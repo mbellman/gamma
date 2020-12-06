@@ -4,17 +4,26 @@
 #include "Geometry.h"
 #include "Traits.h"
 
+struct SDL_Window;
+
 namespace Gamma {
-  class Window final {
+  enum RenderMode {
+    OPENGL,
+    VULKAN
+  };
+
+  class Window {
   public:
-    ~Window();
+    Window();
 
     void open();
-    void setRenderer(AbstractRenderer* renderer);
-    void setRegion(const Region<unsigned int>& region);
+    void setRenderMode(RenderMode mode);
+    void setScreenRegion(const Region<unsigned int>& region);
 
   private:
+    SDL_Window* sdl_window = nullptr;
     AbstractRenderer* renderer = nullptr;
-    Region<unsigned int> region = { 0, 0, 640, 480 };
+
+    void clearRenderer();
   };
 }
