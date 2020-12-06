@@ -10,9 +10,9 @@ namespace Gamma {
     OpenGLRenderer(SDL_Window* sdl_window): AbstractRenderer(sdl_window) {};
     ~OpenGLRenderer() {};
 
-    virtual void onInit() override;
-    virtual void onRender() override;
-    virtual void onDestroy() override;
+    virtual void init() override;
+    virtual void render() override;
+    virtual void destroy() override;
 
   private:
     SDL_GLContext glContext;

@@ -6,7 +6,7 @@
 
 using namespace Gamma;
 
-void OpenGLRenderer::onInit() {
+void OpenGLRenderer::init() {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
@@ -22,7 +22,7 @@ void OpenGLRenderer::onInit() {
   SDL_GL_SetSwapInterval(0);
 }
 
-void OpenGLRenderer::onRender() {
+void OpenGLRenderer::render() {
   // Reset rendering state
   glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
@@ -37,6 +37,6 @@ void OpenGLRenderer::onRender() {
   SDL_GL_SwapWindow(sdl_window);
 }
 
-void OpenGLRenderer::onDestroy() {
+void OpenGLRenderer::destroy() {
   SDL_GL_DeleteContext(glContext);
 }

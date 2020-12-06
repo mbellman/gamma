@@ -12,7 +12,7 @@ Window::Window() {
 
 void Window::clearRenderer() {
   if (renderer != nullptr) {
-    renderer->onDestroy();
+    renderer->destroy();
 
     delete renderer;
 
@@ -35,7 +35,7 @@ void Window::open() {
     }
 
     if (renderer != nullptr) {
-      renderer->onRender();
+      renderer->render();
     }
 
     SDL_Delay(1);
@@ -60,7 +60,7 @@ void Window::setRenderMode(RenderMode mode) {
   }
 
   if (renderer != nullptr) {
-    renderer->onInit();
+    renderer->init();
   }
 }
 

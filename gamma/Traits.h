@@ -2,14 +2,14 @@
 
 namespace Gamma {
   struct Initable {
-    virtual void onInit() = 0;
+    virtual void init() = 0;
   };
 
   struct Destroyable {
-    virtual void onDestroy() = 0;
+    virtual void destroy() = 0;
   };
 
   struct Renderable {
-    virtual void onRender() = 0;
+    virtual void render() = 0;
   };
 }
