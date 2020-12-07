@@ -107,8 +107,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="demo\main.cpp" />
+    <ClCompile Include="gamma\math\vector.cpp" />
     <ClCompile Include="gamma\opengl\OpenGLRenderer.cpp" />
-    <ClCompile Include="gamma\Window.cpp" />
+    <ClCompile Include="gamma\opengl\shader.cpp" />
+    <ClCompile Include="gamma\system\file.cpp" />
+    <ClCompile Include="gamma\system\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\glew\include\eglew.h" />
@@ -200,12 +203,17 @@
     <ClInclude Include="external\sdl2\include\SDL_video.h" />
     <ClInclude Include="external\sdl2\include\SDL_vulkan.h" />
     <ClInclude Include="external\sdl_image\include\SDL_image.h" />
-    <ClInclude Include="gamma\AbstractRenderer.h" />
     <ClInclude Include="gamma\Gamma.h" />
-    <ClInclude Include="gamma\Geometry.h" />
+    <ClInclude Include="gamma\math\matrix.h" />
+    <ClInclude Include="gamma\math\Quaternion.h" />
+    <ClInclude Include="gamma\math\screen.h" />
+    <ClInclude Include="gamma\math\vector.h" />
     <ClInclude Include="gamma\opengl\OpenGLRenderer.h" />
-    <ClInclude Include="gamma\Traits.h" />
-    <ClInclude Include="gamma\Window.h" />
+    <ClInclude Include="gamma\opengl\shader.h" />
+    <ClInclude Include="gamma\system\AbstractRenderer.h" />
+    <ClInclude Include="gamma\system\file.h" />
+    <ClInclude Include="gamma\system\traits.h" />
+    <ClInclude Include="gamma\system\Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

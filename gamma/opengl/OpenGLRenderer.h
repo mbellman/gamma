@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AbstractRenderer.h"
+#include "system/AbstractRenderer.h"
 
 typedef void* SDL_GLContext;
 

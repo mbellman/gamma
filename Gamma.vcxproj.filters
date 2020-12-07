@@ -18,10 +18,19 @@
     <ClCompile Include="demo\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gamma\Window.cpp">
+    <ClCompile Include="gamma\opengl\OpenGLRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gamma\opengl\OpenGLRenderer.cpp">
+    <ClCompile Include="gamma\opengl\shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gamma\system\file.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gamma\system\Window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gamma\math\vector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -296,19 +305,34 @@
     <ClInclude Include="gamma\Gamma.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="gamma\Geometry.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="gamma\Traits.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="gamma\Window.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="gamma\AbstractRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="gamma\opengl\OpenGLRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\opengl\shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\system\Window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\system\AbstractRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\system\file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\system\traits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\math\matrix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\math\Quaternion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\math\screen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\math\vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

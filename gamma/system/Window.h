@@ -1,8 +1,8 @@
 #pragma once
 
-#include "AbstractRenderer.h"
-#include "Geometry.h"
-#include "Traits.h"
+#include "math/screen.h"
+#include "system/AbstractRenderer.h"
+#include "system/traits.h"
 
 struct SDL_Window;
 

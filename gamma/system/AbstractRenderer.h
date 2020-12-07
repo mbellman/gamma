@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Traits.h"
+#include "system/traits.h"
 
 struct SDL_Window;
 

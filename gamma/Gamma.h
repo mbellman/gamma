@@ -1,4 +1,4 @@
 #pragma once
 
-#include "Window.h"
-#include "opengl/OpenGLRenderer.h"
+#include "math/vector.h"
+#include "system/Window.h"

@@ -1,8 +1,8 @@
-#include "opengl/OpenGLRenderer.h"
 #include "SDL.h"
 #include "glew.h"
 #include "SDL_opengl.h"
 #include "glut.h"
+#include "opengl/OpenGLRenderer.h"
 
 using namespace Gamma;
 
