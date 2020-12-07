@@ -1,5 +1,6 @@
 #include <string>
 
+#include "glew.h"
 #include "opengl/shader.h"
 #include "system/file.h"
 

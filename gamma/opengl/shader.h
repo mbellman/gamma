@@ -2,10 +2,10 @@
 
 #include <string>
 
-#include "glew.h"
 #include "math/matrix.h"
 #include "math/vector.h"
 #include "system/traits.h"
+#include "system/type_aliases.h"
 
 namespace Gamma {
   GLuint gm_CompileShader(GLenum shaderType, const char* path);
