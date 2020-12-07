@@ -1,10 +1,16 @@
 #pragma once
 
+#include "opengl/framebuffer.h"
+#include "opengl/shader.h"
 #include "system/AbstractRenderer.h"
-
-typedef void* SDL_GLContext;
+#include "system/type_aliases.h"
 
 namespace Gamma {
+  enum OpenGLRenderFlags {
+    DEFERRED_PATH = 1 << 0,
+    SHADOWS = 1 << 1
+  };
+
   class OpenGLRenderer final : public AbstractRenderer {
   public:
     OpenGLRenderer(SDL_Window* sdl_window): AbstractRenderer(sdl_window) {};
@@ -15,6 +21,21 @@ namespace Gamma {
     virtual void destroy() override;
 
   private:
+    int flags = 0;
     SDL_GLContext glContext;
+
+    struct ForwardPath {
+      // @TODO
+    } forward;
+
+    struct DeferredPath {
+      OpenGLFrameBuffer g_buffer;
+      OpenGLShader geometry;
+      OpenGLShader illumination;
+      OpenGLShader emissives;
+    } deferred;
+
+    void renderDeferred();
+    void renderForward();
   };
 }

@@ -5,6 +5,7 @@
 #include "glew.h"
 #include "math/matrix.h"
 #include "math/vector.h"
+#include "system/traits.h"
 
 namespace Gamma {
   GLuint gm_CompileShader(GLenum shaderType, const char* path);
@@ -12,12 +13,11 @@ namespace Gamma {
   GLuint gm_CompileGeometryShader(const char* path);
   GLuint gm_CompileVertexShader(const char* path);
 
-  class OpenGLShader {
+  class OpenGLShader : public Initable, public Destroyable {
   public:
-    ~OpenGLShader();
-
+    virtual void init() override;
+    virtual void destroy() override;
     void attachShader(GLuint shader);
-    void create();
     void link();
     void setBool(std::string name, bool value) const;
     void setFloat(std::string name, float value) const;

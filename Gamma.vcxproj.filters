@@ -33,6 +33,9 @@
     <ClCompile Include="gamma\math\vector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gamma\opengl\framebuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\glew\include\eglew.h">
@@ -329,10 +332,16 @@
     <ClInclude Include="gamma\math\Quaternion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="gamma\math\screen.h">
+    <ClInclude Include="gamma\math\vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="gamma\math\vector.h">
+    <ClInclude Include="gamma\math\plane.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\opengl\framebuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\system\type_aliases.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

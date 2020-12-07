@@ -44,17 +44,16 @@ GLuint Gamma::gm_CompileVertexShader(const char* path) {
  * OpenGLShader
  * ------------
  */
-OpenGLShader::~OpenGLShader() {
-  // @TODO
+void OpenGLShader::init() {
+  program = glCreateProgram();
 }
 
+void OpenGLShader::destroy() {
+  glDeleteProgram(program);
+}
 
 void OpenGLShader::attachShader(GLuint shader) {
   glAttachShader(program, shader);
-}
-
-void OpenGLShader::create() {
-  program = glCreateProgram();
 }
 
 GLint OpenGLShader::getUniformLocation(const char* name) const {

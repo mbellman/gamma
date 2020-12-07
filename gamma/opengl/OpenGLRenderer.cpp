@@ -7,6 +7,9 @@
 using namespace Gamma;
 
 void OpenGLRenderer::init() {
+  flags = OpenGLRenderFlags::DEFERRED_PATH | OpenGLRenderFlags::SHADOWS;
+
+  // Initialize OpenGL
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
@@ -20,9 +23,42 @@ void OpenGLRenderer::init() {
   glewInit();
 
   SDL_GL_SetSwapInterval(0);
+
+  // Initialize framebuffers and shaders
+  deferred.g_buffer.init();
+  deferred.g_buffer.setSize({ 1920, 1080 });
+  deferred.g_buffer.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
+  deferred.g_buffer.addColorAttachment(ColorFormat::RGBA);  // (RGB) Normal, (A) Specularity
+  deferred.g_buffer.addDepthStencilAttachment();
+  deferred.g_buffer.bindColorAttachments();
 }
 
 void OpenGLRenderer::render() {
+  if (flags & OpenGLRenderFlags::DEFERRED_PATH) {
+    renderDeferred();
+  } else {
+    renderForward();
+  }
+
+  SDL_GL_SwapWindow(sdl_window);
+}
+
+void OpenGLRenderer::destroy() {
+  deferred.g_buffer.destroy();
+  deferred.geometry.destroy();
+  deferred.illumination.destroy();
+  deferred.emissives.destroy();
+
+  SDL_GL_DeleteContext(glContext);
+}
+
+void OpenGLRenderer::renderDeferred() {
+  // Clear G-Buffer
+  deferred.g_buffer.write();
+
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
   // Reset rendering state
   glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
@@ -30,13 +66,8 @@ void OpenGLRenderer::render() {
   glCullFace(GL_BACK);
   glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
   glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
-
-  glClearColor(0, 0, 0, 1);
-  glClear(GL_COLOR_BUFFER_BIT);
-
-  SDL_GL_SwapWindow(sdl_window);
 }
 
-void OpenGLRenderer::destroy() {
-  SDL_GL_DeleteContext(glContext);
+void OpenGLRenderer::renderForward() {
+  // @TODO
 }

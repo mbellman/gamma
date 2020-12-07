@@ -8,6 +8,12 @@ namespace Gamma {
   };
 
   template<typename T>
+  struct Area {
+    T width;
+    T height;
+  };
+
+  template<typename T>
   struct Region {
     T x;
     T y;

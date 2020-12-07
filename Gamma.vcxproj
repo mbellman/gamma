@@ -108,6 +108,7 @@
   <ItemGroup>
     <ClCompile Include="demo\main.cpp" />
     <ClCompile Include="gamma\math\vector.cpp" />
+    <ClCompile Include="gamma\opengl\framebuffer.cpp" />
     <ClCompile Include="gamma\opengl\OpenGLRenderer.cpp" />
     <ClCompile Include="gamma\opengl\shader.cpp" />
     <ClCompile Include="gamma\system\file.cpp" />
@@ -205,14 +206,16 @@
     <ClInclude Include="external\sdl_image\include\SDL_image.h" />
     <ClInclude Include="gamma\Gamma.h" />
     <ClInclude Include="gamma\math\matrix.h" />
+    <ClInclude Include="gamma\math\plane.h" />
     <ClInclude Include="gamma\math\Quaternion.h" />
-    <ClInclude Include="gamma\math\screen.h" />
     <ClInclude Include="gamma\math\vector.h" />
+    <ClInclude Include="gamma\opengl\framebuffer.h" />
     <ClInclude Include="gamma\opengl\OpenGLRenderer.h" />
     <ClInclude Include="gamma\opengl\shader.h" />
     <ClInclude Include="gamma\system\AbstractRenderer.h" />
     <ClInclude Include="gamma\system\file.h" />
     <ClInclude Include="gamma\system\traits.h" />
+    <ClInclude Include="gamma\system\type_aliases.h" />
     <ClInclude Include="gamma\system\Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
