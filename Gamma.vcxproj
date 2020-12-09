@@ -106,15 +106,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="demo\DemoController.cpp" />
+    <ClCompile Include="demo\DemoScene.cpp" />
     <ClCompile Include="demo\main.cpp" />
     <ClCompile Include="gamma\math\vector.cpp" />
     <ClCompile Include="gamma\opengl\framebuffer.cpp" />
     <ClCompile Include="gamma\opengl\OpenGLRenderer.cpp" />
     <ClCompile Include="gamma\opengl\shader.cpp" />
+    <ClCompile Include="gamma\system\AbstractController.cpp" />
+    <ClCompile Include="gamma\system\AbstractLoader.cpp" />
+    <ClCompile Include="gamma\system\AbstractScene.cpp" />
     <ClCompile Include="gamma\system\file.cpp" />
+    <ClCompile Include="gamma\system\object.cpp" />
     <ClCompile Include="gamma\system\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="demo\DemoController.h" />
+    <ClInclude Include="demo\DemoScene.h" />
     <ClInclude Include="external\glew\include\eglew.h" />
     <ClInclude Include="external\glew\include\glew.h" />
     <ClInclude Include="external\glew\include\glxew.h" />
@@ -205,6 +213,7 @@
     <ClInclude Include="external\sdl2\include\SDL_vulkan.h" />
     <ClInclude Include="external\sdl_image\include\SDL_image.h" />
     <ClInclude Include="gamma\Gamma.h" />
+    <ClInclude Include="gamma\math\geometry.h" />
     <ClInclude Include="gamma\math\matrix.h" />
     <ClInclude Include="gamma\math\plane.h" />
     <ClInclude Include="gamma\math\Quaternion.h" />
@@ -212,8 +221,12 @@
     <ClInclude Include="gamma\opengl\framebuffer.h" />
     <ClInclude Include="gamma\opengl\OpenGLRenderer.h" />
     <ClInclude Include="gamma\opengl\shader.h" />
+    <ClInclude Include="gamma\system\AbstractController.h" />
+    <ClInclude Include="gamma\system\AbstractLoader.h" />
     <ClInclude Include="gamma\system\AbstractRenderer.h" />
+    <ClInclude Include="gamma\system\AbstractScene.h" />
     <ClInclude Include="gamma\system\file.h" />
+    <ClInclude Include="gamma\system\object.h" />
     <ClInclude Include="gamma\system\traits.h" />
     <ClInclude Include="gamma\system\type_aliases.h" />
     <ClInclude Include="gamma\system\Window.h" />

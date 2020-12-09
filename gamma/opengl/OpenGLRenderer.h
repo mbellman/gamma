@@ -19,6 +19,7 @@ namespace Gamma {
     virtual void init() override;
     virtual void render() override;
     virtual void destroy() override;
+    virtual void watch(AbstractController* controller) override;
 
   private:
     int flags = 0;

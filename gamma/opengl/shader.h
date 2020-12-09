@@ -8,10 +8,10 @@
 #include "system/type_aliases.h"
 
 namespace Gamma {
-  GLuint gm_CompileShader(GLenum shaderType, const char* path);
-  GLuint gm_CompileFragmentShader(const char* path);
-  GLuint gm_CompileGeometryShader(const char* path);
-  GLuint gm_CompileVertexShader(const char* path);
+  GLuint Gm_CompileShader(GLenum shaderType, const char* path);
+  GLuint Gm_CompileFragmentShader(const char* path);
+  GLuint Gm_CompileGeometryShader(const char* path);
+  GLuint Gm_CompileVertexShader(const char* path);
 
   class OpenGLShader : public Initable, public Destroyable {
   public:
