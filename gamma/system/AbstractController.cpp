@@ -7,6 +7,7 @@ namespace Gamma {
   }
 
   void AbstractController::leaveScene() {
+    // @TODO delete scene
     scenes.pop_back();
   }
 
@@ -20,6 +21,7 @@ namespace Gamma {
 
   void AbstractController::switchScene(AbstractScene* scene) {
     if (scenes.size() > 0) {
+      // @TODO delete scene
       scenes.pop_back();
     }
 
