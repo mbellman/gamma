@@ -21,6 +21,8 @@ namespace Gamma {
 
     scenes.push_back(scene);
 
+    scene->onMeshCreated(handleMeshCreated);
+    scene->onMeshDestroyed(handleMeshDestroyed);
     scene->init();
   }
 
