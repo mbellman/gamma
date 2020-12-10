@@ -62,6 +62,14 @@ namespace Gamma {
     SDL_GL_DeleteContext(glContext);
   }
 
+  void OpenGLRenderer::createMesh(Mesh* mesh) {
+    // @TODO
+  }
+
+  void OpenGLRenderer::destroyMesh(Mesh* mesh) {
+    // @TODO
+  }
+
   void OpenGLRenderer::renderDeferred() {
     // Clear G-Buffer
     deferred.g_buffer.write();
@@ -80,15 +88,5 @@ namespace Gamma {
 
   void OpenGLRenderer::renderForward() {
     // @TODO
-  }
-
-  void OpenGLRenderer::watch(AbstractController* controller) {
-    controller->onMeshCreated([=](Mesh* mesh) {
-
-    });
-
-    controller->onMeshDestroyed([=](Mesh* mesh) {
-
-    });
   }
 }

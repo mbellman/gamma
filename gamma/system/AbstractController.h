@@ -11,15 +11,21 @@ namespace Gamma {
 
   class AbstractController : public Initable, public Destroyable {
   public:
-    void enterScene(AbstractScene* scene);
-    void leaveScene();
+    virtual ~AbstractController();
+
     void onMeshCreated(std::function<void(Mesh*)> handler);
     void onMeshDestroyed(std::function<void(Mesh*)> handler);
+
+  protected:
+    void enterScene(AbstractScene* scene);
+    void leaveScene();
     void switchScene(AbstractScene* scene);
   
   private:
     std::vector<AbstractScene*> scenes;
     std::function<void(Mesh*)> handleMeshCreated = nullptr;
     std::function<void(Mesh*)> handleMeshDestroyed = nullptr;
+
+    void destroyScene(AbstractScene* scene);
   };
 }

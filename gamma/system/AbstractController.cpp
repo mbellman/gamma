@@ -2,16 +2,40 @@
 #include "system/AbstractScene.h"
 
 namespace Gamma {
+  AbstractController::~AbstractController() {
+    for (auto* scene : scenes) {
+      destroyScene(scene);
+    }
+
+    scenes.clear();
+  }
+
+  void AbstractController::destroyScene(AbstractScene* scene) {
+    scene->destroy();
+
+    delete scene;
+  }
+
   void AbstractController::enterScene(AbstractScene* scene) {
+    AbstractScene::active = scene;
+
     scenes.push_back(scene);
+
+    scene->init();
   }
 
   void AbstractController::leaveScene() {
-    // @TODO delete scene
-    scenes.pop_back();
+    if (scenes.size() > 0) {
+      destroyScene(scenes.back());
+
+      scenes.pop_back();
+
+      AbstractScene::active = scenes.size() > 0 ? scenes.back() : nullptr;
+    }
   }
 
   void AbstractController::onMeshCreated(std::function<void(Mesh*)> handler) {
+    // @TODO allow handler to fire retroactively for existing Meshes
     handleMeshCreated = handler;
   }
 
@@ -21,10 +45,10 @@ namespace Gamma {
 
   void AbstractController::switchScene(AbstractScene* scene) {
     if (scenes.size() > 0) {
-      // @TODO delete scene
+      destroyScene(scenes.back());
       scenes.pop_back();
     }
 
-    scenes.push_back(scene);
+    enterScene(scene);
   }
 }

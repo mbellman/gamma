@@ -2,6 +2,7 @@
 
 #include "opengl/framebuffer.h"
 #include "opengl/shader.h"
+#include "system/object.h"
 #include "system/AbstractRenderer.h"
 #include "system/type_aliases.h"
 
@@ -19,7 +20,8 @@ namespace Gamma {
     virtual void init() override;
     virtual void render() override;
     virtual void destroy() override;
-    virtual void watch(AbstractController* controller) override;
+    virtual void createMesh(Mesh* mesh) override;
+    virtual void destroyMesh(Mesh* mesh) override;
 
   private:
     int flags = 0;

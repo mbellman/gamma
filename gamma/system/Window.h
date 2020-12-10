@@ -27,6 +27,7 @@ namespace Gamma {
     AbstractController* controller = nullptr;
     AbstractRenderer* renderer = nullptr;
 
-    void clearRenderer();
+    void bindControllerEvents();
+    void destroyRenderer();
   };
 }

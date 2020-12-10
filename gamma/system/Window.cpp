@@ -2,6 +2,7 @@
 #include "Window.h"
 #include "opengl/OpenGLRenderer.h"
 #include "system/AbstractController.h"
+#include "system/AbstractScene.h"
 
 namespace Gamma {
   Window::Window() {
@@ -10,7 +11,17 @@ namespace Gamma {
     sdl_window = SDL_CreateWindow("Gamma", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
   }
 
-  void Window::clearRenderer() {
+  void Window::bindControllerEvents() {
+    controller->onMeshCreated([=](Mesh* mesh) {
+      renderer->createMesh(mesh);
+    });
+
+    controller->onMeshDestroyed([=](Mesh* mesh) {
+      renderer->destroyMesh(mesh);
+    });
+  }
+
+  void Window::destroyRenderer() {
     if (renderer != nullptr) {
       renderer->destroy();
 
@@ -23,6 +34,7 @@ namespace Gamma {
   void Window::open() {
     SDL_Event event;
     bool didCloseWindow = false;
+    unsigned int lastTick = SDL_GetTicks();
 
     // Main window loop
     while (!didCloseWindow) {
@@ -38,11 +50,18 @@ namespace Gamma {
         renderer->render();
       }
 
+      if (AbstractScene::active != nullptr) {
+        float dt = (float)(SDL_GetTicks() - lastTick) / 1000.0f;
+        lastTick = SDL_GetTicks();
+
+        AbstractScene::active->update(dt);
+      }
+
       SDL_Delay(1);
     }
 
     // Post-quit cleanup
-    clearRenderer();
+    destroyRenderer();
 
     controller->destroy();
 
@@ -56,19 +75,21 @@ namespace Gamma {
     this->controller = controller;
 
     if (renderer != nullptr) {
-      renderer->watch(controller);
+      bindControllerEvents();
     }
+
+    controller->init();
   }
 
   void Window::setRenderMode(RenderMode mode) {
-    clearRenderer();
+    destroyRenderer();
 
     switch (mode) {
       case RenderMode::OPENGL:
         renderer = new OpenGLRenderer(sdl_window);
         break;
       case RenderMode::VULKAN:
-        // Not implemented
+        // @TODO
         break;
     }
 
@@ -76,7 +97,7 @@ namespace Gamma {
       renderer->init();
 
       if (controller != nullptr) {
-        renderer->watch(controller);
+        bindControllerEvents();
       }
     }
   }
