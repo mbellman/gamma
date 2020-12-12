@@ -21,7 +21,9 @@ namespace Gamma {
     virtual void render() override;
     virtual void destroy() override;
     virtual void createMesh(Mesh* mesh) override;
+    virtual void createShadowcaster(Light* light) override;
     virtual void destroyMesh(Mesh* mesh) override;
+    virtual void destroyShadowcaster(Light* light) override;
 
   private:
     int flags = 0;

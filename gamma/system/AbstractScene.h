@@ -10,7 +10,7 @@
 #include "system/traits.h"
 
 namespace Gamma {
-  class AbstractScene : public Initable, public Destroyable, public Signaler2<Mesh*, Light*> {
+  class AbstractScene : public Initable, public Destroyable, public Signaler {
   public:
     static AbstractScene* active;
 

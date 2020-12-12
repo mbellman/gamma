@@ -7,8 +7,7 @@
 
 namespace Gamma {
   enum ObjectFlags {
-    IS_DIRTY = 1 << 0,
-    SHOULD_REMOVE = 1 << 1
+    IS_DIRTY = 1 << 0
   };
 
   enum Primitive {
@@ -37,51 +36,66 @@ namespace Gamma {
     Vec3f _rotation;
     Vec3f _scale;
 
-    inline const Vec3f& position() const {
-      return _position;
-    }
-
-    inline void position(const Vec3f& position) {
-      _position = position;
-      _flags |= ObjectFlags::IS_DIRTY;
-    }
-
-    inline void remove() {
-      _flags |= ObjectFlags::SHOULD_REMOVE;
-    }
-
-    inline const Vec3f& rotation() const {
-      return _rotation;
-    }
-
-    inline void rotation(const Vec3f& rotation) {
-      _rotation = rotation;
-      _flags |= ObjectFlags::IS_DIRTY;
-    }
-
-    inline const Vec3f& scale() const {
-      return _scale;
-    }
-
-    inline void scale(const Vec3f& scale) {
-      _scale = scale;
-      _flags |= ObjectFlags::IS_DIRTY;
-    }
-
-    inline void scale(float scale) {
-      this->scale(Vec3f(scale));
-    }
+    const Vec3f& position() const;
+    void position(const Vec3f& position);
+    void remove();
+    const Vec3f& rotation() const;
+    void rotation(const Vec3f& rotation);
+    const Vec3f& scale() const;
+    void scale(const Vec3f& scale);
+    void scale(float scale);
   };
 
   struct Light : BaseEntity {
     Vec3f position;
     Vec3f color = Vec3f(1.0f);
     float radius = 100.0f;
+    float power = 1.0f;
     LightType type = LightType::POINT;
+    bool canCastShadows = false;
   };
 
   Mesh* Gm_CreatePrimitiveMesh(Primitive primitive);
   void Gm_FreeMesh(Mesh* mesh);
   Mesh* Gm_LoadMesh(const char* path);
   void Gm_RecomputeObjectMatrix(Object* object);
+
+  /**
+   * Object
+   * ------
+   */
+  inline const Vec3f& Object::position() const {
+    return _position;
+  }
+
+  inline void Object::position(const Vec3f& position) {
+    _position = position;
+    _flags |= ObjectFlags::IS_DIRTY;
+  }
+
+  inline void Object::remove() {
+    lifetime = 0;
+  }
+
+  inline const Vec3f& Object::rotation() const {
+    return _rotation;
+  }
+
+  inline void Object::rotation(const Vec3f& rotation) {
+    _rotation = rotation;
+    _flags |= ObjectFlags::IS_DIRTY;
+  }
+
+  inline const Vec3f& Object::scale() const {
+    return _scale;
+  }
+
+  inline void Object::scale(const Vec3f& scale) {
+    _scale = scale;
+    _flags |= ObjectFlags::IS_DIRTY;
+  }
+
+  inline void Object::scale(float scale) {
+    this->scale(Vec3f(scale));
+  }
 }

@@ -12,21 +12,21 @@ namespace Gamma {
   }
 
   void Window::bindControllerEvents() {
-    controller->on("scene-created", [=](AbstractScene* scene) {
-      scene->on("mesh-created", [=](Mesh* mesh) {
+    controller->on<AbstractScene*>("scene-created", [=](auto* scene) {
+      scene->on<Mesh*>("mesh-created", [=](auto* mesh) {
         renderer->createMesh(mesh);
       });
 
-      scene->on("mesh-destroyed", [=](Mesh* mesh) {
+      scene->on<Mesh*>("mesh-destroyed", [=](auto* mesh) {
         renderer->destroyMesh(mesh);
       });
 
-      scene->on("shadowcaster-created", [=](Light* light) {
-
+      scene->on<Light*>("shadowcaster-created", [=](auto* light) {
+        renderer->createShadowcaster(light);
       });
 
-      scene->on("shadowcaster-destroyed", [=](Light* mesh) {
-
+      scene->on<Light*>("shadowcaster-destroyed", [=](auto* light) {
+        renderer->destroyShadowcaster(light);
       });
     });
   }

@@ -10,7 +10,7 @@ namespace Gamma {
   struct Mesh;
   class AbstractScene;
 
-  class AbstractController : public Initable, public Destroyable, public Signaler<AbstractScene*> {
+  class AbstractController : public Initable, public Destroyable, public Signaler {
   public:
     virtual ~AbstractController();
 

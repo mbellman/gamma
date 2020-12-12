@@ -69,9 +69,19 @@ namespace Gamma {
     printf("Mesh created!");
   }
 
+  void OpenGLRenderer::createShadowcaster(Light* mesh) {
+    // @TODO
+    printf("Shadowcaster created!");
+  }
+
   void OpenGLRenderer::destroyMesh(Mesh* mesh) {
     // @TODO
     printf("Mesh destroyed!");
+  }
+
+  void OpenGLRenderer::destroyShadowcaster(Light* mesh) {
+    // @TODO
+    printf("Shadowcaster destroyed!");
   }
 
   void OpenGLRenderer::renderDeferred() {
