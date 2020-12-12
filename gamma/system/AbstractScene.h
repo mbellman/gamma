@@ -5,25 +5,25 @@
 #include <string>
 #include <map>
 
-#include "system/object.h"
+#include "system/entities.h"
+#include "system/Signaler.h"
 #include "system/traits.h"
 
 namespace Gamma {
-  class AbstractScene : public Initable, public Destroyable {
+  class AbstractScene : public Initable, public Destroyable, public Signaler2<Mesh*, Light*> {
   public:
     static AbstractScene* active;
 
     virtual ~AbstractScene() {};
 
-    void addMesh(std::string key, Mesh* mesh);
-    void onMeshCreated(std::function<void(Mesh*)> handler);
-    void onMeshDestroyed(std::function<void(Mesh*)> handler);
-    void removeMesh(std::string key);
+    Light* createLight();
+    void createMesh(std::string name, Mesh* mesh);
+    Object* createObjectFrom(std::string name);
+    void removeMesh(std::string name);
     virtual void update(float dt) {};
 
   private:
-    std::function<void(Mesh*)> handleMeshCreated = nullptr;
-    std::function<void(Mesh*)> handleMeshDestroyed = nullptr;
     std::map<std::string, Mesh*> meshMap;
+    std::vector<Light*> lights;
   };
 }

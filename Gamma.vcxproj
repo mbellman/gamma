@@ -78,6 +78,7 @@
       <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>$(SolutionDir)\external\SDL2\include;$(SolutionDir)\external\GLUT\include;$(SolutionDir)\external\GLEW\include;$(SolutionDir)\external\SDL_image\include;$(SolutionDir)\demo;$(SolutionDir)\gamma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -94,6 +95,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalIncludeDirectories>$(SolutionDir)\external\SDL2\include;$(SolutionDir)\external\GLUT\include;$(SolutionDir)\external\GLEW\include;$(SolutionDir)\external\SDL_image\include;$(SolutionDir)\demo;$(SolutionDir)\gamma;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -116,8 +118,8 @@
     <ClCompile Include="gamma\system\AbstractController.cpp" />
     <ClCompile Include="gamma\system\AbstractLoader.cpp" />
     <ClCompile Include="gamma\system\AbstractScene.cpp" />
+    <ClCompile Include="gamma\system\entities.cpp" />
     <ClCompile Include="gamma\system\file.cpp" />
-    <ClCompile Include="gamma\system\object.cpp" />
     <ClCompile Include="gamma\system\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -225,8 +227,10 @@
     <ClInclude Include="gamma\system\AbstractLoader.h" />
     <ClInclude Include="gamma\system\AbstractRenderer.h" />
     <ClInclude Include="gamma\system\AbstractScene.h" />
+    <ClInclude Include="gamma\system\entities.h" />
     <ClInclude Include="gamma\system\file.h" />
     <ClInclude Include="gamma\system\object.h" />
+    <ClInclude Include="gamma\system\Signaler.h" />
     <ClInclude Include="gamma\system\traits.h" />
     <ClInclude Include="gamma\system\type_aliases.h" />
     <ClInclude Include="gamma\system\Window.h" />

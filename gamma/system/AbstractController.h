@@ -3,18 +3,16 @@
 #include <functional>
 #include <vector>
 
+#include "system/Signaler.h"
 #include "system/traits.h"
 
 namespace Gamma {
   struct Mesh;
   class AbstractScene;
 
-  class AbstractController : public Initable, public Destroyable {
+  class AbstractController : public Initable, public Destroyable, public Signaler<AbstractScene*> {
   public:
     virtual ~AbstractController();
-
-    void onMeshCreated(std::function<void(Mesh*)> handler);
-    void onMeshDestroyed(std::function<void(Mesh*)> handler);
 
   protected:
     void enterScene(AbstractScene* scene);
@@ -23,8 +21,6 @@ namespace Gamma {
   
   private:
     std::vector<AbstractScene*> scenes;
-    std::function<void(Mesh*)> handleMeshCreated = nullptr;
-    std::function<void(Mesh*)> handleMeshDestroyed = nullptr;
 
     void destroyScene(AbstractScene* scene);
   };

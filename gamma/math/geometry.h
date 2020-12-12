@@ -1,8 +1,6 @@
 #pragma once
 
-namespace {
-  struct Vec3f;
-
+namespace Gamma {
   struct Polygon {
 
   };

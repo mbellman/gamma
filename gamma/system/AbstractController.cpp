@@ -21,8 +21,8 @@ namespace Gamma {
 
     scenes.push_back(scene);
 
-    scene->onMeshCreated(handleMeshCreated);
-    scene->onMeshDestroyed(handleMeshDestroyed);
+    signal("scene-created", scene);
+
     scene->init();
   }
 
@@ -34,15 +34,6 @@ namespace Gamma {
 
       AbstractScene::active = scenes.size() > 0 ? scenes.back() : nullptr;
     }
-  }
-
-  void AbstractController::onMeshCreated(std::function<void(Mesh*)> handler) {
-    // @TODO allow handler to fire retroactively for existing Meshes
-    handleMeshCreated = handler;
-  }
-
-  void AbstractController::onMeshDestroyed(std::function<void(Mesh*)> handler) {
-    handleMeshDestroyed = handler;
   }
 
   void AbstractController::switchScene(AbstractScene* scene) {

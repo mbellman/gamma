@@ -44,11 +44,11 @@ namespace Gamma {
     addColorAttachment(format, colorAttachments.size());
   }
 
-  void OpenGLFrameBuffer::addColorAttachment(ColorFormat format, unsigned int unit) {
+  void OpenGLFrameBuffer::addColorAttachment(ColorFormat format, uint32 unit) {
     addColorAttachment(format, unit, GL_CLAMP_TO_BORDER);
   }
 
-  void OpenGLFrameBuffer::addColorAttachment(ColorFormat format, unsigned int unit, GLint clamp) {
+  void OpenGLFrameBuffer::addColorAttachment(ColorFormat format, uint32 unit, GLint clamp) {
     GLuint textureId;
     GLuint index = GL_COLOR_ATTACHMENT0 + colorAttachments.size();
     GLint glInternalFormat = glInternalFormatMap.at(format);
@@ -79,7 +79,7 @@ namespace Gamma {
   void OpenGLFrameBuffer::bindColorAttachments() {
     GLuint* attachments = new GLuint[colorAttachments.size()];
 
-    for (unsigned int i = 0; i < colorAttachments.size(); i++) {
+    for (uint32 i = 0; i < colorAttachments.size(); i++) {
       attachments[i] = colorAttachments[i].index;
     }
 
@@ -89,15 +89,15 @@ namespace Gamma {
   }
 
   void OpenGLFrameBuffer::read() {
-    for (unsigned int i = 0; i < colorAttachments.size(); i++) {
-      glActiveTexture(colorAttachments[i].textureUnit);
+    for (uint32 i = 0; i < colorAttachments.size(); i++) {
+      glActiveTexture(GL_TEXTURE0 + colorAttachments[i].textureUnit);
       glBindTexture(GL_TEXTURE_2D, colorAttachments[i].textureId);
     }
 
     glBindBuffer(GL_READ_FRAMEBUFFER, fbo);
   }
 
-  void OpenGLFrameBuffer::setSize(const Area<unsigned int>& size) {
+  void OpenGLFrameBuffer::setSize(const Area<uint32>& size) {
     this->size = size;
   }
 

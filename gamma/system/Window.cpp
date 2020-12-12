@@ -12,12 +12,22 @@ namespace Gamma {
   }
 
   void Window::bindControllerEvents() {
-    controller->onMeshCreated([=](Mesh* mesh) {
-      renderer->createMesh(mesh);
-    });
+    controller->on("scene-created", [=](AbstractScene* scene) {
+      scene->on("mesh-created", [=](Mesh* mesh) {
+        renderer->createMesh(mesh);
+      });
 
-    controller->onMeshDestroyed([=](Mesh* mesh) {
-      renderer->destroyMesh(mesh);
+      scene->on("mesh-destroyed", [=](Mesh* mesh) {
+        renderer->destroyMesh(mesh);
+      });
+
+      scene->on("shadowcaster-created", [=](Light* light) {
+
+      });
+
+      scene->on("shadowcaster-destroyed", [=](Light* mesh) {
+
+      });
     });
   }
 
@@ -34,7 +44,7 @@ namespace Gamma {
   void Window::open() {
     SDL_Event event;
     bool didCloseWindow = false;
-    unsigned int lastTick = SDL_GetTicks();
+    uint32 lastTick = SDL_GetTicks();
 
     // Main window loop
     while (!didCloseWindow) {
@@ -102,7 +112,7 @@ namespace Gamma {
     }
   }
 
-  void Window::setScreenRegion(const Region<unsigned int>& region) {
+  void Window::setScreenRegion(const Region<uint32>& region) {
     SDL_SetWindowPosition(sdl_window, region.x, region.y);
     SDL_SetWindowSize(sdl_window, region.width, region.height);
   }

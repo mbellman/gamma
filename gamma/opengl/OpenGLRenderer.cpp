@@ -1,10 +1,12 @@
+#include <cstdio>
+
 #include "SDL.h"
 #include "glew.h"
 #include "SDL_opengl.h"
 #include "glut.h"
 #include "opengl/OpenGLRenderer.h"
 #include "system/AbstractController.h"
-#include "system/object.h"
+#include "system/entities.h"
 
 namespace Gamma {
   /**
@@ -64,10 +66,12 @@ namespace Gamma {
 
   void OpenGLRenderer::createMesh(Mesh* mesh) {
     // @TODO
+    printf("Mesh created!");
   }
 
   void OpenGLRenderer::destroyMesh(Mesh* mesh) {
     // @TODO
+    printf("Mesh destroyed!");
   }
 
   void OpenGLRenderer::renderDeferred() {

@@ -3,31 +3,33 @@
 namespace Gamma {
   AbstractScene* AbstractScene::active = nullptr;
 
-  void AbstractScene::addMesh(std::string key, Mesh* mesh) {
-    meshMap.emplace(key, mesh);
+  Light* AbstractScene::createLight() {
+    lights.push_back(new Light());
 
-    if (handleMeshCreated != nullptr) {
-      handleMeshCreated(mesh);
-    }
+    return lights.back();
   }
 
-  void AbstractScene::onMeshCreated(std::function<void(Mesh*)> handler) {
-    handleMeshCreated = handler;
+  void AbstractScene::createMesh(std::string name, Mesh* mesh) {
+    meshMap.emplace(name, mesh);
+
+    signal("mesh-created", mesh);
   }
 
-  void AbstractScene::onMeshDestroyed(std::function<void(Mesh*)> handler) {
-    handleMeshDestroyed = handler;
+  Object* AbstractScene::createObjectFrom(std::string name) {
+    // @TODO create Object record for associated Mesh
+    return new Object();
   }
 
-  void AbstractScene::removeMesh(std::string key) {
-    if (meshMap.find(key) == meshMap.end()) {
+  void AbstractScene::removeMesh(std::string name) {
+    if (meshMap.find(name) == meshMap.end()) {
       return;
     }
 
-    if (handleMeshDestroyed != nullptr) {
-      handleMeshDestroyed(meshMap.at(key));
-    }
+    auto* mesh = meshMap.at(name);
 
-    meshMap.erase(key);
+    signal("mesh-destroyed", mesh);
+    Gm_FreeMesh(mesh);
+
+    meshMap.erase(name);
   }
 }

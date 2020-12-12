@@ -25,19 +25,19 @@ namespace Gamma {
     virtual void init() override;
     virtual void destroy() override;
     void addColorAttachment(ColorFormat format);
-    void addColorAttachment(ColorFormat format, unsigned int unit);
-    void addColorAttachment(ColorFormat format, unsigned int unit, GLint clamp);
+    void addColorAttachment(ColorFormat format, uint32 unit);
+    void addColorAttachment(ColorFormat format, uint32 unit, GLint clamp);
     void addDepthStencilAttachment();
     void bindColorAttachments();
     void read();
-    void setSize(const Area<unsigned int>& size);
+    void setSize(const Area<uint32>& size);
     void write();
 
   private:
     GLuint fbo = 0;
     GLuint depthStencilTextureId = 0;
     std::vector<ColorAttachment> colorAttachments;
-    Area<unsigned int> size;
+    Area<uint32> size;
   };
 
   class OpenGLCubeMap {

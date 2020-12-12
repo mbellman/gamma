@@ -20,7 +20,7 @@ namespace Gamma {
     void open();
     void setController(AbstractController* controller);
     void setRenderMode(RenderMode mode);
-    void setScreenRegion(const Region<unsigned int>& region);
+    void setScreenRegion(const Region<uint32>& region);
 
   private:
     SDL_Window* sdl_window = nullptr;
