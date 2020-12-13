@@ -1,5 +1,3 @@
-#include <cstdio>
-
 #include "DemoScene.h"
 #include "Gamma.h"
 
@@ -19,5 +17,5 @@ void DemoScene::destroy() {
 }
 
 void DemoScene::update(float dt) {
-  printf("Delta: %f\n", dt);
+  Gamma::log("Delta:", dt);
 }

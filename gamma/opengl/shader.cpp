@@ -1,5 +1,6 @@
 #include "glew.h"
 #include "opengl/shader.h"
+#include "system/console.h"
 #include "system/file.h"
 
 namespace Gamma {
@@ -23,8 +24,8 @@ namespace Gamma {
       char error[512];
 
       glGetShaderInfoLog(shader, 512, 0, error);
-      printf("[ShaderLoader] Failed to compile shader: %s\n", path);
-      printf("%s\n", error);
+      log("[ShaderLoader] Failed to compile shader:", path);
+      log(error);
     }
 
     return shader;

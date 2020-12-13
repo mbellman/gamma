@@ -1,5 +1,6 @@
 #include <fstream>
 
+#include "system/console.h"
 #include "system/file.h"
 
 namespace Gamma {
@@ -8,7 +9,7 @@ namespace Gamma {
     std::ifstream file(path);
 
     if (file.fail()) {
-      printf("[Gamma] Gm_LoadFileContents failed to load file: %s\n", path);
+      log("[Gamma] Gm_LoadFileContents failed to load file:", path);
     } else {
       std::string line;
 

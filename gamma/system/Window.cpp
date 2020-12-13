@@ -66,8 +66,6 @@ namespace Gamma {
       if (renderer != nullptr) {
         renderer->render();
       }
-
-      SDL_Delay(1);
     }
 
     // Post-quit cleanup

@@ -6,6 +6,7 @@
 #include "glut.h"
 #include "opengl/OpenGLRenderer.h"
 #include "system/AbstractController.h"
+#include "system/console.h"
 #include "system/entities.h"
 
 namespace Gamma {
@@ -66,22 +67,22 @@ namespace Gamma {
 
   void OpenGLRenderer::createMesh(Mesh* mesh) {
     // @TODO
-    printf("Mesh created!");
+    log("Mesh created!");
   }
 
   void OpenGLRenderer::createShadowcaster(Light* mesh) {
     // @TODO
-    printf("Shadowcaster created!");
+    log("Shadowcaster created!");
   }
 
   void OpenGLRenderer::destroyMesh(Mesh* mesh) {
     // @TODO
-    printf("Mesh destroyed!");
+    log("Mesh destroyed!");
   }
 
   void OpenGLRenderer::destroyShadowcaster(Light* mesh) {
     // @TODO
-    printf("Shadowcaster destroyed!");
+    log("Shadowcaster destroyed!");
   }
 
   void OpenGLRenderer::renderDeferred() {

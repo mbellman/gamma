@@ -1,9 +1,9 @@
-#include <cstdio>
 #include <iostream>
 #include <string>
 #include <algorithm>
 
 #include "system/AbstractLoader.h"
+#include "system/console.h"
 
 namespace Gamma {
   void AbstractLoader::fillBufferUntil(std::string end) {
@@ -56,7 +56,7 @@ namespace Gamma {
       file = f;
       isLoading = true;
     } else {
-      printf("[Gamma] AbstractLoader failed to load file: %s\n", filePath);
+      log("[Gamma] AbstractLoader failed to load file:", filePath);
     }
   }
 
