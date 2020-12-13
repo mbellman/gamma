@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "math/geometry.h"
 #include "math/matrix.h"
 #include "math/vector.h"
@@ -10,26 +12,70 @@ namespace Gamma {
     IS_DIRTY = 1 << 0
   };
 
-  enum Primitive {
-    CUBE,
-    ICOSPHERE
-  };
-
   enum LightType {
     POINT,
     DIRECTIONAL,
     SPOT
   };
 
+  /**
+   * Mesh
+   * ----
+   *
+   * A Mesh serves as a static reference model from which
+   * individual Objects can be created, where Objects
+   * only contain transformation properties and other
+   * individual-specific attributes. Vertices and faces
+   * are defined once per Mesh, with transformations defined
+   * for as many instanced Objects as there are active.
+   */
   struct Mesh {
-    Polygon* polygons = nullptr;
-    float* matrices = nullptr;
+    /**
+     * Static mesh vertices in model space.
+     */
+    std::vector<Vertex> vertices;
+    /**
+     * Vertex indices for each triangle face of the mesh,
+     * defined in groups of three.
+     */
+    std::vector<uint32> faceIndexes;
+    /**
+     * Transformation matrices for each object created from
+     * the mesh. Variable in size as descendant objects are
+     * created or destroyed.
+     *
+     * @TODO see if a vector is appropriate here for object
+     * collections with members being repeatedly inserted,
+     * removed, or conditionally rendered
+     */
+    std::vector<Matrix4f> matrices;
   };
 
+  /**
+   * BaseEntity
+   * ----------
+   *
+   * Defines base attributes extensible to any dynamic
+   * elements in a scene, such as Objects or Lights.
+   */
   struct BaseEntity {
+    /**
+     * Controls how long an entity will remain in the scene
+     * before being subject to removal, in milliseconds.
+     * Entities with lifetimes of -1 are ignored and allowed
+     * to remain in the scene indefinitely.
+     */
     int lifetime = -1;
   };
 
+  /**
+   * Object
+   * ------
+   *
+   * Objects are derived from Meshes, defining individual
+   * instances of a Mesh distributed throughout a scene,
+   * each with its own unique transformations.
+   */
   struct Object : BaseEntity {
     uint8 _flags = 0;
     Vec3f _position;
@@ -46,6 +92,13 @@ namespace Gamma {
     void scale(float scale);
   };
 
+  /**
+   * Light
+   * -----
+   *
+   * Defines a light source, which affects scene illumination
+   * and color/reflective properties of illuminated surfaces.
+   */
   struct Light : BaseEntity {
     Vec3f position;
     Vec3f color = Vec3f(1.0f);
@@ -55,9 +108,28 @@ namespace Gamma {
     bool canCastShadows = false;
   };
 
-  Mesh* Gm_CreatePrimitiveMesh(Primitive primitive);
+  /**
+   * Gm_CreateCube
+   * -------------
+   */
+  Mesh* Gm_CreateCube();
+
+  /**
+   * Gm_FreeMesh
+   * -----------
+   */
   void Gm_FreeMesh(Mesh* mesh);
+
+  /**
+   * Gm_LoadMesh
+   * -----------
+   */
   Mesh* Gm_LoadMesh(const char* path);
+
+  /**
+   * Gm_RecomputeObjectMatrix
+   * ------------------------
+   */
   void Gm_RecomputeObjectMatrix(Object* object);
 
   /**

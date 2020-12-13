@@ -56,15 +56,15 @@ namespace Gamma {
           }
       }
 
-      if (renderer != nullptr) {
-        renderer->render();
-      }
-
       if (AbstractScene::active != nullptr) {
         float dt = (float)(SDL_GetTicks() - lastTick) / 1000.0f;
         lastTick = SDL_GetTicks();
 
         AbstractScene::active->update(dt);
+      }
+
+      if (renderer != nullptr) {
+        renderer->render();
       }
 
       SDL_Delay(1);

@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 
+#include "system/camera.h"
 #include "system/entities.h"
 #include "system/Signaler.h"
 #include "system/traits.h"
@@ -14,16 +15,21 @@ namespace Gamma {
   public:
     static AbstractScene* active;
 
-    virtual ~AbstractScene() {};
+    virtual ~AbstractScene();
 
+    void addMesh(std::string name, Mesh* mesh);
     Light* createLight();
-    void createMesh(std::string name, Mesh* mesh);
     Object* createObjectFrom(std::string name);
     void removeMesh(std::string name);
     virtual void update(float dt) {};
+    virtual void updateScene(float dt) final;
+
+  protected:
+    Camera camera;
 
   private:
     std::map<std::string, Mesh*> meshMap;
+    std::vector<Object*> objects;
     std::vector<Light*> lights;
   };
 }

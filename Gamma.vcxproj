@@ -118,6 +118,7 @@
     <ClCompile Include="gamma\system\AbstractController.cpp" />
     <ClCompile Include="gamma\system\AbstractLoader.cpp" />
     <ClCompile Include="gamma\system\AbstractScene.cpp" />
+    <ClCompile Include="gamma\system\camera.cpp" />
     <ClCompile Include="gamma\system\entities.cpp" />
     <ClCompile Include="gamma\system\file.cpp" />
     <ClCompile Include="gamma\system\Window.cpp" />
@@ -227,6 +228,7 @@
     <ClInclude Include="gamma\system\AbstractLoader.h" />
     <ClInclude Include="gamma\system\AbstractRenderer.h" />
     <ClInclude Include="gamma\system\AbstractScene.h" />
+    <ClInclude Include="gamma\system\camera.h" />
     <ClInclude Include="gamma\system\entities.h" />
     <ClInclude Include="gamma\system\file.h" />
     <ClInclude Include="gamma\system\object.h" />

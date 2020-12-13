@@ -6,11 +6,11 @@
 void DemoScene::init() {
   using namespace Gamma;
 
-  createMesh("cube", Gm_CreatePrimitiveMesh(Primitive::CUBE));
+  addMesh("cube", Gm_CreateCube());
 
   auto* cube = createObjectFrom("cube");
 
-  cube->position(Vec3f(1.0f));
+  cube->position(Vec3f(0.0f, 50.0f, 100.0f));
   cube->scale(20.0f);
 }
 
@@ -19,5 +19,5 @@ void DemoScene::destroy() {
 }
 
 void DemoScene::update(float dt) {
-  // printf("Delta: %f\n", dt);
+  printf("Delta: %f\n", dt);
 }
