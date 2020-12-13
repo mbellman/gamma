@@ -14,7 +14,7 @@ namespace Gamma {
    * --------------
    */
   void OpenGLRenderer::init() {
-    flags = OpenGLRenderFlags::DEFERRED_PATH | OpenGLRenderFlags::SHADOWS;
+    flags = OpenGLRenderFlags::RENDER_DEFERRED | OpenGLRenderFlags::RENDER_SHADOWS;
 
     // Initialize OpenGL
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -46,7 +46,7 @@ namespace Gamma {
   }
 
   void OpenGLRenderer::render() {
-    if (flags & OpenGLRenderFlags::DEFERRED_PATH) {
+    if (flags & OpenGLRenderFlags::RENDER_DEFERRED) {
       renderDeferred();
     } else {
       renderForward();

@@ -8,8 +8,8 @@
 
 namespace Gamma {
   enum OpenGLRenderFlags {
-    DEFERRED_PATH = 1 << 0,
-    SHADOWS = 1 << 1
+    RENDER_DEFERRED = 1 << 0,
+    RENDER_SHADOWS = 1 << 1
   };
 
   class OpenGLRenderer final : public AbstractRenderer {

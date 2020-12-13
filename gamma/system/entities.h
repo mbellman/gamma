@@ -25,9 +25,7 @@ namespace Gamma {
    * A Mesh serves as a static reference model from which
    * individual Objects can be created, where Objects
    * only contain transformation properties and other
-   * individual-specific attributes. Vertices and faces
-   * are defined once per Mesh, with transformations defined
-   * for as many instanced Objects as there are active.
+   * instance-specific attributes.
    */
   struct Mesh {
     /**
@@ -74,7 +72,7 @@ namespace Gamma {
    *
    * Objects are derived from Meshes, defining individual
    * instances of a Mesh distributed throughout a scene,
-   * each with its own unique transformations.
+   * each with its own transformations and properties.
    */
   struct Object : BaseEntity {
     uint8 _flags = 0;
