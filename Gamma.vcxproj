@@ -108,13 +108,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="demo\benchmarks\object_management.cpp" />
     <ClCompile Include="demo\DemoController.cpp" />
     <ClCompile Include="demo\DemoScene.cpp" />
     <ClCompile Include="demo\main.cpp" />
+    <ClCompile Include="gamma\math\matrix.cpp" />
+    <ClCompile Include="gamma\math\Quaternion.cpp" />
     <ClCompile Include="gamma\math\vector.cpp" />
     <ClCompile Include="gamma\opengl\framebuffer.cpp" />
     <ClCompile Include="gamma\opengl\OpenGLRenderer.cpp" />
     <ClCompile Include="gamma\opengl\shader.cpp" />
+    <ClCompile Include="gamma\performance\benchmark.cpp" />
     <ClCompile Include="gamma\system\AbstractController.cpp" />
     <ClCompile Include="gamma\system\AbstractLoader.cpp" />
     <ClCompile Include="gamma\system\AbstractScene.cpp" />
@@ -124,6 +128,7 @@
     <ClCompile Include="gamma\system\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="demo\benchmarks\object_management.h" />
     <ClInclude Include="demo\DemoController.h" />
     <ClInclude Include="demo\DemoScene.h" />
     <ClInclude Include="external\glew\include\eglew.h" />
@@ -224,11 +229,13 @@
     <ClInclude Include="gamma\opengl\framebuffer.h" />
     <ClInclude Include="gamma\opengl\OpenGLRenderer.h" />
     <ClInclude Include="gamma\opengl\shader.h" />
+    <ClInclude Include="gamma\performance\benchmark.h" />
     <ClInclude Include="gamma\system\AbstractController.h" />
     <ClInclude Include="gamma\system\AbstractLoader.h" />
     <ClInclude Include="gamma\system\AbstractRenderer.h" />
     <ClInclude Include="gamma\system\AbstractScene.h" />
     <ClInclude Include="gamma\system\camera.h" />
+    <ClInclude Include="gamma\system\console.h" />
     <ClInclude Include="gamma\system\entities.h" />
     <ClInclude Include="gamma\system\file.h" />
     <ClInclude Include="gamma\system\object.h" />

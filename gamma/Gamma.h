@@ -6,3 +6,8 @@
 #include "system/console.h"
 #include "system/entities.h"
 #include "system/Window.h"
+
+#ifdef GAMMA_ENABLE_BENCHMARK_TESTING
+  #include "math/matrix.h"
+  #include "performance/benchmark.h"
+#endif
