@@ -1,7 +1,9 @@
 #include <cmath>
+#include <cstdio>
 
 #include "math/matrix.h"
 #include "math/Quaternion.h"
+#include "system/console.h"
 
 namespace Gamma {
   /**
@@ -21,7 +23,7 @@ namespace Gamma {
     Vec3f forward = direction.unit();
     Vec3f right = Vec3f::crossProduct(top, forward).unit();
     Vec3f up = Vec3f::crossProduct(forward, right).unit();
-    Matrix4f translation = Matrix4f::translate(eye.invert());
+    Matrix4f translation = Matrix4f::translation(eye.invert());
 
     Matrix4f rotation = {
       right.x, right.y, right.z, 0.0f,
@@ -56,7 +58,7 @@ namespace Gamma {
     };
   }
 
-  Matrix4f Matrix4f::rotate(const Vec3f& rotation) {
+  Matrix4f Matrix4f::rotation(const Vec3f& rotation) {
     Quaternion pitch = Quaternion::fromAxisAngle(rotation.x, 1.0f, 0.0f, 0.0f);
     Quaternion yaw = Quaternion::fromAxisAngle(rotation.y, 0.0f, 1.0f, 0.0f);
     Quaternion roll = Quaternion::fromAxisAngle(rotation.z, 0.0f, 0.0f, 1.0f);
@@ -73,7 +75,33 @@ namespace Gamma {
     };
   }
 
-  Matrix4f Matrix4f::translate(const Vec3f& translation) {
+  Matrix4f Matrix4f::transformation(const Vec3f& translation, const Vec3f& rotation, const Vec3f& scale) {
+    Matrix4f m_transform;
+    Matrix4f m_scale = Matrix4f::scale(scale);
+    Matrix4f m_rotation = Matrix4f::rotation(rotation);
+
+    // accumulate scale * rotation
+    for (int r = 0; r < 3; r++) {
+      for (int c = 0; c < 3; c++) {
+        float& value = m_transform.m[r * 4 + c] = 0;
+
+        for (int n = 0; n < 3; n++) {
+          // @TODO SIMD vectorization
+          value += m_scale.m[r * 4 + n] * m_rotation.m[n * 4 + c];
+        }
+      }
+    }
+
+    // apply translation directly
+    m_transform.m[3] = translation.x;
+    m_transform.m[7] = translation.y;
+    m_transform.m[11] = translation.z;
+    m_transform.m[15] = 1.0f;
+
+    return m_transform;
+  }
+
+  Matrix4f Matrix4f::translation(const Vec3f& translation) {
     return {
       1.0f, 0.0f, 0.0f, translation.x,
       0.0f, 1.0f, 0.0f, translation.y,
@@ -89,6 +117,12 @@ namespace Gamma {
       m[2], m[6], m[10], m[14],
       m[3], m[7], m[11], m[15]
     };
+  }
+
+  void Matrix4f::debug() const {
+    for (uint32 i = 0; i < 4; i++) {
+      printf("[ %f, %f, %f, %f ]\n", m[i * 4], m[i * 4 + 1], m[i * 4 + 2], m[i * 4 + 3]);
+    }
   }
 
   Matrix4f Matrix4f::operator*(const Matrix4f& matrix) const {
@@ -113,6 +147,7 @@ namespace Gamma {
     float z = vector.z;
     float w = 1.0f;
 
+    // @TODO SIMD vectorization
     return Vec3f(
       x * m[0] + y * m[1] + z * m[2] + w * m[3],
       x * m[4] + y * m[5] + z * m[6] + w * m[7],

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "math/matrix.h"
 #include "math/vector.h"
 #include "system/AbstractController.h"
 #include "system/AbstractScene.h"
@@ -8,6 +9,5 @@
 #include "system/Window.h"
 
 #ifdef GAMMA_ENABLE_BENCHMARK_TESTING
-  #include "math/matrix.h"
   #include "performance/benchmark.h"
 #endif

@@ -4,18 +4,39 @@
 
 #include "performance/benchmark.h"
 
+static auto createTimer = []() {
+  auto start = std::chrono::system_clock::now();
+
+  return [&]() {
+    auto end = std::chrono::system_clock::now();
+
+    std::chrono::duration duration = end - start;
+
+    return duration;
+  };
+};
+
 namespace Gamma {
+  void Gm_RepeatBenchmarkTest(const std::function<void()>& test, uint32 times) {
+    auto getTime = createTimer();
+
+    for (uint32 i = 0; i < times; i++) {
+      Gm_RunBenchmarkTest(test);
+    }
+
+    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(getTime()).count();
+
+    std::cout << "\nFinished " << times << " iterations in " << milliseconds << "ms\n\n";
+  }
+
   void Gm_RunBenchmarkTest(const std::function<void()>& test) {
-    auto startTime = std::chrono::system_clock::now();
+    auto getTime = createTimer();
 
     test();
 
-    auto endTime = std::chrono::system_clock::now();
-
-    std::chrono::duration duration = endTime - startTime;
-
-    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-    auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+    auto time = getTime();
+    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(time).count();
+    auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(time).count();
 
     std::cout << "Benchmark finished in: " << milliseconds << "ms (" << microseconds << "us)\n";
   }

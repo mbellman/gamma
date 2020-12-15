@@ -16,15 +16,17 @@ namespace Gamma {
   }
 
   Matrix4f Quaternion::toMatrix4f() const {
+    // @TODO SIMD vectorization
     return {
       1 - 2 * y * y - 2 * z * z, 2 * x * y - 2 * z * w, 2 * x * z + 2 * y * w, 0.0f,
       2 * x * y + 2 * z * w, 1 - 2 * x * x - 2 * z * z, 2 * y * z - 2 * x * w, 0.0f,
       2 * x * z - 2 * y * w, 2 * y * z + 2 * x * w, 1 - 2 * x * x - 2 * y * y, 0.0f,
-      0.0f, 0.0f, 0.0f, 0.0f
+      0.0f, 0.0f, 0.0f, 1.0f
     };
   }
 
   Quaternion Quaternion::operator*(const Quaternion& q2) const {
+    // @TODO SIMD vectorization
     return {
       w * q2.w - x * q2.x - y * q2.y - z * q2.z,
       w * q2.x + x * q2.w + y * q2.z - z * q2.y,

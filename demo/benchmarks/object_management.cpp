@@ -10,112 +10,72 @@ using namespace Gamma;
 constexpr static uint32 TOTAL_MESHES = 100;
 constexpr static uint32 TOTAL_OBJECTS = 10000;
 
-struct TestObject {
-  Vec3f position;
-  Vec3f rotation;
-  Vec3f scale;
-  bool isDirty = true;
-  uint32 meshId;
-  uint32 objectId;
-};
-
-static void updateObjects(const std::vector<TestObject*>& objects) {
-  for (auto* object : objects) {
-    auto& o = *object;
-
-    o.position = Vec3f(1.0f, 0.5f, 10.0f);
-    o.rotation = Vec3f(1.0f, 1.0f, 2.0f);
-    o.scale = Vec3f(2.0f);
-    o.isDirty = true;
-  }
-}
-
 void benchmark_objects_optimized() {
   // setup
-  struct ObjectRecord {
-    uint32 meshId;
-    uint32 objectId;
+  log("benchmark_objects_optimized");
+
+  struct PackedObject {
+    Vec3f position;
+    Vec3f rotation;
+    Vec3f scale;
+    Matrix4f matrix;
   };
 
-  struct PackedMesh {
-    std::vector<Matrix4f> matrices;
-    std::vector<TestObject> objects;
-    uint32 id;
-  };
+  std::vector<PackedObject> objects;
 
-  std::vector<PackedMesh*> meshes;
-  std::vector<ObjectRecord> updateRecords;
+  objects.resize(TOTAL_OBJECTS);
 
-  for (uint32 i = 0; i < TOTAL_MESHES; i++) {
-    auto* mesh = new PackedMesh();
-
-    mesh->matrices.resize(TOTAL_OBJECTS);
-    mesh->objects.resize(TOTAL_OBJECTS);
-    mesh->id = i;
-
-    for (uint32 j = 0; j < TOTAL_OBJECTS; j++) {
-      mesh->objects[j].meshId = i;
-      mesh->objects[j].objectId = j;
-
-      if (j % 100 == 0) {
-        updateRecords.push_back({ i, j });
-      }
-    }
-
-    meshes.push_back(mesh);
-  }
-
-  auto simulateGameUpdate = [&]() {
-    for (auto& record : updateRecords) {
-      auto& mesh = *meshes[record.meshId];
-      auto& object = mesh.objects[record.objectId];
-
+  // test
+  Gm_RepeatBenchmarkTest([&]() {
+    for (auto& object : objects) {
       object.position = Vec3f(1.0f, 0.5f, 10.0f);
       object.rotation = Vec3f(1.0f, 1.0f, 2.0f);
       object.scale = Vec3f(2.0f);
 
-      mesh.matrices[object.objectId] = (
-        Matrix4f::translate(object.position) *
-        Matrix4f::rotate(object.rotation) *
-        Matrix4f::scale(object.scale)
+      object.matrix = (
+        Matrix4f::translation(object.position) *
+        Matrix4f::scale(object.scale) *
+        Matrix4f::rotation(object.rotation)
       ).transpose();
     }
-  };
-
-  // test
-  Gm_RunLoopedBenchmarkTest([&]() {
-    simulateGameUpdate();
-
-    log(updateRecords.size(), "objects updated");
-  });
+  }, 50);
 }
 
 void benchmark_objects_unoptimized() {
   // setup
+  log("benchmark_objects_unoptimized");
+
+  struct PointerObject;
+
   struct PointerMesh {
     std::vector<Matrix4f> matrices;
-    std::vector<TestObject*> objects;
+    std::vector<PointerObject*> objects;
+  };
+
+  struct PointerObject {
+    Vec3f position;
+    Vec3f rotation;
+    Vec3f scale;
     uint32 id;
+    PointerMesh* parent = nullptr;
   };
 
   std::vector<PointerMesh*> meshes;
-  std::vector<TestObject*> objectsToUpdate;
+  std::vector<PointerObject*> objectsToUpdate;
 
   for (uint32 i = 0; i < TOTAL_MESHES; i++) {
-    meshes.push_back(new PointerMesh());
+    auto* mesh = new PointerMesh();
 
-    auto& mesh = *meshes.back();
-
-    mesh.matrices.resize(TOTAL_OBJECTS);
-    mesh.id = i;
+    mesh->matrices.resize(TOTAL_OBJECTS);
+    meshes.push_back(mesh);
 
     for (uint32 j = 0; j < TOTAL_OBJECTS; j++) {
-      auto* object = new TestObject();
+      auto* object = new PointerObject();
 
-      object->meshId = i;
-      object->objectId = j;
+      object->id = j;
+      object->parent = mesh;
 
-      mesh.objects.push_back(object);
+      mesh->objects.push_back(object);
 
       if (j % 100 == 0) {
         objectsToUpdate.push_back(object);
@@ -124,29 +84,19 @@ void benchmark_objects_unoptimized() {
   }
 
   // test
-  Gm_RunLoopedBenchmarkTest([&]() {
-    updateObjects(objectsToUpdate);
+  Gm_RepeatBenchmarkTest([&]() {
+    for (auto* object : objectsToUpdate) {
+      object->position = Vec3f(1.0f, 0.5f, 10.0f);
+      object->rotation = Vec3f(1.0f, 1.0f, 2.0f);
+      object->scale = Vec3f(2.0f);
 
-    for (uint32 i = 0; i < TOTAL_MESHES; i++) {
-      auto& mesh = *meshes[i];
-      auto& matrices = mesh.matrices;
-      auto& objects = mesh.objects;
-      
-      for (uint32 j = 0; j < TOTAL_OBJECTS; j++) {
-        auto& object = *objects[j];
-        
-        if (object.isDirty) {
-          matrices[j] = (
-            Matrix4f::translate(object.position) *
-            Matrix4f::rotate(object.rotation) *
-            Matrix4f::scale(object.scale)
-          ).transpose();
+      auto* mesh = object->parent;
 
-          object.isDirty = false;
-        }
-      }
+      mesh->matrices[object->id] = (
+        Matrix4f::translation(object->position) *
+        Matrix4f::scale(object->scale) *
+        Matrix4f::rotation(object->rotation)
+      ).transpose();
     }
-
-    log(objectsToUpdate.size(), "objects updated");
-  });
+  }, 50);
 }

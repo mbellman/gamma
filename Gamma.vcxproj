@@ -108,6 +108,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="demo\benchmarks\matrix_multiplication.cpp" />
     <ClCompile Include="demo\benchmarks\object_management.cpp" />
     <ClCompile Include="demo\DemoController.cpp" />
     <ClCompile Include="demo\DemoScene.cpp" />
@@ -128,6 +129,7 @@
     <ClCompile Include="gamma\system\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="demo\benchmarks\matrix_multiplication.h" />
     <ClInclude Include="demo\benchmarks\object_management.h" />
     <ClInclude Include="demo\DemoController.h" />
     <ClInclude Include="demo\DemoScene.h" />
