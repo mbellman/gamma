@@ -11,8 +11,8 @@ int main(int argc, char* argv[]) {
   // window.setController(new DemoController());
   // window.open();
 
-  // benchmark_objects_optimized();
-  // benchmark_objects_unoptimized();
+  benchmark_objects_optimized();
+  benchmark_objects_unoptimized();
   benchmark_matrix_multiplication();
 
   return 0;

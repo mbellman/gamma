@@ -12,7 +12,7 @@ constexpr static uint32 TOTAL_OBJECTS = 10000;
 
 void benchmark_objects_optimized() {
   // setup
-  log("benchmark_objects_optimized");
+  log("benchmark_objects_optimized\n");
 
   struct PackedObject {
     Vec3f position;
@@ -43,7 +43,7 @@ void benchmark_objects_optimized() {
 
 void benchmark_objects_unoptimized() {
   // setup
-  log("benchmark_objects_unoptimized");
+  log("benchmark_objects_unoptimized\n");
 
   struct PointerObject;
 

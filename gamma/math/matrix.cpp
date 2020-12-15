@@ -3,7 +3,6 @@
 
 #include "math/matrix.h"
 #include "math/Quaternion.h"
-#include "system/console.h"
 
 namespace Gamma {
   /**
