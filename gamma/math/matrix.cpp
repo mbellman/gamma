@@ -87,9 +87,9 @@ namespace Gamma {
     // the number of transforms per frame reaches into the thousands.
     float v[6];
 
-    // // Accumulate scale * rotation
+    // Accumulate scale * rotation
     for (uint32 r = 0; r < 3; r++) {
-      //Store scale terms
+      // Store scale terms
       v[0] = m_scale.m[r * 4];
       v[2] = m_scale.m[r * 4 + 1];
       v[4] = m_scale.m[r * 4 + 2];
