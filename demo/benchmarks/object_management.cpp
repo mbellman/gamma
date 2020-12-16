@@ -32,10 +32,10 @@ void benchmark_objects_optimized() {
       object.rotation = Vec3f(1.0f, 1.0f, 2.0f);
       object.scale = Vec3f(2.0f);
 
-      object.matrix = (
-        Matrix4f::translation(object.position) *
-        Matrix4f::scale(object.scale) *
-        Matrix4f::rotation(object.rotation)
+      object.matrix = Matrix4f::transformation(
+        object.position,
+        object.scale,
+        object.rotation
       ).transpose();
     }
   }, 50);
