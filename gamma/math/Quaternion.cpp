@@ -5,10 +5,10 @@
 
 namespace Gamma {
   Quaternion Quaternion::fromAxisAngle(float angle, float x, float y, float z) {
-    float sa = sinf(angle / 2);
+    float sa = sinf(angle / 2.0f);
 
     return {
-      cosf(angle / 2),
+      cosf(angle / 2.0f),
       x * sa,
       y * sa,
       z * sa
@@ -16,7 +16,6 @@ namespace Gamma {
   }
 
   Matrix4f Quaternion::toMatrix4f() const {
-    // @TODO SIMD vectorization
     return {
       1 - 2 * y * y - 2 * z * z, 2 * x * y - 2 * z * w, 2 * x * z + 2 * y * w, 0.0f,
       2 * x * y + 2 * z * w, 1 - 2 * x * x - 2 * z * z, 2 * y * z - 2 * x * w, 0.0f,
@@ -26,7 +25,6 @@ namespace Gamma {
   }
 
   Quaternion Quaternion::operator*(const Quaternion& q2) const {
-    // @TODO SIMD vectorization
     return {
       w * q2.w - x * q2.x - y * q2.y - z * q2.z,
       w * q2.x + x * q2.w + y * q2.z - z * q2.y,
