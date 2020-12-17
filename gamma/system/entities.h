@@ -93,19 +93,17 @@ namespace Gamma {
      */
     std::vector<uint32> faceIndexes;
     /**
-     * Transformation matrices for each object created from
-     * the mesh. Variable in size as descendant objects are
-     * created or destroyed.
-     *
-     * @TODO see if a vector is appropriate here for object
-     * collections with members being repeatedly inserted,
-     * removed, or conditionally rendered
+     * An array of transformation matrices for each object
+     * created from the mesh. Variable in size as descendant
+     * objects are created or destroyed.
      */
-    std::vector<Matrix4f> matrices;
+    Matrix4f* matrices = nullptr;
+    uint32 totalActiveMatrices = 0;
     /**
-     * An Object pool
+     * An array of objects created from the mesh.
      */
-    std::vector<Object> objects;
+    Object* objects = nullptr;
+    uint32 totalActiveObjects = 0;
   };
 
   /**
