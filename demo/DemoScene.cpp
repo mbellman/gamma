@@ -10,6 +10,8 @@ void DemoScene::init() {
 
   cube->position(Vec3f(0.0f, 50.0f, 100.0f));
   cube->scale(20.0f);
+
+  // transform(cube);
 }
 
 void DemoScene::destroy() {

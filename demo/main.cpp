@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
 
   benchmark_objects_optimized();
   benchmark_objects_unoptimized();
-  benchmark_matrix_multiplication();
+  // benchmark_matrix_multiplication();
 
   return 0;
 }

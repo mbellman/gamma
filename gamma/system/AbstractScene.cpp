@@ -25,8 +25,6 @@ namespace Gamma {
     // @TODO create Object record for associated Mesh
     auto* object = new Object();
 
-    objects.push_back(object);
-
     return object;
   }
 
@@ -48,34 +46,5 @@ namespace Gamma {
 
     // run updates on the subclassed scene
     update(dt);
-
-    // run updates on objects, postponing loop incrementation
-    // until we know whether an object was removed in its update
-    for (uint32 i = 0; i < objects.size();) {
-      auto& object = *objects[i];
-
-      if (object.lifetime != -1) {
-        object.lifetime -= (int)(1000.0f * dt);
-
-        if (object.lifetime < 0) {
-          object.lifetime = 0;
-        }
-      }
-
-      if (object.lifetime == 0) {
-        // @TODO Gm_FreeObject() -> deallocate + delete record from reference Mesh
-        delete objects[i];
-
-        objects.erase(objects.begin() + i);
-
-        continue;
-      }
-
-      if (object._flags & ObjectFlags::IS_DIRTY) {
-        Gm_RecomputeObjectMatrix(&object);
-      }
-
-      i++;
-    }
   }
 }

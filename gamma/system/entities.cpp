@@ -108,6 +108,5 @@ namespace Gamma {
    */
   void Gm_RecomputeObjectMatrix(Object* object) {
     // @TODO recompute reference Mesh matrix entry for the object
-    object->_flags &= ~ObjectFlags::IS_DIRTY;
   }
 }

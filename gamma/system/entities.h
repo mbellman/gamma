@@ -8,14 +8,69 @@
 #include "system/type_aliases.h"
 
 namespace Gamma {
-  enum ObjectFlags {
-    IS_DIRTY = 1 << 0
-  };
-
   enum LightType {
     POINT,
     DIRECTIONAL,
     SPOT
+  };
+
+  /**
+   * BaseEntity
+   * ----------
+   *
+   * Defines base attributes extensible to any dynamic
+   * elements in a scene, such as Objects or Lights.
+   */
+  struct BaseEntity {
+    /**
+     * Controls how long an entity will remain in the scene
+     * before being subject to removal, in milliseconds.
+     * Entities with lifetimes of -1 are ignored and allowed
+     * to remain in the scene indefinitely.
+     */
+    int lifetime = -1;
+  };
+
+  /**
+   * Object
+   * ------
+   *
+   * Objects are derived from Meshes, defining individual
+   * instances of a Mesh distributed throughout a scene,
+   * each with its own transformations and properties.
+   */
+  struct Object : BaseEntity {
+    uint32 _meshId = 0;
+    uint32 _objectId = 0;
+    uint32 _matrixId = 0;
+    Vec3f _position;
+    Vec3f _rotation;
+    Vec3f _scale;
+
+    const Vec3f& position() const;
+    void position(const Vec3f& position);
+    void remove();
+    const Vec3f& rotation() const;
+    void rotation(const Vec3f& rotation);
+    const Vec3f& scale() const;
+    void scale(const Vec3f& scale);
+    void scale(float scale);
+  };
+
+  /**
+   * Light
+   * -----
+   *
+   * Defines a light source, which affects scene illumination
+   * and color/reflective properties of illuminated surfaces.
+   */
+  struct Light : BaseEntity {
+    Vec3f position;
+    Vec3f color = Vec3f(1.0f);
+    float radius = 100.0f;
+    float power = 1.0f;
+    LightType type = LightType::POINT;
+    bool canCastShadows = false;
   };
 
   /**
@@ -47,63 +102,10 @@ namespace Gamma {
      * removed, or conditionally rendered
      */
     std::vector<Matrix4f> matrices;
-  };
-
-  /**
-   * BaseEntity
-   * ----------
-   *
-   * Defines base attributes extensible to any dynamic
-   * elements in a scene, such as Objects or Lights.
-   */
-  struct BaseEntity {
     /**
-     * Controls how long an entity will remain in the scene
-     * before being subject to removal, in milliseconds.
-     * Entities with lifetimes of -1 are ignored and allowed
-     * to remain in the scene indefinitely.
+     * An Object pool
      */
-    int lifetime = -1;
-  };
-
-  /**
-   * Object
-   * ------
-   *
-   * Objects are derived from Meshes, defining individual
-   * instances of a Mesh distributed throughout a scene,
-   * each with its own transformations and properties.
-   */
-  struct Object : BaseEntity {
-    uint8 _flags = 0;
-    Vec3f _position;
-    Vec3f _rotation;
-    Vec3f _scale;
-
-    const Vec3f& position() const;
-    void position(const Vec3f& position);
-    void remove();
-    const Vec3f& rotation() const;
-    void rotation(const Vec3f& rotation);
-    const Vec3f& scale() const;
-    void scale(const Vec3f& scale);
-    void scale(float scale);
-  };
-
-  /**
-   * Light
-   * -----
-   *
-   * Defines a light source, which affects scene illumination
-   * and color/reflective properties of illuminated surfaces.
-   */
-  struct Light : BaseEntity {
-    Vec3f position;
-    Vec3f color = Vec3f(1.0f);
-    float radius = 100.0f;
-    float power = 1.0f;
-    LightType type = LightType::POINT;
-    bool canCastShadows = false;
+    std::vector<Object> objects;
   };
 
   /**
@@ -140,7 +142,6 @@ namespace Gamma {
 
   inline void Object::position(const Vec3f& position) {
     _position = position;
-    _flags |= ObjectFlags::IS_DIRTY;
   }
 
   inline void Object::remove() {
@@ -153,7 +154,6 @@ namespace Gamma {
 
   inline void Object::rotation(const Vec3f& rotation) {
     _rotation = rotation;
-    _flags |= ObjectFlags::IS_DIRTY;
   }
 
   inline const Vec3f& Object::scale() const {
@@ -162,7 +162,6 @@ namespace Gamma {
 
   inline void Object::scale(const Vec3f& scale) {
     _scale = scale;
-    _flags |= ObjectFlags::IS_DIRTY;
   }
 
   inline void Object::scale(float scale) {
