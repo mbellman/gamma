@@ -93,17 +93,17 @@ namespace Gamma {
      */
     std::vector<uint32> faceIndexes;
     /**
-     * An array of transformation matrices for each object
-     * created from the mesh. Variable in size as descendant
-     * objects are created or destroyed.
-     */
-    Matrix4f* matrices = nullptr;
-    uint32 totalActiveMatrices = 0;
-    /**
      * An array of objects created from the mesh.
      */
     Object* objects = nullptr;
     uint32 totalActiveObjects = 0;
+    /**
+     * An array of transformation matrices for each object
+     * created from the mesh, stored contiguously to allow
+     * the data to be easily uploaded to the GPU.
+     */
+    Matrix4f* matrices = nullptr;
+    uint32 totalActiveMatrices = 0;
   };
 
   /**
