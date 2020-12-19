@@ -4,14 +4,15 @@
 void DemoScene::init() {
   using namespace Gamma;
 
-  addMesh("cube", Gm_CreateCube());
+  addMesh("cube", Gm_CreateCube(), 10);
 
-  auto* cube = createObjectFrom("cube");
+  auto& cube = createObjectFrom("cube");
+  auto& cube2 = createObjectFrom("cube");
 
-  cube->position(Vec3f(0.0f, 50.0f, 100.0f));
-  cube->scale(20.0f);
+  cube.position = Vec3f(0.0f, 50.0f, 100.0f);
+  cube.scale = 20.0f;
 
-  // transform(cube);
+  transform(cube);
 }
 
 void DemoScene::destroy() {

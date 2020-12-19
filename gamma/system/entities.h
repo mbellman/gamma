@@ -43,18 +43,9 @@ namespace Gamma {
     uint32 _meshId = 0;
     uint32 _objectId = 0;
     uint32 _matrixId = 0;
-    Vec3f _position;
-    Vec3f _rotation;
-    Vec3f _scale;
-
-    const Vec3f& position() const;
-    void position(const Vec3f& position);
-    void remove();
-    const Vec3f& rotation() const;
-    void rotation(const Vec3f& rotation);
-    const Vec3f& scale() const;
-    void scale(const Vec3f& scale);
-    void scale(float scale);
+    Vec3f position;
+    Vec3f rotation;
+    Vec3f scale;
   };
 
   /**
@@ -84,6 +75,10 @@ namespace Gamma {
    */
   struct Mesh {
     /**
+     * A unique ID for the mesh.
+     */
+    uint32 id;
+    /**
      * Static mesh vertices in model space.
      */
     std::vector<Vertex> vertices;
@@ -92,6 +87,12 @@ namespace Gamma {
      * defined in groups of three.
      */
     std::vector<uint32> faceIndexes;
+    /**
+     * Defines the maximum number of allotted instances
+     * for the mesh, determined whenever the mesh is
+     * added to a scene.
+     */
+    uint32 maxInstances = 0;
     /**
      * An array of objects created from the mesh.
      */
@@ -123,46 +124,4 @@ namespace Gamma {
    * -----------
    */
   Mesh* Gm_LoadMesh(const char* path);
-
-  /**
-   * Gm_RecomputeObjectMatrix
-   * ------------------------
-   */
-  void Gm_RecomputeObjectMatrix(Object* object);
-
-  /**
-   * Object
-   * ------
-   */
-  inline const Vec3f& Object::position() const {
-    return _position;
-  }
-
-  inline void Object::position(const Vec3f& position) {
-    _position = position;
-  }
-
-  inline void Object::remove() {
-    lifetime = 0;
-  }
-
-  inline const Vec3f& Object::rotation() const {
-    return _rotation;
-  }
-
-  inline void Object::rotation(const Vec3f& rotation) {
-    _rotation = rotation;
-  }
-
-  inline const Vec3f& Object::scale() const {
-    return _scale;
-  }
-
-  inline void Object::scale(const Vec3f& scale) {
-    _scale = scale;
-  }
-
-  inline void Object::scale(float scale) {
-    this->scale(Vec3f(scale));
-  }
 }

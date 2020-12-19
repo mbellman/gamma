@@ -5,14 +5,14 @@
 #include "benchmarks/matrix_multiplication.h"
 
 int main(int argc, char* argv[]) {
-  // Gamma::Window window;
+  Gamma::Window window;
 
-  // window.setRenderMode(Gamma::RenderMode::OPENGL);
-  // window.setController(new DemoController());
-  // window.open();
+  window.setRenderMode(Gamma::RenderMode::OPENGL);
+  window.setController(new DemoController());
+  window.open();
 
-  benchmark_objects_optimized();
-  benchmark_objects_unoptimized();
+  // benchmark_objects_optimized();
+  // benchmark_objects_unoptimized();
   // benchmark_matrix_multiplication();
 
   return 0;

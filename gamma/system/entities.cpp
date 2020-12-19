@@ -99,6 +99,17 @@ namespace Gamma {
    * -----------
    */
   void Gm_FreeMesh(Mesh* mesh) {
+    mesh->vertices.clear();
+    mesh->faceIndexes.clear();
+
+    if (mesh->objects != nullptr) {
+      delete[] mesh->objects;
+    }
+
+    if (mesh->matrices != nullptr) {
+      delete[] mesh->matrices;
+    }
+
     delete mesh;
   }
 

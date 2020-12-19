@@ -24,9 +24,9 @@ namespace Gamma {
 
     virtual ~AbstractScene();
 
-    void addMesh(std::string name, Mesh* mesh);
+    void addMesh(std::string name, Mesh* mesh, uint32 maxInstances);
     Light* createLight();
-    Object* createObjectFrom(std::string name);
+    Object& createObjectFrom(std::string name);
     void removeMesh(std::string name);
     void transform(const Object& object);
     virtual void update(float dt) {};
@@ -36,6 +36,7 @@ namespace Gamma {
     Camera camera;
 
   private:
+    std::vector<Mesh*> meshes;
     std::map<std::string, Mesh*> meshMap;
     std::vector<Light*> lights;
   };
