@@ -12,6 +12,7 @@
 #include "system/camera.h"
 #include "system/console.h"
 #include "system/entities.h"
+#include "system/Window.h"
 
 namespace Gamma {
   /**
@@ -110,11 +111,11 @@ namespace Gamma {
 
     // Render camera view to G-Buffer
     auto& camera = *Camera::active;
-    Matrix4f projection = Matrix4f::projection({ 1920, 1080 }, 90.0f, 10.0f, 10000.0f).transpose();
+    Matrix4f projection = Matrix4f::projection({ 1920, 1080 }, 45.0f, 1.0f, 10000.0f).transpose();
 
     Matrix4f view = (
       Matrix4f::rotation(camera.orientation.toVec3f()) *
-      Matrix4f::translation(camera.position)
+      Matrix4f::translation(camera.position.invert().gl())
     ).transpose();
 
     deferred.geometry.use();
@@ -129,6 +130,7 @@ namespace Gamma {
     // @TODO lighting, shadowing, and post-processing
     deferred.g_buffer.read();
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glViewport(0, 0, Window::size.width, Window::size.height);
 
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);

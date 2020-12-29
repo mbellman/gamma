@@ -5,10 +5,17 @@
 #include "system/AbstractScene.h"
 
 namespace Gamma {
+  /**
+   * Window
+   * ------
+   */
+  Area<uint32> Window::size = { 0, 0 };
+
   Window::Window() {
     SDL_Init(SDL_INIT_EVERYTHING);
 
     sdl_window = SDL_CreateWindow("Gamma", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    Window::size = { 640, 480 };
   }
 
   void Window::bindControllerEvents() {
@@ -53,7 +60,18 @@ namespace Gamma {
           case SDL_QUIT:
             didCloseWindow = true;
             break;
-          }
+          case SDL_WINDOWEVENT:
+            if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+              Window::size = {
+                (uint32)event.window.data1,
+                (uint32)event.window.data2
+              };
+            }
+
+            break;
+          default:
+            break;
+        }
       }
 
       if (AbstractScene::active != nullptr) {

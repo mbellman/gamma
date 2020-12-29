@@ -36,5 +36,5 @@ void main() {
   float depth = gl_FragCoord.z / gl_FragCoord.w;
 
   color_depth = vec4(color, depth);
-  normal_specularity = vec4(fragNormal, 1.0);
+  normal_specularity = vec4(getNormal(), 1.0);
 }

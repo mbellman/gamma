@@ -3,7 +3,7 @@
 uniform sampler2D color_depth;
 uniform sampler2D normal_specularity;
 
-in vec2 fragUv;
+noperspective in vec2 fragUv;
 
 layout (location = 0) out vec3 color;
 

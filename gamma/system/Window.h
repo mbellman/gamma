@@ -15,6 +15,8 @@ namespace Gamma {
 
   class Window {
   public:
+    static Area<uint32> size;
+
     Window();
 
     void open();
