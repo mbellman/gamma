@@ -8,6 +8,10 @@ namespace Gamma {
     float roll;
     float pitch;
     float yaw;
+
+    Vec3f toVec3f() {
+      return Vec3f(pitch, yaw, roll);
+    }
   };
 
   struct Camera {

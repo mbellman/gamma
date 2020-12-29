@@ -37,7 +37,7 @@ namespace Gamma {
    *
    * Objects are derived from Meshes, defining individual
    * instances of a Mesh distributed throughout a scene,
-   * each with its own transformations and properties.
+   * each with its own transformations.
    */
   struct Object : BaseEntity {
     uint32 _meshId = 0;

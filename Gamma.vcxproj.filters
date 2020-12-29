@@ -75,6 +75,15 @@
     <ClCompile Include="gamma\system\assert.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gamma\opengl\OpenGLMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gamma\opengl\OpenGLScreenQuad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gamma\opengl\errors.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\glew\include\eglew.h">
@@ -426,6 +435,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gamma\system\assert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\opengl\OpenGLMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\opengl\OpenGLScreenQuad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\opengl\errors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

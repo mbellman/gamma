@@ -59,16 +59,16 @@ namespace Gamma {
   }
 
   void AbstractScene::transform(const Object& object) {
-    auto& mesh = meshes[object._meshId];
+    auto& mesh = *meshes[object._meshId];
 
     // @TODO dispatch transform commands to separate buckets for multithreading
-    mesh->matrices[object._matrixId] = Matrix4f::transformation(
+    mesh.matrices[object._matrixId] = Matrix4f::transformation(
       // @TODO make translation adjustments based on coordinate system handedness
       // what if render mode changes mid-game, with some objects already transformed?
       object.position * Vec3f(1.0f, 1.0f, -1.0f),
       object.scale,
       object.rotation
-    );
+    ).transpose();
   }
 
   void AbstractScene::updateScene(float dt) {

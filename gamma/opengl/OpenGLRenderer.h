@@ -1,6 +1,9 @@
 #pragma once
 
+#include <vector>
+
 #include "opengl/framebuffer.h"
+#include "opengl/OpenGLMesh.h"
 #include "opengl/shader.h"
 #include "system/AbstractRenderer.h"
 #include "system/entities.h"
@@ -28,6 +31,7 @@ namespace Gamma {
   private:
     int flags = 0;
     SDL_GLContext glContext;
+    std::vector<OpenGLMesh*> glMeshes;
 
     struct ForwardPath {
       // @TODO

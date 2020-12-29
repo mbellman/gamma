@@ -1,11 +1,15 @@
 #include <cstdio>
+#include <map>
 
 #include "SDL.h"
 #include "glew.h"
 #include "SDL_opengl.h"
 #include "glut.h"
+#include "opengl/errors.h"
 #include "opengl/OpenGLRenderer.h"
+#include "opengl/OpenGLScreenQuad.h"
 #include "system/AbstractController.h"
+#include "system/camera.h"
 #include "system/console.h"
 #include "system/entities.h"
 
@@ -29,7 +33,6 @@ namespace Gamma {
     glewExperimental = true;
 
     glewInit();
-
     SDL_GL_SetSwapInterval(0);
 
     // Initialize framebuffers and shaders
@@ -41,9 +44,14 @@ namespace Gamma {
     deferred.g_buffer.bindColorAttachments();
 
     deferred.geometry.init();
-    deferred.geometry.attachShader(Gm_CompileVertexShader("geometry.vertex.glsl"));
-    deferred.geometry.attachShader(Gm_CompileFragmentShader("geometry.fragment.glsl"));
+    deferred.geometry.attachShader(Gm_CompileVertexShader("shaders/deferred/geometry.vert.glsl"));
+    deferred.geometry.attachShader(Gm_CompileFragmentShader("shaders/deferred/geometry.frag.glsl"));
     deferred.geometry.link();
+
+    deferred.illumination.init();
+    deferred.illumination.attachShader(Gm_CompileVertexShader("shaders/deferred/quad.vert.glsl"));
+    deferred.illumination.attachShader(Gm_CompileFragmentShader("shaders/deferred/illumination.frag.glsl"));
+    deferred.illumination.link();
   }
 
   void OpenGLRenderer::render() {
@@ -66,8 +74,7 @@ namespace Gamma {
   }
 
   void OpenGLRenderer::createMesh(Mesh* mesh) {
-    // @TODO
-    log("Mesh created!");
+    glMeshes.push_back(new OpenGLMesh(mesh));
   }
 
   void OpenGLRenderer::createShadowcaster(Light* mesh) {
@@ -99,6 +106,38 @@ namespace Gamma {
     glCullFace(GL_BACK);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
+    glViewport(0, 0, 1920, 1080);
+
+    // Render camera view to G-Buffer
+    auto& camera = *Camera::active;
+    Matrix4f projection = Matrix4f::projection({ 1920, 1080 }, 90.0f, 10.0f, 10000.0f).transpose();
+
+    Matrix4f view = (
+      Matrix4f::rotation(camera.orientation.toVec3f()) *
+      Matrix4f::translation(camera.position)
+    ).transpose();
+
+    deferred.geometry.use();
+    deferred.geometry.setMatrix4f("projection", projection);
+    deferred.geometry.setMatrix4f("view", view);
+
+    for (auto* glMesh : glMeshes) {
+      glMesh->render();
+    }
+
+    // Render illuminated camera view from G-Buffer layers
+    // @TODO lighting, shadowing, and post-processing
+    deferred.g_buffer.read();
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+
+    deferred.illumination.use();
+    deferred.illumination.setInt("color_depth", 0);
+    deferred.illumination.setInt("normal_specularity", 1);
+
+    OpenGLScreenQuad::render();
   }
 
   void OpenGLRenderer::renderForward() {

@@ -2,6 +2,7 @@
 
 #include "glew.h"
 #include "opengl/framebuffer.h"
+#include "system/console.h"
 
 namespace Gamma {
   const static float defaultBorderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -28,7 +29,6 @@ namespace Gamma {
   void OpenGLFrameBuffer::destroy() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
-
     glDeleteFramebuffers(1, &fbo);
 
     for (auto& attachment : colorAttachments) {
@@ -94,7 +94,7 @@ namespace Gamma {
       glBindTexture(GL_TEXTURE_2D, colorAttachments[i].textureId);
     }
 
-    glBindBuffer(GL_READ_FRAMEBUFFER, fbo);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
   }
 
   void OpenGLFrameBuffer::setSize(const Area<uint32>& size) {
@@ -102,7 +102,7 @@ namespace Gamma {
   }
 
   void OpenGLFrameBuffer::write() {
-    glBindBuffer(GL_DRAW_FRAMEBUFFER, fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
     glViewport(0, 0, size.width, size.height);
   }
 }

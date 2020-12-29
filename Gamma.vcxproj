@@ -116,8 +116,11 @@
     <ClCompile Include="gamma\math\matrix.cpp" />
     <ClCompile Include="gamma\math\Quaternion.cpp" />
     <ClCompile Include="gamma\math\vector.cpp" />
+    <ClCompile Include="gamma\opengl\errors.cpp" />
     <ClCompile Include="gamma\opengl\framebuffer.cpp" />
+    <ClCompile Include="gamma\opengl\OpenGLMesh.cpp" />
     <ClCompile Include="gamma\opengl\OpenGLRenderer.cpp" />
+    <ClCompile Include="gamma\opengl\OpenGLScreenQuad.cpp" />
     <ClCompile Include="gamma\opengl\shader.cpp" />
     <ClCompile Include="gamma\performance\benchmark.cpp" />
     <ClCompile Include="gamma\system\AbstractController.cpp" />
@@ -229,8 +232,11 @@
     <ClInclude Include="gamma\math\plane.h" />
     <ClInclude Include="gamma\math\Quaternion.h" />
     <ClInclude Include="gamma\math\vector.h" />
+    <ClInclude Include="gamma\opengl\errors.h" />
     <ClInclude Include="gamma\opengl\framebuffer.h" />
+    <ClInclude Include="gamma\opengl\OpenGLMesh.h" />
     <ClInclude Include="gamma\opengl\OpenGLRenderer.h" />
+    <ClInclude Include="gamma\opengl\OpenGLScreenQuad.h" />
     <ClInclude Include="gamma\opengl\shader.h" />
     <ClInclude Include="gamma\performance\benchmark.h" />
     <ClInclude Include="gamma\system\AbstractController.h" />

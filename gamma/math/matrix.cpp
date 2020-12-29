@@ -43,7 +43,7 @@ namespace Gamma {
     };
   }
 
-  Matrix4f Matrix4f::projection(const Area<unsigned int>& area, float fov, float near, float far) {
+  Matrix4f Matrix4f::projection(const Area<uint32>& area, float fov, float near, float far) {
     constexpr float PI = 3.141592f;
     constexpr float DEG_TO_RAD = PI / 180.0f;
     float f = 1.0f / tanf(fov / 2.0f * DEG_TO_RAD);
