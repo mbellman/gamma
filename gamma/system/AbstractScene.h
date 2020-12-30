@@ -12,12 +12,6 @@
 #include "system/type_aliases.h"
 
 namespace Gamma {
-  struct TransformCommand {
-    uint32 meshId;
-    uint32 matrixId;
-    uint32 objectId;
-  };
-
   class AbstractScene : public Initable, public Destroyable, public Signaler {
   public:
     static AbstractScene* active;
@@ -35,9 +29,19 @@ namespace Gamma {
   protected:
     Camera camera;
 
+    Object& get(std::string);
+    void store(std::string, Object& object);
+
   private:
+    struct ObjectRecord {
+      uint32 meshId;
+      uint32 meshGeneration;
+      uint32 objectId;
+    };
+
     std::vector<Mesh*> meshes;
     std::map<std::string, Mesh*> meshMap;
+    std::map<std::string, ObjectRecord> objectStore;
     std::vector<Light*> lights;
   };
 }

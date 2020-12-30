@@ -41,6 +41,7 @@ namespace Gamma {
    */
   struct Object : BaseEntity {
     uint32 _meshId = 0;
+    uint32 _meshGeneration = 0;
     uint32 _objectId = 0;
     uint32 _matrixId = 0;
     Vec3f position;
@@ -78,6 +79,14 @@ namespace Gamma {
      * A unique ID for the mesh.
      */
     uint32 id;
+    /**
+     * Determines the number of times the mesh object has
+     * been recycled based on removal and reallocation of
+     * meshes within a scene. Mesh lookups rely on both a
+     * mesh ID and generation; if a mesh meeting these
+     * criteria can't be found, the lookup will fail.
+     */
+    uint32 generation = 0;
     /**
      * Static mesh vertices in model space.
      */

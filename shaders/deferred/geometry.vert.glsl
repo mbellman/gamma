@@ -31,12 +31,18 @@ vec3 getFragBitangent(vec3 normal, vec3 tangent) {
 }
 
 void main() {
-  gl_Position = projection * view * modelMatrix * vec4(vertexPosition, 1.0);
+  mat4 model = mat4(modelMatrix);
 
-  mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
+  // Invert the model translation z component to accommodate
+  // the game world's left-handed coordinate system
+  model[3][2] *= -1.0;
 
-  fragNormal = normalMatrix * vec3(vertexNormal) * vec3(1.0, 1.0, -1.0);
-  fragTangent = normalMatrix * vec3(vertexTangent) * vec3(1.0, 1.0, -1.0);
+  mat3 normalMatrix = transpose(inverse(mat3(model)));
+
+  gl_Position = projection * view * model * vec4(vertexPosition, 1.0);
+
+  fragNormal = normalMatrix * vertexNormal;
+  fragTangent = normalMatrix * vertexTangent;
   fragBitangent = getFragBitangent(fragNormal, fragTangent);
   fragUv = vertexUv;
 }
