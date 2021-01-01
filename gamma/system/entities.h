@@ -117,6 +117,18 @@ namespace Gamma {
   };
 
   /**
+   * Gm_ComputeNormals
+   * -----------------
+   */
+  void Gm_ComputeNormals(Mesh* mesh);
+
+  /**
+   * Gm_ComputeTangents
+   * ------------------
+   */
+  void Gm_ComputeTangents(Mesh* mesh);
+
+  /**
    * Gm_CreateCube
    * -------------
    */

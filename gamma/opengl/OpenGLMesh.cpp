@@ -4,13 +4,13 @@
 #include "system/console.h"
 
 namespace Gamma {
-  const static enum GLBuffer {
+  const enum GLBuffer {
     VERTEX,
     MATRIX,
     COLOR
   };
 
-  const static enum GLAttribute {
+  const enum GLAttribute {
     VERTEX_POSITION,
     VERTEX_NORMAL,
     VERTEX_TANGENT,

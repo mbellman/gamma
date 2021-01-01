@@ -20,8 +20,8 @@ namespace Gamma {
 
   Matrix4f Matrix4f::lookAt(const Vec3f& eye, const Vec3f& direction, const Vec3f& top) {
     Vec3f forward = direction.unit();
-    Vec3f right = Vec3f::crossProduct(top, forward).unit();
-    Vec3f up = Vec3f::crossProduct(forward, right).unit();
+    Vec3f right = Vec3f::cross(top, forward).unit();
+    Vec3f up = Vec3f::cross(forward, right).unit();
     Matrix4f translation = Matrix4f::translation(eye.invert());
 
     Matrix4f rotation = {

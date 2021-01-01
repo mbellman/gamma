@@ -14,6 +14,10 @@ out vec3 fragTangent;
 out vec3 fragBitangent;
 out vec2 fragUv;
 
+vec3 invertZ(vec3 vector) {
+  return vector * vec3(1.0, 1.0, -1.0);
+}
+
 /**
  * Returns a bitangent from potentially non-orthonormal
  * normal/tangent vectors using the Gram-Schmidt process.
@@ -32,17 +36,17 @@ vec3 getFragBitangent(vec3 normal, vec3 tangent) {
 
 void main() {
   mat4 model = mat4(modelMatrix);
+  mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
 
   // Invert the model translation z component to accommodate
   // the game world's left-handed coordinate system
   model[3][2] *= -1.0;
 
-  mat3 normalMatrix = transpose(inverse(mat3(model)));
-
   gl_Position = projection * view * model * vec4(vertexPosition, 1.0);
 
-  fragNormal = normalMatrix * vertexNormal;
-  fragTangent = normalMatrix * vertexTangent;
+  // Make similar adjustments to the normal/tangent z components
+  fragNormal = invertZ(normalMatrix * vertexNormal);
+  fragTangent = invertZ(normalMatrix * vertexTangent);
   fragBitangent = getFragBitangent(fragNormal, fragTangent);
   fragUv = vertexUv;
 }

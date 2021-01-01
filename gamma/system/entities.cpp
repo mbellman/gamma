@@ -42,6 +42,62 @@ namespace Gamma {
   };
 
   /**
+   * Gm_ComputeNormals
+   * -----------------
+   */
+  void Gm_ComputeNormals(Mesh* mesh) {
+    auto& vertices = mesh->vertices;
+    auto& faceIndexes = mesh->faceIndexes;
+
+    for (uint32 i = 0; i < faceIndexes.size(); i += 3) {
+      Vertex& v1 = vertices[faceIndexes[i]];
+      Vertex& v2 = vertices[faceIndexes[i + 1]];
+      Vertex& v3 = vertices[faceIndexes[i + 2]];
+
+      Vec3f normal = Vec3f::cross(v2.position - v1.position, v3.position - v1.position).unit();
+
+      v1.normal += normal;
+      v2.normal += normal;
+      v3.normal += normal;
+    }
+  }
+
+  /**
+   * Gm_ComputeTangents
+   * ------------------
+   */
+  void Gm_ComputeTangents(Mesh* mesh) {
+    auto& vertices = mesh->vertices;
+    auto& faceIndexes = mesh->faceIndexes;
+
+    for (uint32 i = 0; i < faceIndexes.size(); i += 3) {
+      Vertex& v1 = vertices[faceIndexes[i]];
+      Vertex& v2 = vertices[faceIndexes[i + 1]];
+      Vertex& v3 = vertices[faceIndexes[i + 2]];
+
+      Vec3f e1 = v2.position - v1.position;
+      Vec3f e2 = v3.position - v1.position;
+
+      float deltaU1 = v2.uv.x - v1.uv.x;
+      float deltaV1 = v2.uv.y - v1.uv.y;
+      float deltaU2 = v3.uv.x - v1.uv.x;
+      float deltaV2 = v3.uv.y - v1.uv.y;
+
+      float f = 1.0f / (deltaU1 * deltaV2 - deltaU2 * deltaV1);
+
+      Vec3f tangent = {
+        f * (deltaV2 * e1.x - deltaV1 * e2.x),
+        f * (deltaV2 * e1.y - deltaV1 * e2.y),
+        f * (deltaV2 * e1.z - deltaV1 * e2.z)
+      };
+
+      v1.tangent += tangent;
+      v2.tangent += tangent;
+      v3.tangent += tangent;
+    }
+  }
+
+  /**
    * Gm_CreateCube
    * -------------
    *
@@ -82,16 +138,10 @@ namespace Gamma {
       }
     }
 
-    return mesh;
-  }
+    Gm_ComputeNormals(mesh);
+    Gm_ComputeTangents(mesh);
 
-  /**
-   * Gm_LoadMesh
-   * -----------
-   */
-  Mesh* Gm_LoadMesh(const char* path) {
-    // @TODO load .obj model files
-    return new Mesh();
+    return mesh;
   }
 
   /**
@@ -114,10 +164,11 @@ namespace Gamma {
   }
 
   /**
-   * Gm_RecomputeObjectMatrix
-   * ------------------------
+   * Gm_LoadMesh
+   * -----------
    */
-  void Gm_RecomputeObjectMatrix(Object* object) {
-    // @TODO recompute reference Mesh matrix entry for the object
+  Mesh* Gm_LoadMesh(const char* path) {
+    // @TODO load .obj model files
+    return new Mesh();
   }
 }
