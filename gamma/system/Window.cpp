@@ -85,10 +85,10 @@ namespace Gamma {
         lastTick = SDL_GetTicks();
 
         activeScene->updateScene(dt);
-      }
 
-      if (renderer != nullptr) {
-        renderer->render();
+        if (renderer != nullptr) {
+          renderer->render();
+        }
       }
     }
 

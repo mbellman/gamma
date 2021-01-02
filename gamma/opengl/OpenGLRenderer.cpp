@@ -9,6 +9,7 @@
 #include "opengl/OpenGLRenderer.h"
 #include "opengl/OpenGLScreenQuad.h"
 #include "system/AbstractController.h"
+#include "system/AbstractScene.h"
 #include "system/camera.h"
 #include "system/console.h"
 #include "system/entities.h"
@@ -122,8 +123,12 @@ namespace Gamma {
     deferred.geometry.setMatrix4f("projection", projection);
     deferred.geometry.setMatrix4f("view", view);
 
+    GLenum primitiveMode = AbstractScene::active->flags & SceneFlags::MODE_WIREFRAME
+      ? GL_LINE_STRIP
+      : GL_TRIANGLES;
+
     for (auto* glMesh : glMeshes) {
-      glMesh->render();
+      glMesh->render(primitiveMode);
     }
 
     // Render illuminated camera view from G-Buffer layers

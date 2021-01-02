@@ -16,7 +16,7 @@ namespace Gamma {
   enum SceneFlags {
     MODE_FREE_CAMERA = 1 << 0,
     MODE_MOVABLE_OBJECTS = 1 << 1,  // @TODO
-    MODE_WIREFRAME = 1 << 2         // @TODO
+    MODE_WIREFRAME = 1 << 2
   };
 
   class AbstractScene : public Initable, public Destroyable, public Signaler {

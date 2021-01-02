@@ -13,5 +13,5 @@ void main() {
 
   // color = frag_color_depth.rgb;
   // color = vec3((frag_color_depth.w - 150.0) / 100.0, 0.0, 0.0);
-  color = frag_normal_specularity.rgb;
+  color = frag_color_depth.rgb;
 }

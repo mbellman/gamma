@@ -70,7 +70,7 @@ namespace Gamma {
     return sourceMesh->id;
   }
 
-  void OpenGLMesh::render() {
+  void OpenGLMesh::render(GLenum primitiveMode) {
     auto& mesh = *sourceMesh;
 
     // Buffer instance matrices
@@ -80,6 +80,6 @@ namespace Gamma {
     // Bind VAO/EBO and draw instances
     glBindVertexArray(vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glDrawElementsInstanced(GL_TRIANGLES, mesh.faceIndexes.size(), GL_UNSIGNED_INT, (void*)0, mesh.totalActiveObjects);
+    glDrawElementsInstanced(primitiveMode, mesh.faceIndexes.size(), GL_UNSIGNED_INT, (void*)0, mesh.totalActiveObjects);
   }
 }

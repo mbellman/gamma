@@ -10,7 +10,7 @@ namespace Gamma {
     ~OpenGLMesh();
 
     uint32 getId() const;
-    void render();
+    void render(GLenum primitiveMode);
 
   private:
     Mesh* sourceMesh = nullptr;
