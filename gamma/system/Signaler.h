@@ -6,6 +6,14 @@
 #include <vector>
 
 namespace Gamma {
+  template<typename T>
+  struct Event {
+    T data;
+
+    Event(T data): data(data) {};
+  };
+
+  // @TODO? use a lock for listener binding/dispatch thread-safety
   class Signaler {
   public:
     ~Signaler() {
@@ -17,19 +25,20 @@ namespace Gamma {
     }
 
     template<typename T>
-    void on(std::string event, const std::function<void(T)>& listener) {
-      listenerMap[event].push_back([=](void* data) {
-        listener((T)data);
+    void on(std::string eventName, const std::function<void(T)>& listener) {
+      listenerMap[eventName].push_back([=](void* event) {
+        listener(((Event<T>*)event)->data);
       });
     }
 
   protected:
     template<typename T>
-    void signal(std::string event, T data) {
-      auto& listeners = listenerMap[event];
+    void signal(std::string eventName, T data) {
+      Event<T> event(data);
+      auto& listeners = listenerMap[eventName];
 
       for (auto& listener : listeners) {
-        listener((void*)data);
+        listener(&event);
       }
     }
 

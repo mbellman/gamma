@@ -69,7 +69,7 @@ namespace Gamma {
       Key key = keyMap.at(code);
       keyState |= (uint64)key;
 
-      signal("keydown", &key);
+      signal("keydown", key);
     }
   }
 
@@ -78,7 +78,7 @@ namespace Gamma {
       Key key = keyMap.at(code);
       keyState &= ~(uint64)key;
 
-      signal("keyup", &key);
+      signal("keyup", key);
     }
   }
 
@@ -88,7 +88,7 @@ namespace Gamma {
     buttonEvent.position.x = event.x;
     buttonEvent.position.y = event.y;
 
-    signal("mousedown", &buttonEvent);
+    signal("mousedown", buttonEvent);
   }
 
   void InputSystem::handleMouseMotion(const SDL_MouseMotionEvent& event) {
@@ -97,7 +97,7 @@ namespace Gamma {
     moveEvent.deltaX = event.xrel;
     moveEvent.deltaY = event.yrel;
 
-    signal("mousemove", &moveEvent);
+    signal("mousemove", moveEvent);
   }
 
   bool InputSystem::isKeyHeld(Key key) {

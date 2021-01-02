@@ -20,21 +20,21 @@ void DemoScene::init() {
 
   // @TODO fix void* -> Event& casting issues
   // so pointers need not be used
-  input.on<MouseMoveEvent*>("mousemove", [=](MouseMoveEvent* event) {
+  input.on<MouseMoveEvent>("mousemove", [=](MouseMoveEvent& event) {
     if (SDL_GetRelativeMouseMode()) {
-      camera.orientation.pitch += event->deltaY / 1000.0f;
-      camera.orientation.yaw += event->deltaX / 1000.0f;
+      camera.orientation.pitch += event.deltaY / 1000.0f;
+      camera.orientation.yaw += event.deltaX / 1000.0f;
     }
   });
 
-  input.on<MouseButtonEvent*>("mousedown", [=](MouseButtonEvent* event) {
+  input.on<MouseButtonEvent>("mousedown", [=](MouseButtonEvent& event) {
     if (!SDL_GetRelativeMouseMode()) {
       SDL_SetRelativeMouseMode(SDL_TRUE);
     }
   });
 
-  input.on<Key*>("keyup", [=](Key* key) {
-    if (*key == Key::ESCAPE) {
+  input.on<Key>("keyup", [=](Key key) {
+    if (key == Key::ESCAPE) {
       SDL_SetRelativeMouseMode(SDL_FALSE);
     }
   });
