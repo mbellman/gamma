@@ -18,8 +18,6 @@ void DemoScene::init() {
 
   store("cube", cube);
 
-  // @TODO fix void* -> Event& casting issues
-  // so pointers need not be used
   input.on<MouseMoveEvent>("mousemove", [=](MouseMoveEvent& event) {
     if (SDL_GetRelativeMouseMode()) {
       camera.orientation.pitch += event.deltaY / 1000.0f;
