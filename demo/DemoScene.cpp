@@ -4,6 +4,8 @@
 using namespace Gamma;
 
 void DemoScene::init() {
+  flags = SceneFlags::MODE_FREE_CAMERA;
+
   addMesh("cube", Gm_CreateCube(), 10);
 
   auto& cube = createObjectFrom("cube");
@@ -43,20 +45,6 @@ void DemoScene::destroy() {
 }
 
 void DemoScene::update(float dt) {
-  float movementSpeed = 100.0f * dt;
-
-  if (input.isKeyHeld(Key::A)) {
-    camera.position += camera.orientation.getLeftDirection() * movementSpeed;
-  } else if (input.isKeyHeld(Key::D)) {
-    camera.position += camera.orientation.getRightDirection() * movementSpeed;
-  }
-
-  if (input.isKeyHeld(Key::W)) {
-    camera.position += camera.orientation.getDirection() * movementSpeed;
-  } else if (input.isKeyHeld(Key::S)) {
-    camera.position += camera.orientation.getDirection().invert() * movementSpeed;
-  }
-
   auto& cube = get("cube");
 
   cube.rotation.x += 0.5f * dt;

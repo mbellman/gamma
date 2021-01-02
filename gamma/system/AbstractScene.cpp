@@ -70,6 +70,24 @@ namespace Gamma {
     input.handleEvent(event);
   }
 
+  void AbstractScene::handleFreeCameraMode(float dt) {
+    float speed = 150.0f * dt;
+    Vec3f& position = camera.position;
+    const Orientation& orientation = camera.orientation;
+
+    if (input.isKeyHeld(Key::A)) {
+      position += orientation.getLeftDirection() * speed;
+    } else if (input.isKeyHeld(Key::D)) {
+      position += orientation.getRightDirection() * speed;
+    }
+
+    if (input.isKeyHeld(Key::W)) {
+      position += orientation.getDirection() * speed;
+    } else if (input.isKeyHeld(Key::S)) {
+      position += orientation.getDirection().invert() * speed;
+    }
+  }
+
   void AbstractScene::removeMesh(std::string name) {
     if (meshMap.find(name) == meshMap.end()) {
       return;
@@ -109,7 +127,11 @@ namespace Gamma {
   void AbstractScene::updateScene(float dt) {
     Camera::active = &camera;
 
-    // run updates on the subclassed scene
+    if (flags & SceneFlags::MODE_FREE_CAMERA) {
+      handleFreeCameraMode(dt);
+    }
+
+    // Run updates on the subclassed scene
     update(dt);
   }
 }

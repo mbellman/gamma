@@ -13,8 +13,16 @@
 #include "system/type_aliases.h"
 
 namespace Gamma {
+  enum SceneFlags {
+    MODE_FREE_CAMERA = 1 << 0,
+    MODE_MOVABLE_OBJECTS = 1 << 1,  // @TODO
+    MODE_WIREFRAME = 1 << 2         // @TODO
+  };
+
   class AbstractScene : public Initable, public Destroyable, public Signaler {
   public:
+    uint32 flags = 0;
+
     static AbstractScene* active;
 
     virtual ~AbstractScene();
@@ -46,5 +54,7 @@ namespace Gamma {
     std::map<std::string, Mesh*> meshMap;
     std::map<std::string, ObjectRecord> objectStore;
     std::vector<Light*> lights;
+
+    void handleFreeCameraMode(float dt);
   };
 }
