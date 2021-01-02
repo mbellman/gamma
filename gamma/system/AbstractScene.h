@@ -7,6 +7,7 @@
 
 #include "system/camera.h"
 #include "system/entities.h"
+#include "system/InputSystem.h"
 #include "system/Signaler.h"
 #include "system/traits.h"
 #include "system/type_aliases.h"
@@ -21,6 +22,7 @@ namespace Gamma {
     void addMesh(std::string name, Mesh* mesh, uint32 maxInstances);
     Light* createLight();
     Object& createObjectFrom(std::string name);
+    void handleEvent(const SDL_Event& event);
     void removeMesh(std::string name);
     void transform(const Object& object);
     virtual void update(float dt) {};
@@ -28,6 +30,7 @@ namespace Gamma {
 
   protected:
     Camera camera;
+    InputSystem input;
 
     Object& get(std::string);
     void store(std::string, Object& object);

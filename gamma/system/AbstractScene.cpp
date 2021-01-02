@@ -66,6 +66,10 @@ namespace Gamma {
     return mesh.objects[record.objectId];
   }
 
+  void AbstractScene::handleEvent(const SDL_Event& event) {
+    input.handleEvent(event);
+  }
+
   void AbstractScene::removeMesh(std::string name) {
     if (meshMap.find(name) == meshMap.end()) {
       return;

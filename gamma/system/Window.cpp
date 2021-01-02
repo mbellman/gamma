@@ -55,6 +55,8 @@ namespace Gamma {
 
     // Main window loop
     while (!didCloseWindow) {
+      AbstractScene* activeScene = AbstractScene::active;
+
       while (SDL_PollEvent(&event)) {
         switch (event.type) {
           case SDL_QUIT:
@@ -72,13 +74,17 @@ namespace Gamma {
           default:
             break;
         }
+
+        if (activeScene != nullptr) {
+          activeScene->handleEvent(event);
+        }
       }
 
-      if (AbstractScene::active != nullptr) {
+      if (activeScene != nullptr) {
         float dt = (float)(SDL_GetTicks() - lastTick) / 1000.0f;
         lastTick = SDL_GetTicks();
 
-        AbstractScene::active->updateScene(dt);
+        activeScene->updateScene(dt);
       }
 
       if (renderer != nullptr) {

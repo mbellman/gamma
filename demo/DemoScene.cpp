@@ -15,6 +15,27 @@ void DemoScene::init() {
   transform(cube);
 
   store("cube", cube);
+
+  // @TODO fix void* -> Event& casting issues
+  // so pointers need not be used
+  input.on<MouseMoveEvent*>("mousemove", [=](MouseMoveEvent* event) {
+    if (SDL_GetRelativeMouseMode()) {
+      camera.orientation.pitch += event->deltaY / 1000.0f;
+      camera.orientation.yaw += event->deltaX / 1000.0f;
+    }
+  });
+
+  input.on<MouseButtonEvent*>("mousedown", [=](MouseButtonEvent* event) {
+    if (!SDL_GetRelativeMouseMode()) {
+      SDL_SetRelativeMouseMode(SDL_TRUE);
+    }
+  });
+
+  input.on<Key*>("keyup", [=](Key* key) {
+    if (*key == Key::ESCAPE) {
+      SDL_SetRelativeMouseMode(SDL_FALSE);
+    }
+  });
 }
 
 void DemoScene::destroy() {
@@ -22,7 +43,19 @@ void DemoScene::destroy() {
 }
 
 void DemoScene::update(float dt) {
-  Gamma::log("Delta:", dt);
+  float movementSpeed = 100.0f * dt;
+
+  if (input.isKeyHeld(Key::A)) {
+    camera.position += camera.orientation.getLeftDirection() * movementSpeed;
+  } else if (input.isKeyHeld(Key::D)) {
+    camera.position += camera.orientation.getRightDirection() * movementSpeed;
+  }
+
+  if (input.isKeyHeld(Key::W)) {
+    camera.position += camera.orientation.getDirection() * movementSpeed;
+  } else if (input.isKeyHeld(Key::S)) {
+    camera.position += camera.orientation.getDirection().invert() * movementSpeed;
+  }
 
   auto& cube = get("cube");
 

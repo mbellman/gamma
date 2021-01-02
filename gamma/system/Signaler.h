@@ -8,6 +8,14 @@
 namespace Gamma {
   class Signaler {
   public:
+    ~Signaler() {
+      for (auto& [key, listeners] : listenerMap) {
+        listeners.clear();
+      }
+
+      listenerMap.clear();
+    }
+
     template<typename T>
     void on(std::string event, const std::function<void(T)>& listener) {
       listenerMap[event].push_back([=](void* data) {
@@ -21,7 +29,7 @@ namespace Gamma {
       auto& listeners = listenerMap[event];
 
       for (auto& listener : listeners) {
-        listener((T)data);
+        listener((void*)data);
       }
     }
 
