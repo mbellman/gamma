@@ -1,10 +1,10 @@
 #include "SDL.h"
-#include "Window.h"
 #include "opengl/OpenGLRenderer.h"
 #include "performance/benchmark.h"
 #include "system/AbstractController.h"
 #include "system/AbstractScene.h"
 #include "system/console.h"
+#include "system/Window.h"
 
 namespace Gamma {
   /**
@@ -16,12 +16,22 @@ namespace Gamma {
   Window::Window() {
     SDL_Init(SDL_INIT_EVERYTHING);
 
-    sdl_window = SDL_CreateWindow("Gamma", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+    sdl_window = SDL_CreateWindow(
+      "Gamma",
+      SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+      640, 480,
+      SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI
+    );
+
     Window::size = { 640, 480 };
   }
 
-  void Window::bindControllerEvents() {
-    controller->on<AbstractScene*>("scene-created", [=](auto* scene) {
+  void Window::bindEvents() {
+    if (AbstractScene::active != nullptr) {
+      // @TODO: subscribe to active scene mesh/light events
+    }
+
+    controller->on<AbstractScene*>("scene-created", [=](AbstractScene* scene) {
       scene->on<Mesh*>("mesh-created", [=](auto* mesh) {
         renderer->createMesh(mesh);
       });
@@ -116,7 +126,7 @@ namespace Gamma {
     this->controller = controller;
 
     if (renderer != nullptr) {
-      bindControllerEvents();
+      bindEvents();
     }
 
     controller->init();
@@ -137,8 +147,12 @@ namespace Gamma {
     if (renderer != nullptr) {
       renderer->init();
 
+      if (AbstractScene::active != nullptr) {
+        // @TODO get all active meshes/lights and create them in the renderer instance
+      }
+
       if (controller != nullptr) {
-        bindControllerEvents();
+        bindEvents();
       }
     }
   }
