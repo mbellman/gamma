@@ -2,7 +2,6 @@
 
 uniform sampler2D color_depth;
 uniform sampler2D normal_specularity;
-uniform sampler2D position;
 uniform mat4 inverseProjection;
 uniform mat4 inverseView;
 

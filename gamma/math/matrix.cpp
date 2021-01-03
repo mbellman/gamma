@@ -54,33 +54,31 @@ namespace Gamma {
     float A0113 = m[4] * m[13] - m[5] * m[12];
     float A0112 = m[4] * m[9] - m[5] * m[8];
 
-    float determinant = (
+    float determinant = 1.0f / (
       m[0] * (m[5] * A2323 - m[6] * A1323 + m[7] * A1223) -
       m[1] * (m[4] * A2323 - m[6] * A0323 + m[7] * A0223) +
       m[2] * (m[4] * A1323 - m[5] * A0323 + m[7] * A0123) -
       m[3] * (m[4] * A1223 - m[5] * A0223 + m[6] * A0123)
     );
 
-    determinant = 1.0f / determinant;
-
     Matrix4f inverse;
 
-    inverse.m[0] = determinant *   (m[5] * A2323 - m[6] * A1323 + m[7] * A1223);
-    inverse.m[1] = determinant * - (m[1] * A2323 - m[2] * A1323 + m[3] * A1223);
-    inverse.m[2] = determinant *   (m[1] * A2313 - m[2] * A1313 + m[3] * A1213);
-    inverse.m[3] = determinant * - (m[1] * A2312 - m[2] * A1312 + m[3] * A1212);
-    inverse.m[4] = determinant * - (m[4] * A2323 - m[6] * A0323 + m[7] * A0223);
-    inverse.m[5] = determinant *   (m[0] * A2323 - m[2] * A0323 + m[3] * A0223);
-    inverse.m[6] = determinant * - (m[0] * A2313 - m[2] * A0313 + m[3] * A0213);
-    inverse.m[7] = determinant *   (m[0] * A2312 - m[2] * A0312 + m[3] * A0212);
-    inverse.m[8] = determinant *   (m[4] * A1323 - m[5] * A0323 + m[7] * A0123);
-    inverse.m[9] = determinant * - (m[0] * A1323 - m[1] * A0323 + m[3] * A0123);
-    inverse.m[10] = determinant *   (m[0] * A1313 - m[1] * A0313 + m[3] * A0113);
-    inverse.m[11] = determinant * - (m[0] * A1312 - m[1] * A0312 + m[3] * A0112);
-    inverse.m[12] = determinant * - (m[4] * A1223 - m[5] * A0223 + m[6] * A0123);
-    inverse.m[13] = determinant *   (m[0] * A1223 - m[1] * A0223 + m[2] * A0123);
-    inverse.m[14] = determinant * - (m[0] * A1213 - m[1] * A0213 + m[2] * A0113);
-    inverse.m[15] = determinant *   (m[0] * A1212 - m[1] * A0212 + m[2] * A0112);
+    inverse.m[0] = determinant *  (m[5] * A2323 - m[6] * A1323 + m[7] * A1223);
+    inverse.m[1] = determinant * -(m[1] * A2323 - m[2] * A1323 + m[3] * A1223);
+    inverse.m[2] = determinant *  (m[1] * A2313 - m[2] * A1313 + m[3] * A1213);
+    inverse.m[3] = determinant * -(m[1] * A2312 - m[2] * A1312 + m[3] * A1212);
+    inverse.m[4] = determinant * -(m[4] * A2323 - m[6] * A0323 + m[7] * A0223);
+    inverse.m[5] = determinant *  (m[0] * A2323 - m[2] * A0323 + m[3] * A0223);
+    inverse.m[6] = determinant * -(m[0] * A2313 - m[2] * A0313 + m[3] * A0213);
+    inverse.m[7] = determinant *  (m[0] * A2312 - m[2] * A0312 + m[3] * A0212);
+    inverse.m[8] = determinant *  (m[4] * A1323 - m[5] * A0323 + m[7] * A0123);
+    inverse.m[9] = determinant * -(m[0] * A1323 - m[1] * A0323 + m[3] * A0123);
+    inverse.m[10] = determinant *  (m[0] * A1313 - m[1] * A0313 + m[3] * A0113);
+    inverse.m[11] = determinant * -(m[0] * A1312 - m[1] * A0312 + m[3] * A0112);
+    inverse.m[12] = determinant * -(m[4] * A1223 - m[5] * A0223 + m[6] * A0123);
+    inverse.m[13] = determinant *  (m[0] * A1223 - m[1] * A0223 + m[2] * A0123);
+    inverse.m[14] = determinant * -(m[0] * A1213 - m[1] * A0213 + m[2] * A0113);
+    inverse.m[15] = determinant *  (m[0] * A1212 - m[1] * A0212 + m[2] * A0112);
 
     return inverse;
   }
