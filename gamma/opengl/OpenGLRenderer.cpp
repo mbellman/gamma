@@ -141,8 +141,9 @@ namespace Gamma {
     glDisable(GL_DEPTH_TEST);
 
     deferred.illumination.use();
-    deferred.illumination.setInt("color_depth", 0);
-    deferred.illumination.setInt("normal_specularity", 1);
+    deferred.illumination.setInt("colorAndDepth", 0);
+    deferred.illumination.setInt("normalAndSpecularity", 1);
+    deferred.illumination.setVec3f("cameraPosition", camera.position);
     deferred.illumination.setMatrix4f("inverseProjection", projection.inverse());
     deferred.illumination.setMatrix4f("inverseView", view.inverse());
 

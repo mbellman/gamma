@@ -10,12 +10,12 @@ void DemoScene::init() {
 
   addMesh("cube", Gm_CreateCube(), 100);
 
-  for (uint32 i = 0; i < 10; i++) {
-    for (uint32 j = 0; j < 10; j++) {
+  for (int i = 0; i < 10; i++) {
+    for (int j = 0; j < 10; j++) {
       auto& cube = createObjectFrom("cube");
 
-      cube.position = Vec3f(100.0f * i, 0.0f, 100.0f * j);
-      cube.scale = 20.0f;
+      cube.position = Vec3f(100.0f * (i - 5), 0.0f, 100.0f * (j - 5));
+      cube.scale = 30.0f;
       // cube.rotation = 0.0f;
 
       transform(cube);
