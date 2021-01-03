@@ -4,21 +4,9 @@
 
 #include "performance/benchmark.h"
 
-static auto createTimer = []() {
-  auto start = std::chrono::system_clock::now();
-
-  return [&]() {
-    auto end = std::chrono::system_clock::now();
-
-    std::chrono::duration duration = end - start;
-
-    return duration;
-  };
-};
-
 namespace Gamma {
   void Gm_RepeatBenchmarkTest(const std::function<void()>& test, uint32 times) {
-    auto getTime = createTimer();
+    auto getTime = Gm_CreateTimer();
 
     for (uint32 i = 0; i < times; i++) {
       Gm_RunBenchmarkTest(test);
@@ -30,7 +18,7 @@ namespace Gamma {
   }
 
   void Gm_RunBenchmarkTest(const std::function<void()>& test) {
-    auto getTime = createTimer();
+    auto getTime = Gm_CreateTimer();
 
     test();
 

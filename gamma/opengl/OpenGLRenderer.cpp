@@ -143,6 +143,9 @@ namespace Gamma {
     deferred.illumination.use();
     deferred.illumination.setInt("color_depth", 0);
     deferred.illumination.setInt("normal_specularity", 1);
+    deferred.illumination.setInt("position", 2);
+    deferred.illumination.setMatrix4f("inverseProjection", projection.inverse());
+    deferred.illumination.setMatrix4f("inverseView", view.inverse());
 
     OpenGLScreenQuad::render();
   }

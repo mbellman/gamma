@@ -41,6 +41,7 @@ namespace Gamma {
     InputSystem input;
 
     Object& get(std::string);
+    float getRunningTime();
     void store(std::string, Object& object);
 
   private:
@@ -54,6 +55,7 @@ namespace Gamma {
     std::map<std::string, Mesh*> meshMap;
     std::map<std::string, ObjectRecord> objectStore;
     std::vector<Light*> lights;
+    float runningTime = 0.0f;
 
     void handleFreeCameraMode(float dt);
   };

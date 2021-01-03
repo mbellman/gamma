@@ -1,8 +1,10 @@
 #include "SDL.h"
 #include "Window.h"
 #include "opengl/OpenGLRenderer.h"
+#include "performance/benchmark.h"
 #include "system/AbstractController.h"
 #include "system/AbstractScene.h"
+#include "system/console.h"
 
 namespace Gamma {
   /**
@@ -87,7 +89,14 @@ namespace Gamma {
         activeScene->updateScene(dt);
 
         if (renderer != nullptr) {
+          // @TODO create profiler helpers for this
+          auto getTime = Gm_CreateTimer();
+
           renderer->render();
+
+          auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(getTime()).count();
+
+          log("Render time: ", microseconds, "us");
         }
       }
     }

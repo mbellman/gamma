@@ -21,6 +21,7 @@ namespace Gamma {
     Vec3f operator*(const Vec3f& vector) const;
 
     void debug() const;
+    Matrix4f inverse() const;
     Matrix4f transpose() const;
   };
 }

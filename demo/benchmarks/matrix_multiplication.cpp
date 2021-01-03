@@ -1,5 +1,3 @@
-#define GAMMA_ENABLE_BENCHMARK_TESTING
-
 #include "Gamma.h"
 #include "benchmarks/matrix_multiplication.h"
 

@@ -1,5 +1,3 @@
-#define GAMMA_ENABLE_BENCHMARK_TESTING
-
 #include <vector>
 
 #include "Gamma.h"

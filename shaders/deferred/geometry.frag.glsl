@@ -33,7 +33,7 @@ vec3 getNormal() {
 
 void main() {
   vec3 color = vec3(1.0, 0.0, 0.0);
-  float depth = gl_FragCoord.z / gl_FragCoord.w;
+  float depth = gl_FragCoord.z;
 
   color_depth = vec4(color, depth);
   normal_specularity = vec4(getNormal(), 1.0);

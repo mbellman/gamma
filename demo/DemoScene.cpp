@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "DemoScene.h"
 #include "Gamma.h"
 
@@ -6,17 +8,21 @@ using namespace Gamma;
 void DemoScene::init() {
   flags = SceneFlags::MODE_FREE_CAMERA;
 
-  addMesh("cube", Gm_CreateCube(), 10);
+  addMesh("cube", Gm_CreateCube(), 100);
 
-  auto& cube = createObjectFrom("cube");
+  for (uint32 i = 0; i < 10; i++) {
+    for (uint32 j = 0; j < 10; j++) {
+      auto& cube = createObjectFrom("cube");
 
-  cube.position = Vec3f(0.0f, 0.0f, 200.0f);
-  cube.scale = 20.0f;
-  cube.rotation = 0.0f;
+      cube.position = Vec3f(100.0f * i, 0.0f, 100.0f * j);
+      cube.scale = 20.0f;
+      // cube.rotation = 0.0f;
 
-  transform(cube);
+      transform(cube);
+    }
+  }
 
-  store("cube", cube);
+  // store("cube", cube);
 
   input.on<MouseMoveEvent>("mousemove", [=](MouseMoveEvent& event) {
     if (SDL_GetRelativeMouseMode()) {
@@ -43,11 +49,11 @@ void DemoScene::destroy() {
 }
 
 void DemoScene::update(float dt) {
-  auto& cube = get("cube");
+  // auto& cube = get("cube");
 
-  cube.rotation.x += 0.5f * dt;
-  cube.rotation.y += dt;
-  cube.rotation.z += 0.84f * dt;
+  // cube.rotation.x += 0.5f * dt;
+  // cube.rotation.y += dt;
+  // cube.rotation.z += 0.84f * dt;
 
-  transform(cube);
+  // transform(cube);
 }

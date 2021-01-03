@@ -40,7 +40,7 @@ namespace Gamma {
     auto& mesh = *meshMap.at(name);
 
     assert(
-      mesh.maxInstances > mesh.totalActiveObjects + 1,
+      mesh.maxInstances > mesh.totalActiveObjects,
       "Failed to create object: a maximum of " + std::to_string(mesh.maxInstances) + " object(s) allowed for mesh '" + name + "'"
     );
 
@@ -64,6 +64,10 @@ namespace Gamma {
     auto& mesh = *meshes[record.meshId];
     
     return mesh.objects[record.objectId];
+  }
+
+  float AbstractScene::getRunningTime() {
+    return runningTime;
   }
 
   void AbstractScene::handleEvent(const SDL_Event& event) {
@@ -133,5 +137,7 @@ namespace Gamma {
 
     // Run updates on the subclassed scene
     update(dt);
+
+    runningTime += dt;
   }
 }
