@@ -15,23 +15,6 @@ namespace Gamma {
   };
 
   /**
-   * BaseEntity
-   * ----------
-   *
-   * Defines base attributes extensible to any dynamic
-   * elements in a scene, such as Objects or Lights.
-   */
-  struct BaseEntity {
-    /**
-     * Controls how long an entity will remain in the scene
-     * before being subject to removal, in milliseconds.
-     * Entities with lifetimes of -1 are ignored and allowed
-     * to remain in the scene indefinitely.
-     */
-    int lifetime = -1;
-  };
-
-  /**
    * Object
    * ------
    *
@@ -39,7 +22,7 @@ namespace Gamma {
    * instances of a Mesh distributed throughout a scene,
    * each with its own transformations.
    */
-  struct Object : BaseEntity {
+  struct Object {
     uint32 _meshId = 0;
     uint32 _meshGeneration = 0;
     uint32 _objectId = 0;
@@ -56,13 +39,11 @@ namespace Gamma {
    * Defines a light source, which affects scene illumination
    * and color/reflective properties of illuminated surfaces.
    */
-  struct Light : BaseEntity {
+  struct Light {
     Vec3f position;
-    Vec3f color = Vec3f(1.0f);
     float radius = 100.0f;
+    Vec3f color = Vec3f(1.0f);
     float power = 1.0f;
-    LightType type = LightType::POINT;
-    bool canCastShadows = false;
   };
 
   /**

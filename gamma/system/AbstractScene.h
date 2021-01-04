@@ -28,8 +28,9 @@ namespace Gamma {
     virtual ~AbstractScene();
 
     void addMesh(std::string name, Mesh* mesh, uint32 maxInstances);
-    Light* createLight();
+    Light& createLight();
     Object& createObjectFrom(std::string name);
+    const std::vector<Light>& getLights() const;
     void handleEvent(const SDL_Event& event);
     void removeMesh(std::string name);
     void transform(const Object& object);
@@ -54,7 +55,7 @@ namespace Gamma {
     std::vector<Mesh*> meshes;
     std::map<std::string, Mesh*> meshMap;
     std::map<std::string, ObjectRecord> objectStore;
-    std::vector<Light*> lights;
+    std::vector<Light> lights;
     float runningTime = 0.0f;
 
     void handleFreeCameraMode(float dt);

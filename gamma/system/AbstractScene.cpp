@@ -28,10 +28,11 @@ namespace Gamma {
     signal("mesh-created", mesh);
   }
 
-  Light* AbstractScene::createLight() {
+  Light& AbstractScene::createLight() {
     // @TODO how can we determine whether the light is a shadowcaster
     // and dispatch the appropriate signal?
-    lights.push_back(new Light());
+    // @TODO recycle removed/deactivated Lights
+    lights.push_back(Light());
 
     return lights.back();
   }
@@ -64,6 +65,10 @@ namespace Gamma {
     auto& mesh = *meshes[record.meshId];
     
     return mesh.objects[record.objectId];
+  }
+
+  const std::vector<Light>& AbstractScene::getLights() const {
+    return lights;
   }
 
   float AbstractScene::getRunningTime() {

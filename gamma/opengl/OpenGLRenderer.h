@@ -30,6 +30,7 @@ namespace Gamma {
 
   private:
     int flags = 0;
+    GLuint lightsUbo = 0;
     SDL_GLContext glContext;
     std::vector<OpenGLMesh*> glMeshes;
 

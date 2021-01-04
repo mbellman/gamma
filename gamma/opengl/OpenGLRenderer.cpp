@@ -16,6 +16,8 @@
 #include "system/Window.h"
 
 namespace Gamma {
+  const static uint32 MAX_LIGHTS = 1000;
+
   /**
    * OpenGLRenderer
    * --------------
@@ -38,6 +40,7 @@ namespace Gamma {
     SDL_GL_SetSwapInterval(0);
 
     // Initialize framebuffers and shaders
+    // @TODO define separate OpenGLDeferredRenderer/OpenGLForwardRenderer classes
     deferred.g_buffer.init();
     deferred.g_buffer.setSize({ 1920, 1080 });
     deferred.g_buffer.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
@@ -54,9 +57,17 @@ namespace Gamma {
     deferred.illumination.attachShader(Gm_CompileVertexShader("shaders/deferred/quad.vert.glsl"));
     deferred.illumination.attachShader(Gm_CompileFragmentShader("shaders/deferred/illumination.frag.glsl"));
     deferred.illumination.link();
+
+    // Initialize dynamic lights UBO
+    glGenBuffers(1, &lightsUbo);
+    glBindBuffer(GL_UNIFORM_BUFFER, lightsUbo);
+    glBufferData(GL_UNIFORM_BUFFER, MAX_LIGHTS * sizeof(Light), 0, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, lightsUbo);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
 
   void OpenGLRenderer::render() {
+    // @TODO define separate OpenGLDeferredRenderer/OpenGLForwardRenderer classes
     if (flags & OpenGLRenderFlags::RENDER_DEFERRED) {
       renderDeferred();
     } else {
@@ -134,11 +145,13 @@ namespace Gamma {
     // Render illuminated camera view from G-Buffer layers
     // @TODO lighting, shadowing, and post-processing
     deferred.g_buffer.read();
+
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glViewport(0, 0, Window::size.width, Window::size.height);
-
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
+
+    auto& lights = AbstractScene::active->getLights();
 
     deferred.illumination.use();
     deferred.illumination.setInt("colorAndDepth", 0);
@@ -146,6 +159,10 @@ namespace Gamma {
     deferred.illumination.setVec3f("cameraPosition", camera.position);
     deferred.illumination.setMatrix4f("inverseProjection", projection.inverse());
     deferred.illumination.setMatrix4f("inverseView", view.inverse());
+    deferred.illumination.setInt("totalLights", lights.size());
+
+    glBindBuffer(GL_UNIFORM_BUFFER, lightsUbo);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, lights.size() * sizeof(Light), lights.data());
 
     OpenGLScreenQuad::render();
   }
