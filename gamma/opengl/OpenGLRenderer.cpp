@@ -4,7 +4,6 @@
 #include "SDL.h"
 #include "glew.h"
 #include "SDL_opengl.h"
-#include "glut.h"
 #include "opengl/errors.h"
 #include "opengl/OpenGLRenderer.h"
 #include "opengl/OpenGLScreenQuad.h"
@@ -37,6 +36,7 @@ namespace Gamma {
     glewExperimental = true;
 
     glewInit();
+
     SDL_GL_SetSwapInterval(0);
 
     // Initialize framebuffers and shaders
@@ -153,6 +153,7 @@ namespace Gamma {
 
     auto& lights = AbstractScene::active->getLights();
 
+    // @TODO use stencil buffer to avoid lighting emissive surfaces/unwritten pixels
     deferred.illumination.use();
     deferred.illumination.setInt("colorAndDepth", 0);
     deferred.illumination.setInt("normalAndSpecularity", 1);
