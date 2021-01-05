@@ -4,14 +4,6 @@
 
 namespace Gamma {
   /**
-   * Vec2f
-   * -----
-   */
-  const float* Vec2f::float2() const {
-    return &x;
-  }
-
-  /**
    * Vec3f
    * -----
    */
@@ -81,10 +73,6 @@ namespace Gamma {
     };
   }
 
-  const float* Vec3f::float3() const {
-    return &x;
-  }
-
   Vec3f Vec3f::gl() const {
     return *this * Vec3f(1.0f, 1.0f, -1.0f);
   }
@@ -94,7 +82,7 @@ namespace Gamma {
   }
 
   float Vec3f::magnitude() const {
-    return sqrtf(x*x + y*y + z*z);
+    return sqrtf(x * x + y * y + z * z);
   }
 
   Vec3f Vec3f::unit() const {

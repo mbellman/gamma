@@ -25,6 +25,7 @@ namespace Gamma {
     void setMatrix4f(std::string name, const Matrix4f& value) const;
     void setVec2f(std::string name, const Vec2f& value) const;
     void setVec3f(std::string name, const Vec3f& value) const;
+    void setVec4f(std::string name, const Vec4f& value) const;
     void use() const;
 
   private:

@@ -1,9 +1,6 @@
 #include <cstdio>
 #include <map>
 
-#include "SDL.h"
-#include "glew.h"
-#include "SDL_opengl.h"
 #include "opengl/errors.h"
 #include "opengl/OpenGLRenderer.h"
 #include "opengl/OpenGLScreenQuad.h"
@@ -13,6 +10,11 @@
 #include "system/console.h"
 #include "system/entities.h"
 #include "system/Window.h"
+
+#include "SDL.h"
+#include "SDL_ttf.h"
+#include "glew.h"
+#include "SDL_opengl.h"
 
 namespace Gamma {
   const static uint32 MAX_LIGHTS = 1000;
@@ -39,6 +41,12 @@ namespace Gamma {
 
     SDL_GL_SetSwapInterval(0);
 
+    // Initialize font texture
+    glGenTextures(1, &screenTexture);
+    glBindTexture(GL_TEXTURE_2D, screenTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
     // Initialize framebuffers and shaders
     // @TODO define separate OpenGLDeferredRenderer/OpenGLForwardRenderer classes
     deferred.g_buffer.init();
@@ -54,9 +62,15 @@ namespace Gamma {
     deferred.geometry.link();
 
     deferred.illumination.init();
-    deferred.illumination.attachShader(Gm_CompileVertexShader("shaders/deferred/quad.vert.glsl"));
+    deferred.illumination.attachShader(Gm_CompileVertexShader("shaders/quad.vert.glsl"));
     deferred.illumination.attachShader(Gm_CompileFragmentShader("shaders/deferred/illumination.frag.glsl"));
     deferred.illumination.link();
+
+    // Initialize remaining shaders
+    screen.init();
+    screen.attachShader(Gm_CompileVertexShader("shaders/quad.vert.glsl"));
+    screen.attachShader(Gm_CompileFragmentShader("shaders/screen.frag.glsl"));
+    screen.link();
 
     // Initialize dynamic lights UBO
     glGenBuffers(1, &lightsUbo);
@@ -73,8 +87,6 @@ namespace Gamma {
     } else {
       renderForward();
     }
-
-    SDL_GL_SwapWindow(sdl_window);
   }
 
   void OpenGLRenderer::destroy() {
@@ -82,6 +94,9 @@ namespace Gamma {
     deferred.geometry.destroy();
     deferred.illumination.destroy();
     deferred.emissives.destroy();
+
+    glDeleteBuffers(1, &lightsUbo);
+    glDeleteTextures(1, &screenTexture);
 
     SDL_GL_DeleteContext(glContext);
   }
@@ -105,6 +120,10 @@ namespace Gamma {
     log("Shadowcaster destroyed!");
   }
 
+  void OpenGLRenderer::present() {
+    SDL_GL_SwapWindow(sdl_window);
+  }
+
   void OpenGLRenderer::renderDeferred() {
     // Clear G-Buffer
     deferred.g_buffer.write();
@@ -116,6 +135,7 @@ namespace Gamma {
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
+    glDisable(GL_BLEND);
     glCullFace(GL_BACK);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
@@ -155,6 +175,7 @@ namespace Gamma {
 
     // @TODO use stencil buffer to avoid lighting emissive surfaces/unwritten pixels
     deferred.illumination.use();
+    deferred.illumination.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
     deferred.illumination.setInt("colorAndDepth", 0);
     deferred.illumination.setInt("normalAndSpecularity", 1);
     deferred.illumination.setVec3f("cameraPosition", camera.position);
@@ -170,5 +191,35 @@ namespace Gamma {
 
   void OpenGLRenderer::renderForward() {
     // @TODO
+  }
+
+  void OpenGLRenderer::renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y) {
+    float offsetX = -1.0f + (x + surface->w) / (float)Window::size.width;
+    float offsetY = 1.0f - (y + surface->h) / (float)Window::size.height;
+    float scaleX = surface->w / (float)Window::size.width;
+    float scaleY = -1.0f * surface->h / (float)Window::size.height;
+
+    int format = surface->format->BytesPerPixel == 4 ? GL_RGBA : GL_RGB;
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, screenTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, surface->w, surface->h, 0, format, GL_UNSIGNED_BYTE, surface->pixels);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    screen.use();
+    screen.setVec4f("transform", { offsetX, offsetY, scaleX, scaleY });
+
+    OpenGLScreenQuad::render();
+  }
+
+  void OpenGLRenderer::renderText(TTF_Font* font, const char* message, uint32 x, uint32 y) {
+    SDL_Color color = { 255, 255, 255 };
+    SDL_Surface* text = TTF_RenderText_Blended(font, message, color);
+
+    renderSurfaceToScreen(text, x, y);
+
+    SDL_FreeSurface(text);
   }
 }

@@ -1,8 +1,10 @@
 #pragma once
 
 #include "system/traits.h"
+#include "system/type_aliases.h"
 
-struct SDL_Window;
+#include "SDL.h"
+#include "SDL_ttf.h"
 
 namespace Gamma {
   struct Mesh;
@@ -17,6 +19,8 @@ namespace Gamma {
     virtual void createShadowcaster(Light* light) {};
     virtual void destroyMesh(Mesh* mesh) {};
     virtual void destroyShadowcaster(Light* light) {};
+    virtual void present() {};
+    virtual void renderText(TTF_Font* font, const char* message, uint32 x, uint32 y) {};
 
   protected:
     SDL_Window* sdl_window = nullptr;

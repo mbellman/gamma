@@ -7,8 +7,6 @@ namespace Gamma {
 
     float x = 0.0f;
     float y = 0.0f;
-
-    const float* float2() const;
   };
 
   struct Vec3f : Vec2f {
@@ -29,11 +27,17 @@ namespace Gamma {
     void operator*=(float scalar);
     Vec3f operator/(float scalar) const;
 
-    const float* float3() const;
     Vec3f gl() const;
     Vec3f invert() const;
     float magnitude() const;
     Vec3f unit() const;
     Vec3f xz() const;
+  };
+
+  struct Vec4f {
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+    float w = 0.0f;
   };
 }

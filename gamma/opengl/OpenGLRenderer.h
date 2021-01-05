@@ -9,6 +9,9 @@
 #include "system/entities.h"
 #include "system/type_aliases.h"
 
+#include "SDL.h"
+#include "SDL_ttf.h"
+
 namespace Gamma {
   enum OpenGLRenderFlags {
     RENDER_DEFERRED = 1 << 0,
@@ -27,11 +30,15 @@ namespace Gamma {
     virtual void createShadowcaster(Light* light) override;
     virtual void destroyMesh(Mesh* mesh) override;
     virtual void destroyShadowcaster(Light* light) override;
+    virtual void present() override;
+    virtual void renderText(TTF_Font* font, const char* message, uint32 x, uint32 y) override;
 
   private:
     int flags = 0;
-    GLuint lightsUbo = 0;
     SDL_GLContext glContext;
+    GLuint lightsUbo = 0;
+    GLuint screenTexture = 0;
+    OpenGLShader screen;
     std::vector<OpenGLMesh*> glMeshes;
 
     struct ForwardPath {
@@ -47,5 +54,6 @@ namespace Gamma {
 
     void renderDeferred();
     void renderForward();
+    void renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y);
   };
 }

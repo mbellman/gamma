@@ -1,10 +1,16 @@
-#include "SDL.h"
+#include <string>
+
 #include "opengl/OpenGLRenderer.h"
 #include "performance/benchmark.h"
+#include "performance/tools.h"
 #include "system/AbstractController.h"
 #include "system/AbstractScene.h"
 #include "system/console.h"
 #include "system/Window.h"
+
+#include "SDL.h"
+#include "SDL_ttf.h"
+#include "SDL_image.h"
 
 namespace Gamma {
   /**
@@ -15,6 +21,8 @@ namespace Gamma {
 
   Window::Window() {
     SDL_Init(SDL_INIT_EVERYTHING);
+    TTF_Init();
+	  IMG_Init(IMG_INIT_PNG);
 
     sdl_window = SDL_CreateWindow(
       "Gamma",
@@ -22,6 +30,8 @@ namespace Gamma {
       640, 480,
       SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI
     );
+
+    font_OpenSans = TTF_OpenFont("./demo/assets/fonts/OpenSans-Regular.ttf", 16);
 
     Window::size = { 640, 480 };
   }
@@ -64,6 +74,7 @@ namespace Gamma {
     SDL_Event event;
     bool didCloseWindow = false;
     uint32 lastTick = SDL_GetTicks();
+    Averager<50, uint32> fpsAverager;
 
     // Main window loop
     while (!didCloseWindow) {
@@ -102,11 +113,17 @@ namespace Gamma {
           // @TODO create profiler helpers for this
           auto getTime = Gm_CreateTimer();
 
+          std::string fpsLabel = "FPS: " + std::to_string(fpsAverager.average());
+
           renderer->render();
+          renderer->renderText(font_OpenSans, fpsLabel.c_str(), 50, 50);
+          renderer->present();
 
           auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(getTime()).count();
 
-          log("Render time: ", microseconds, "us");
+          uint32 fps = (uint32)(1000000 / (float)microseconds);
+
+          fpsAverager.add(fps);
         }
       }
     }
@@ -117,6 +134,11 @@ namespace Gamma {
     controller->destroy();
 
     delete controller;
+
+    IMG_Quit();
+
+    TTF_CloseFont(font_OpenSans);
+    TTF_Quit();
 
     SDL_DestroyWindow(sdl_window);
     SDL_Quit();

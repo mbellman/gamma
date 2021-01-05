@@ -458,5 +458,8 @@
     <ClInclude Include="gamma\math\orientation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="gamma\performance\tools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

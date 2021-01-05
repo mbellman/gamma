@@ -4,6 +4,8 @@
 #include "system/traits.h"
 #include "system/type_aliases.h"
 
+#include "SDL_ttf.h"
+
 namespace Gamma {
   enum RenderMode {
     OPENGL,
@@ -28,6 +30,7 @@ namespace Gamma {
     SDL_Window* sdl_window = nullptr;
     AbstractController* controller = nullptr;
     AbstractRenderer* renderer = nullptr;
+    TTF_Font* font_OpenSans = nullptr;
 
     void bindEvents();
     void destroyRenderer();

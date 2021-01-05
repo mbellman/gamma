@@ -100,11 +100,15 @@ namespace Gamma {
   }
 
   void OpenGLShader::setVec2f(std::string name, const Vec2f& value) const {
-    glUniform2fv(getUniformLocation(name), 1, value.float2());
+    glUniform2fv(getUniformLocation(name), 1, &value.x);
   }
 
   void OpenGLShader::setVec3f(std::string name, const Vec3f& value) const {
-    glUniform3fv(getUniformLocation(name), 1, value.float3());
+    glUniform3fv(getUniformLocation(name), 1, &value.x);
+  }
+
+  void OpenGLShader::setVec4f(std::string name, const Vec4f& value) const {
+    glUniform4fv(getUniformLocation(name), 1, &value.x);
   }
 
   void OpenGLShader::use() const {
