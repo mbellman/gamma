@@ -74,7 +74,9 @@ namespace Gamma {
     SDL_Event event;
     bool didCloseWindow = false;
     uint32 lastTick = SDL_GetTicks();
+
     Averager<50, uint32> fpsAverager;
+    Averager<50, uint64> frameTimeAverager;
 
     // Main window loop
     while (!didCloseWindow) {
@@ -114,9 +116,11 @@ namespace Gamma {
           auto getTime = Gm_CreateTimer();
 
           std::string fpsLabel = "FPS: " + std::to_string(fpsAverager.average());
+          std::string frameTimeLabel = "Frame time: " + std::to_string(frameTimeAverager.average()) + "us";
 
           renderer->render();
           renderer->renderText(font_OpenSans, fpsLabel.c_str(), 50, 50);
+          renderer->renderText(font_OpenSans, frameTimeLabel.c_str(), 50, 100);
           renderer->present();
 
           auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(getTime()).count();
@@ -124,6 +128,7 @@ namespace Gamma {
           uint32 fps = (uint32)(1000000 / (float)microseconds);
 
           fpsAverager.add(fps);
+          frameTimeAverager.add(microseconds);
         }
       }
     }
