@@ -19,6 +19,20 @@ namespace Gamma {
     MODE_WIREFRAME = 1 << 2
   };
 
+  typedef std::function<void(float)> BehaviorHandler;
+
+  struct ObjectRecord {
+    uint32 meshId;
+    uint32 meshGeneration;
+    uint32 objectId;
+    uint32 objectGeneration;
+  };
+
+  struct Behavior {
+    ObjectRecord record;
+    BehaviorHandler handler;
+  };
+
   class AbstractScene : public Initable, public Destroyable, public Signaler {
   public:
     uint32 flags = 0;
@@ -27,6 +41,7 @@ namespace Gamma {
 
     virtual ~AbstractScene();
 
+    virtual void addBehavior(const Object& object, BehaviorHandler handler);
     void addMesh(std::string name, Mesh* mesh, uint32 maxInstances);
     Light& createLight();
     Object& createObjectFrom(std::string name);
@@ -46,18 +61,14 @@ namespace Gamma {
     void store(std::string, Object& object);
 
   private:
-    struct ObjectRecord {
-      uint32 meshId;
-      uint32 meshGeneration;
-      uint32 objectId;
-    };
-
     std::vector<Mesh*> meshes;
     std::map<std::string, Mesh*> meshMap;
     std::map<std::string, ObjectRecord> objectStore;
     std::vector<Light> lights;
+    std::vector<Behavior> behaviors;
     float runningTime = 0.0f;
 
+    Object* findObject(const ObjectRecord& record);
     void handleFreeCameraMode(float dt);
   };
 }

@@ -1,5 +1,6 @@
 #include "system/AbstractScene.h"
 #include "system/assert.h"
+#include "system/console.h"
 
 namespace Gamma {
   /**
@@ -10,6 +11,17 @@ namespace Gamma {
 
   AbstractScene::~AbstractScene() {
     // @TODO clear vectors + maps, free all resources
+  }
+
+  void AbstractScene::addBehavior(const Object& object, BehaviorHandler handler) {
+    ObjectRecord record;
+
+    record.meshId = object._meshId;
+    record.meshGeneration = object._meshGeneration;
+    record.objectId = object._objectId;
+    record.objectGeneration = object._generation;
+
+    behaviors.push_back({ record, handler });
   }
 
   // @TODO replace Mesh* with std::function<void(Mesh*)>, have handler
@@ -59,12 +71,34 @@ namespace Gamma {
     return object;
   }
 
+  // @TODO write a pool class for more efficient meshes/objects/etc. storage + lookup
+  Object* AbstractScene::findObject(const ObjectRecord& record) {
+    if (record.meshId >= meshes.size()) {
+      return nullptr;
+    }
+
+    auto& mesh = *meshes[record.meshId];
+
+    if (record.meshGeneration != mesh.generation) {
+      return nullptr;
+    }
+
+    auto& object = mesh.objects[record.objectId];
+
+    if (object._generation != record.objectGeneration) {
+      return nullptr;
+    }
+
+    return &object;
+  }
+
   Object& AbstractScene::get(std::string name) {
     auto& record = objectStore.at(name);
-    // @TODO getMesh(uint32 id, uint32 generation)
-    auto& mesh = *meshes[record.meshId];
-    
-    return mesh.objects[record.objectId];
+    auto* object = findObject(record);
+
+    assert(object != nullptr, "Object '" + name + "' is invalid");
+
+    return *object;
   }
 
   const std::vector<Light>& AbstractScene::getLights() const {
@@ -105,6 +139,7 @@ namespace Gamma {
     auto* mesh = meshMap.at(name);
 
     signal("mesh-destroyed", mesh);
+
     Gm_FreeMesh(mesh);
 
     meshMap.erase(name);
@@ -142,6 +177,16 @@ namespace Gamma {
 
     // Run updates on the subclassed scene
     update(dt);
+
+    // Run behaviors
+    for (uint32 i = 0; i < behaviors.size(); i++) {
+      auto& behavior = behaviors[i];
+      auto* object = findObject(behavior.record);
+
+      if (object != nullptr) {
+        behavior.handler(dt);
+      }
+    }
 
     runningTime += dt;
   }

@@ -22,7 +22,7 @@ namespace Gamma {
   Window::Window() {
     SDL_Init(SDL_INIT_EVERYTHING);
     TTF_Init();
-	  IMG_Init(IMG_INIT_PNG);
+    IMG_Init(IMG_INIT_PNG);
 
     sdl_window = SDL_CreateWindow(
       "Gamma",

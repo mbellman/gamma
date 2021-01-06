@@ -160,7 +160,11 @@ namespace Gamma {
       delete[] mesh->matrices;
     }
 
-    delete mesh;
+    mesh->objects = nullptr;
+    mesh->matrices = nullptr;
+    mesh->totalActiveMatrices = 0;
+    mesh->totalActiveObjects = 0;
+    mesh->maxInstances = 0;
   }
 
   /**

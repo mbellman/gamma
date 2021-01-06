@@ -26,6 +26,7 @@ namespace Gamma {
     uint32 _meshId = 0;
     uint32 _meshGeneration = 0;
     uint32 _objectId = 0;
+    uint32 _generation = 0;
     uint32 _matrixId = 0;
     Vec3f position;
     Vec3f rotation;

@@ -34,11 +34,15 @@ void DemoScene::init() {
       light.position = cubePosition + Vec3f(-5.0f, 50.0f, 0.0f);
       light.radius = 250.0f;
 
-      transform(cube);
+      cube.rotation.y += (float)(i * 10 + j) / 10.0f;
+
+      addBehavior(cube, [&](float dt) {
+        cube.rotation.y += dt;
+
+        transform(cube);
+      });
     }
   }
-
-  // store("cube", cube);
 
   input.on<MouseMoveEvent>("mousemove", [=](MouseMoveEvent& event) {
     if (SDL_GetRelativeMouseMode()) {
@@ -60,16 +64,6 @@ void DemoScene::init() {
   });
 }
 
-void DemoScene::destroy() {
-  // @TODO
-}
+void DemoScene::destroy() {}
 
-void DemoScene::update(float dt) {
-  // auto& cube = get("cube");
-
-  // cube.rotation.x += 0.5f * dt;
-  // cube.rotation.y += dt;
-  // cube.rotation.z += 0.84f * dt;
-
-  // transform(cube);
-}
+void DemoScene::update(float dt) {}
