@@ -101,7 +101,7 @@ namespace Gamma {
         }
 
         if (activeScene != nullptr) {
-          activeScene->handleEvent(event);
+          activeScene->input.handleEvent(event);
         }
       }
 
@@ -109,6 +109,7 @@ namespace Gamma {
         float dt = (float)(SDL_GetTicks() - lastTick) / 1000.0f;
         lastTick = SDL_GetTicks();
 
+        Camera::active = &activeScene->camera;
         activeScene->updateScene(dt);
 
         if (renderer != nullptr) {

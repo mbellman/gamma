@@ -3,6 +3,7 @@
 namespace Gamma {
   struct Vec2f {
     Vec2f() {};
+    Vec2f(float f): x(f), y(f) {};
     Vec2f(float x, float y) : x(x), y(y) {};
 
     float x = 0.0f;

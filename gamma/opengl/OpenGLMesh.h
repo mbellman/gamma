@@ -16,7 +16,7 @@ namespace Gamma {
     Mesh* sourceMesh = nullptr;
     GLuint vao;
     /**
-     * Defines three buffers for instanced object attributes.
+     * Buffers for instanced object attributes.
      *
      * [0] Vertex
      * [1] Matrix

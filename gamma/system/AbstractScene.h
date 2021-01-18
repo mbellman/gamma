@@ -35,6 +35,8 @@ namespace Gamma {
 
   class AbstractScene : public Initable, public Destroyable, public Signaler {
   public:
+    Camera camera;
+    InputSystem input;
     uint32 flags = 0;
 
     static AbstractScene* active;
@@ -46,16 +48,12 @@ namespace Gamma {
     Light& createLight();
     Object& createObjectFrom(std::string name);
     const std::vector<Light>& getLights() const;
-    void handleEvent(const SDL_Event& event);
     void removeMesh(std::string name);
     void transform(const Object& object);
     virtual void update(float dt) {};
     virtual void updateScene(float dt) final;
 
   protected:
-    Camera camera;
-    InputSystem input;
-
     Object& get(std::string);
     float getRunningTime();
     void store(std::string, Object& object);

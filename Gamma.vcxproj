@@ -125,6 +125,7 @@
     <ClCompile Include="gamma\math\vector.cpp" />
     <ClCompile Include="gamma\opengl\errors.cpp" />
     <ClCompile Include="gamma\opengl\framebuffer.cpp" />
+    <ClCompile Include="gamma\opengl\OpenGLLightDisc.cpp" />
     <ClCompile Include="gamma\opengl\OpenGLMesh.cpp" />
     <ClCompile Include="gamma\opengl\OpenGLRenderer.cpp" />
     <ClCompile Include="gamma\opengl\OpenGLScreenQuad.cpp" />
@@ -243,6 +244,7 @@
     <ClInclude Include="gamma\math\vector.h" />
     <ClInclude Include="gamma\opengl\errors.h" />
     <ClInclude Include="gamma\opengl\framebuffer.h" />
+    <ClInclude Include="gamma\opengl\OpenGLLightDisc.h" />
     <ClInclude Include="gamma\opengl\OpenGLMesh.h" />
     <ClInclude Include="gamma\opengl\OpenGLRenderer.h" />
     <ClInclude Include="gamma\opengl\OpenGLScreenQuad.h" />

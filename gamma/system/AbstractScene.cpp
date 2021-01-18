@@ -109,10 +109,6 @@ namespace Gamma {
     return runningTime;
   }
 
-  void AbstractScene::handleEvent(const SDL_Event& event) {
-    input.handleEvent(event);
-  }
-
   void AbstractScene::handleFreeCameraMode(float dt) {
     float speed = 150.0f * dt;
     Vec3f& position = camera.position;
@@ -169,8 +165,6 @@ namespace Gamma {
   }
 
   void AbstractScene::updateScene(float dt) {
-    Camera::active = &camera;
-
     if (flags & SceneFlags::MODE_FREE_CAMERA) {
       handleFreeCameraMode(dt);
     }
