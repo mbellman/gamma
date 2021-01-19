@@ -43,12 +43,12 @@ vec3 getIlluminatedColor(Light light, vec3 position, vec3 normal, vec3 color) {
   vec3 n_surfaceToLight = surfaceToLight / lightDistance;
   float incidence = max(dot(n_surfaceToLight, normal), 0.0);
   float attenuation = pow(1.0 / lightDistance, 2);
-  vec3 diffuseTerm = light.color * light.radius * incidence * attenuation;
+  vec3 diffuseTerm = light.color * light.power * light.radius * incidence * attenuation;
 
   vec3 n_surfaceToCamera = normalize(cameraPosition - position);
   vec3 halfVector = normalize(n_surfaceToLight + n_surfaceToCamera);
   float specularity = pow(max(dot(halfVector, normal), 0.0), 50);
-  vec3 specularTerm = light.color * light.radius * attenuation * specularity;
+  vec3 specularTerm = light.color * light.power * light.radius * specularity * attenuation;
 
   return color * (diffuseTerm + specularTerm);
 }
@@ -62,5 +62,4 @@ void main() {
   vec3 color = frag_colorAndDepth.rgb;
 
   out_color = getIlluminatedColor(light, position, normal, color);
-  // out_color = getIlluminatedColor(light, position, normal, color) + vec3(0.02, 0.0, 0.0);
 }

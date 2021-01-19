@@ -101,6 +101,11 @@ namespace Gamma {
     this->size = size;
   }
 
+  void OpenGLFrameBuffer::shareDepthStencilAttachment(const OpenGLFrameBuffer& target) {
+    glBindFramebuffer(GL_FRAMEBUFFER, target.fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depthStencilTextureId, 0);
+  }
+
   void OpenGLFrameBuffer::write() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
     glViewport(0, 0, size.width, size.height);

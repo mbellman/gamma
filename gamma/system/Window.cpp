@@ -75,8 +75,8 @@ namespace Gamma {
     bool didCloseWindow = false;
     uint32 lastTick = SDL_GetTicks();
 
-    Averager<50, uint32> fpsAverager;
-    Averager<50, uint64> frameTimeAverager;
+    Averager<5, uint32> fpsAverager;
+    Averager<5, uint64> frameTimeAverager;
 
     // Main window loop
     while (!didCloseWindow) {

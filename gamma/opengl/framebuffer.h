@@ -31,6 +31,7 @@ namespace Gamma {
     void bindColorAttachments();
     void read();
     void setSize(const Area<uint32>& size);
+    void shareDepthStencilAttachment(const OpenGLFrameBuffer& target);
     void write();
 
   private:

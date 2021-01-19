@@ -13,7 +13,7 @@ void DemoScene::init() {
   // auto& light = createLight();
 
   // light.color = Vec3f(1.0f, 0.5f, 0.2f);
-  // light.position = Vec3f(0.0f, 50.0f, 250.0f);
+  // light.position = Vec3f(0.0f, 50.0f, 0.0f);
   // light.radius = 250.0f;
 
   for (int i = 0; i < 10; i++) {
@@ -21,9 +21,9 @@ void DemoScene::init() {
       auto& cube = createObjectFrom("cube");
 
       Vec3f cubePosition = Vec3f(
-        100.0f * (i - 5),
+        150.0f * (i - 5),
         0.0f,
-        100.0f * (j - 5)
+        150.0f * (j - 5)
       );
 
       cube.position = cubePosition;

@@ -83,6 +83,7 @@ namespace Gamma {
     post.debanding.buffer.init();
     post.debanding.buffer.setSize({ 1920, 1080 });
     post.debanding.buffer.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
+    deferred.g_buffer.shareDepthStencilAttachment(post.debanding.buffer);
     post.debanding.buffer.bindColorAttachments();
 
     post.debanding.shader.init();
@@ -175,26 +176,34 @@ namespace Gamma {
       ? GL_LINE_STRIP
       : GL_TRIANGLES;
 
+    // Render non-emissive objects
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilMask(0xFF);
+
     for (auto* glMesh : glMeshes) {
       glMesh->render(primitiveMode);
     }
+
+    glStencilMask(0x00);
+
+    // @TODO render emissive objects
 
     // Lighting pass; read from G-Buffer and preemptively write to post-processing pipeline
     deferred.g_buffer.read();
     post.debanding.buffer.write();
 
     glViewport(0, 0, 1920, 1080);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
+    glStencilFunc(GL_EQUAL, 1, 0xFF);
 
     // Non-shadowed lighting pass
     auto& lights = AbstractScene::active->getLights();
 
-    // @TODO use stencil buffer to avoid lighting emissive surfaces/unwritten pixels
     deferred.illumination.use();
     deferred.illumination.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
     deferred.illumination.setInt("colorAndDepth", 0);
@@ -215,6 +224,8 @@ namespace Gamma {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glDisable(GL_BLEND);
+    glDisable(GL_STENCIL_TEST);
+    glStencilMask(0xFF);
 
     post.debanding.shader.use();
     post.debanding.shader.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });

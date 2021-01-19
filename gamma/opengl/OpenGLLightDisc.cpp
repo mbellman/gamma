@@ -101,7 +101,6 @@ namespace Gamma {
   void OpenGLLightDisc::draw(const std::vector<Light>& lights) {
     // @TODO avoid reallocating/freeing the disc array on each draw
     Disc* discs = new Disc[lights.size()];
-
     auto& camera = *Camera::active;
     float aspectRatio = (float)Window::size.width / (float)Window::size.height;
     Matrix4f projection = Matrix4f::projection(Window::size, 90.0f * 0.5f, 1.0f, 10000.0f);
@@ -121,10 +120,12 @@ namespace Gamma {
       if (localLightPosition.z > 0.0f) {
         // Light source in front of the camera
         Vec3f screenLightPosition = (projection * localLightPosition) / localLightPosition.z;
+        // @TODO use a more sophisticated radius-of-influence formula for this
+        float scaleFactor = light.power * 1.2f;
 
         disc.offset = Vec2f(screenLightPosition.x, screenLightPosition.y);
-        disc.scale.x = light.radius / localLightPosition.z;
-        disc.scale.y = light.radius / localLightPosition.z * aspectRatio;
+        disc.scale.x = scaleFactor * light.radius / localLightPosition.z;
+        disc.scale.y = scaleFactor * light.radius / localLightPosition.z * aspectRatio;
       } else {
         // Light source behind the camera
         float scale = localLightPosition.magnitude() < light.radius ? 2.0f : 0.0f;
