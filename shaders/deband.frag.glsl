@@ -7,7 +7,7 @@ in vec2 fragUv;
 layout (location = 0) out vec3 out_color;
 
 /**
- * Returns a value within the range 0.0 - 1.0, constant
+ * Returns a value within the range -1.0 - 1.0, constant
  * in screen space, acting as a noise filter.
  */
 float noise() {
@@ -21,10 +21,9 @@ float noise() {
  */
 vec3 deband(vec3 color) {
   float brightness = color.r + color.g + color.b;
-  float divisor = brightness * 60.0;
-  float half_term = 1.0 / divisor * 0.5;
+  float divisor = brightness * 150.0;
 
-  return color * (1.0 + noise() / divisor - half_term);
+  return color * (1.0 + noise() / divisor);
 }
 
 void main() {
