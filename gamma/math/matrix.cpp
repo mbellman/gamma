@@ -1,6 +1,7 @@
 #include <cmath>
 #include <cstdio>
 
+#include "math/constants.h"
 #include "math/matrix.h"
 #include "math/Quaternion.h"
 
@@ -93,9 +94,7 @@ namespace Gamma {
   }
 
   Matrix4f Matrix4f::projection(const Area<uint32>& area, float fov, float near, float far) {
-    constexpr float PI = 3.141592f;
-    constexpr float DEG_TO_RAD = PI / 180.0f;
-    float f = 1.0f / tanf(fov / 2.0f * DEG_TO_RAD);
+    float f = 1.0f / tanf(fov / 2.0f * DEGREES_TO_RADIANS);
     float aspectRatio = (float)area.width / (float)area.height;
 
     return {

@@ -10,6 +10,12 @@ void DemoScene::init() {
 
   addMesh("cube", Gm_CreateCube(), 100);
 
+  // auto& light = createLight();
+
+  // light.color = Vec3f(1.0f, 0.5f, 0.2f);
+  // light.position = Vec3f(0.0f, 50.0f, 250.0f);
+  // light.radius = 250.0f;
+
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < 10; j++) {
       auto& cube = createObjectFrom("cube");

@@ -47,7 +47,7 @@ namespace Gamma {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // Initialize framebuffers and shaders
+    // Initialize deferred renderer
     // @TODO define separate OpenGLDeferredRenderer/OpenGLForwardRenderer classes
     deferred.g_buffer.init();
     deferred.g_buffer.setSize({ 1920, 1080 });
@@ -62,9 +62,11 @@ namespace Gamma {
     deferred.geometry.link();
 
     deferred.illumination.init();
-    deferred.illumination.attachShader(Gm_CompileVertexShader("shaders/quad.vert.glsl"));
-    deferred.illumination.attachShader(Gm_CompileFragmentShader("shaders/deferred/illumination.frag.glsl"));
+    deferred.illumination.attachShader(Gm_CompileVertexShader("shaders/deferred/lights.vert.glsl"));
+    deferred.illumination.attachShader(Gm_CompileFragmentShader("shaders/deferred/lights.frag.glsl"));
     deferred.illumination.link();
+
+    deferred.lightDisc.init();
 
     // Initialize remaining shaders
     screen.init();
@@ -72,11 +74,15 @@ namespace Gamma {
     screen.attachShader(Gm_CompileFragmentShader("shaders/screen.frag.glsl"));
     screen.link();
 
+    // Initialize forward renderer
+    // @TODO
+
     // Initialize dynamic lights UBO
-    glGenBuffers(1, &lightsUbo);
-    glBindBuffer(GL_UNIFORM_BUFFER, lightsUbo);
+    // @TODO buffer lights to forward renderer geometry shader
+    glGenBuffers(1, &forward.lightsUbo);
+    glBindBuffer(GL_UNIFORM_BUFFER, forward.lightsUbo);
     glBufferData(GL_UNIFORM_BUFFER, MAX_LIGHTS * sizeof(Light), 0, GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_UNIFORM_BUFFER, 0, lightsUbo);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, forward.lightsUbo);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
 
@@ -94,8 +100,9 @@ namespace Gamma {
     deferred.geometry.destroy();
     deferred.illumination.destroy();
     deferred.emissives.destroy();
+    deferred.lightDisc.destroy();
 
-    glDeleteBuffers(1, &lightsUbo);
+    glDeleteBuffers(1, &forward.lightsUbo);
     glDeleteTextures(1, &screenTexture);
 
     SDL_GL_DeleteContext(glContext);
@@ -163,13 +170,17 @@ namespace Gamma {
     }
 
     // Render illuminated camera view from G-Buffer layers
-    // @TODO lighting, shadowing, and post-processing
+    // @TODO shadowing, post-processing
     deferred.g_buffer.read();
 
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glViewport(0, 0, Window::size.width, Window::size.height);
+    glClear(GL_COLOR_BUFFER_BIT);
+
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
 
     auto& lights = AbstractScene::active->getLights();
 
@@ -181,12 +192,8 @@ namespace Gamma {
     deferred.illumination.setVec3f("cameraPosition", camera.position);
     deferred.illumination.setMatrix4f("inverseProjection", projection.inverse());
     deferred.illumination.setMatrix4f("inverseView", view.inverse());
-    deferred.illumination.setInt("totalLights", lights.size());
 
-    glBindBuffer(GL_UNIFORM_BUFFER, lightsUbo);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, lights.size() * sizeof(Light), lights.data());
-
-    OpenGLScreenQuad::render();
+    deferred.lightDisc.draw(lights);
   }
 
   void OpenGLRenderer::renderForward() {
@@ -205,6 +212,8 @@ namespace Gamma {
     glBindTexture(GL_TEXTURE_2D, screenTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, format, surface->w, surface->h, 0, format, GL_UNSIGNED_BYTE, surface->pixels);
 
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 

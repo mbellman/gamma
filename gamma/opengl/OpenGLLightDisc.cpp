@@ -1,12 +1,16 @@
+#include <cmath>
+
+#include "math/constants.h"
 #include "math/matrix.h"
 #include "opengl/OpenGLLightDisc.h"
 #include "system/camera.h"
+#include "system/console.h"
 #include "system/Window.h"
 
 #include "glew.h"
 
 namespace Gamma {
-  const static uint32 DISC_CORNERS = 10;
+  constexpr static uint32 DISC_SLICES = 10;
 
   enum GLBuffer {
     VERTEX,
@@ -17,7 +21,10 @@ namespace Gamma {
     VERTEX_POSITION,
     DISC_OFFSET,
     DISC_SCALE,
-    DISC_LIGHT
+    DISC_LIGHT_POSITION,
+    DISC_LIGHT_RADIUS,
+    DISC_LIGHT_COLOR,
+    DISC_LIGHT_POWER
   };
 
   struct Disc {
@@ -31,8 +38,27 @@ namespace Gamma {
     glGenBuffers(2, &buffers[0]);
     glBindVertexArray(vao);
 
+    // Create the vertices for each slice of the disc
+    Vec2f vertexPositions[DISC_SLICES * 3];
+
+    for (uint32 i = 0; i < DISC_SLICES; i++) {
+      constexpr static float sliceAngle = 360.0f / (float)DISC_SLICES;
+      uint32 index = i * 3;
+
+      // Add center vertex
+      vertexPositions[index] = Vec2f(0.0f);
+
+      // Add corners
+      const float a1 = i * sliceAngle * DEGREES_TO_RADIANS;
+      const float a2 = (i + 1) * sliceAngle * DEGREES_TO_RADIANS;
+
+      vertexPositions[index + 1] = Vec2f(sinf(a1), cosf(a1));
+      vertexPositions[index + 2] = Vec2f(sinf(a2), cosf(a2));
+    }
+
     // Buffer disc vertices
-    // @TODO
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::VERTEX]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vec2f) * DISC_SLICES * 3, vertexPositions, GL_STATIC_DRAW);
 
     // Define disc vertex attributes
     glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::VERTEX]);
@@ -51,9 +77,21 @@ namespace Gamma {
     glVertexAttribPointer(GLAttribute::DISC_SCALE, 2, GL_FLOAT, GL_FALSE, sizeof(Disc), (void*)offsetof(Disc, scale));
     glVertexAttribDivisor(GLAttribute::DISC_SCALE, 1);
 
-    glEnableVertexAttribArray(GLAttribute::DISC_LIGHT);
-    glVertexAttribPointer(GLAttribute::DISC_LIGHT, sizeof(Light), GL_FLOAT, GL_FALSE, sizeof(Disc), (void*)offsetof(Disc, light));
-    glVertexAttribDivisor(GLAttribute::DISC_LIGHT, 1);
+    glEnableVertexAttribArray(GLAttribute::DISC_LIGHT_POSITION);
+    glVertexAttribPointer(GLAttribute::DISC_LIGHT_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(Disc), (void*)(offsetof(Disc, light) + offsetof(Light, position)));
+    glVertexAttribDivisor(GLAttribute::DISC_LIGHT_POSITION, 1);
+
+    glEnableVertexAttribArray(GLAttribute::DISC_LIGHT_RADIUS);
+    glVertexAttribPointer(GLAttribute::DISC_LIGHT_RADIUS, 1, GL_FLOAT, GL_FALSE, sizeof(Disc), (void*)(offsetof(Disc, light) + offsetof(Light, radius)));
+    glVertexAttribDivisor(GLAttribute::DISC_LIGHT_RADIUS, 1);
+
+    glEnableVertexAttribArray(GLAttribute::DISC_LIGHT_COLOR);
+    glVertexAttribPointer(GLAttribute::DISC_LIGHT_COLOR, 3, GL_FLOAT, GL_FALSE, sizeof(Disc), (void*)(offsetof(Disc, light) + offsetof(Light, color)));
+    glVertexAttribDivisor(GLAttribute::DISC_LIGHT_COLOR, 1);
+
+    glEnableVertexAttribArray(GLAttribute::DISC_LIGHT_POWER);
+    glVertexAttribPointer(GLAttribute::DISC_LIGHT_POWER, 1, GL_FLOAT, GL_FALSE, sizeof(Disc), (void*)(offsetof(Disc, light) + offsetof(Light, power)));
+    glVertexAttribDivisor(GLAttribute::DISC_LIGHT_POWER, 1);
   }
 
   void OpenGLLightDisc::destroy() {
@@ -66,10 +104,10 @@ namespace Gamma {
 
     auto& camera = *Camera::active;
     float aspectRatio = (float)Window::size.width / (float)Window::size.height;
-    Matrix4f projection = Matrix4f::projection(Window::size, 90.0f, 1.0f, 10000.0f);
+    Matrix4f projection = Matrix4f::projection(Window::size, 90.0f * 0.5f, 1.0f, 10000.0f);
 
     Matrix4f view = (
-      Matrix4f::rotation(camera.orientation.toVec3f()) *
+      Matrix4f::rotation(camera.orientation.toVec3f().invert()) *
       Matrix4f::translation(camera.position.invert())
     );
 
@@ -86,7 +124,7 @@ namespace Gamma {
 
         disc.offset.x = screenLightPosition.x;
         disc.offset.y = screenLightPosition.y;
-        disc.scale.x = light.radius / localLightPosition.z * aspectRatio;
+        disc.scale.x = light.radius / localLightPosition.z;
         disc.scale.y = light.radius / localLightPosition.z;
       } else {
         // Define disc attributes for lights behind the camera
@@ -100,7 +138,7 @@ namespace Gamma {
     glBufferData(GL_ARRAY_BUFFER, sizeof(Disc) * lights.size(), discs, GL_DYNAMIC_DRAW);
 
     glBindVertexArray(vao);
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, lights.size());
+    glDrawArraysInstanced(GL_TRIANGLES, 0, DISC_SLICES * 3, lights.size());
 
     delete[] discs;
   }

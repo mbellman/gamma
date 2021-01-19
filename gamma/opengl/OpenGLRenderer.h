@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "opengl/framebuffer.h"
+#include "opengl/OpenGLLightDisc.h"
 #include "opengl/OpenGLMesh.h"
 #include "opengl/shader.h"
 #include "system/AbstractRenderer.h"
@@ -36,13 +37,13 @@ namespace Gamma {
   private:
     int flags = 0;
     SDL_GLContext glContext;
-    GLuint lightsUbo = 0;
     GLuint screenTexture = 0;
     OpenGLShader screen;
     std::vector<OpenGLMesh*> glMeshes;
 
     struct ForwardPath {
       // @TODO
+      GLuint lightsUbo = 0;
     } forward;
 
     struct DeferredPath {
@@ -50,6 +51,7 @@ namespace Gamma {
       OpenGLShader geometry;
       OpenGLShader illumination;
       OpenGLShader emissives;
+      OpenGLLightDisc lightDisc;
     } deferred;
 
     void renderDeferred();

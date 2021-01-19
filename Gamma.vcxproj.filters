@@ -467,5 +467,8 @@
     <ClInclude Include="gamma\opengl\OpenGLLightDisc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="gamma\math\constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

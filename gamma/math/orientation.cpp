@@ -1,11 +1,10 @@
 #include <cmath>
 
+#include "math/constants.h"
 #include "math/orientation.h"
 #include "math/vector.h"
 
 namespace Gamma {
-  constexpr static float PI = 3.141592f;
-
   Vec3f Orientation::getDirection() const {
     return Vec3f(
       sinf(yaw) * cosf(pitch),
