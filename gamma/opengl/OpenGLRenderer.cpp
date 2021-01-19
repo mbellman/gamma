@@ -193,7 +193,7 @@ namespace Gamma {
     post.debanding.buffer.write();
 
     glViewport(0, 0, 1920, 1080);
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
