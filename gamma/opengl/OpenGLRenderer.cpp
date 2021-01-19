@@ -47,6 +47,17 @@ namespace Gamma {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+    // Initialize forward renderer
+    // @TODO
+
+    // Initialize dynamic lights UBO
+    // @TODO buffer lights to forward renderer geometry shader
+    glGenBuffers(1, &forward.lightsUbo);
+    glBindBuffer(GL_UNIFORM_BUFFER, forward.lightsUbo);
+    glBufferData(GL_UNIFORM_BUFFER, MAX_LIGHTS * sizeof(Light), 0, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, forward.lightsUbo);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
     // Initialize deferred renderer
     // @TODO define separate OpenGLDeferredRenderer/OpenGLForwardRenderer classes
     deferred.g_buffer.init();
@@ -68,22 +79,22 @@ namespace Gamma {
 
     deferred.lightDisc.init();
 
+    // Initialize post effects
+    post.debanding.buffer.init();
+    post.debanding.buffer.setSize({ 1920, 1080 });
+    post.debanding.buffer.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
+    post.debanding.buffer.bindColorAttachments();
+
+    post.debanding.shader.init();
+    post.debanding.shader.attachShader(Gm_CompileVertexShader("shaders/quad.vert.glsl"));
+    post.debanding.shader.attachShader(Gm_CompileFragmentShader("shaders/deband.frag.glsl"));
+    post.debanding.shader.link();
+
     // Initialize remaining shaders
     screen.init();
     screen.attachShader(Gm_CompileVertexShader("shaders/quad.vert.glsl"));
     screen.attachShader(Gm_CompileFragmentShader("shaders/screen.frag.glsl"));
     screen.link();
-
-    // Initialize forward renderer
-    // @TODO
-
-    // Initialize dynamic lights UBO
-    // @TODO buffer lights to forward renderer geometry shader
-    glGenBuffers(1, &forward.lightsUbo);
-    glBindBuffer(GL_UNIFORM_BUFFER, forward.lightsUbo);
-    glBufferData(GL_UNIFORM_BUFFER, MAX_LIGHTS * sizeof(Light), 0, GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_UNIFORM_BUFFER, 0, forward.lightsUbo);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
 
   void OpenGLRenderer::render() {
@@ -132,13 +143,13 @@ namespace Gamma {
   }
 
   void OpenGLRenderer::renderDeferred() {
-    // Clear G-Buffer
+    // Set G-Buffer as render target, reset state
     deferred.g_buffer.write();
 
+    glViewport(0, 0, 1920, 1080);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    // Reset rendering state
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
@@ -146,9 +157,8 @@ namespace Gamma {
     glCullFace(GL_BACK);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
-    glViewport(0, 0, 1920, 1080);
 
-    // Render camera view to G-Buffer
+    // Render camera view
     auto& camera = *Camera::active;
     Matrix4f projection = Matrix4f::projection({ 1920, 1080 }, 45.0f, 1.0f, 10000.0f).transpose();
 
@@ -169,12 +179,11 @@ namespace Gamma {
       glMesh->render(primitiveMode);
     }
 
-    // Render illuminated camera view from G-Buffer layers
-    // @TODO shadowing, post-processing
+    // Lighting pass; read from G-Buffer and preemptively write to post-processing pipeline
     deferred.g_buffer.read();
+    post.debanding.buffer.write();
 
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glViewport(0, 0, Window::size.width, Window::size.height);
+    glViewport(0, 0, 1920, 1080);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glDisable(GL_CULL_FACE);
@@ -182,6 +191,7 @@ namespace Gamma {
     glEnable(GL_BLEND);
     glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
 
+    // Non-shadowed lighting pass
     auto& lights = AbstractScene::active->getLights();
 
     // @TODO use stencil buffer to avoid lighting emissive surfaces/unwritten pixels
@@ -194,6 +204,22 @@ namespace Gamma {
     deferred.illumination.setMatrix4f("inverseView", view.inverse());
 
     deferred.lightDisc.draw(lights);
+
+    // @TODO shadowed lighting pass
+
+    // Post-processing pass
+    post.debanding.buffer.read();
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+    glViewport(0, 0, Window::size.width, Window::size.height);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glDisable(GL_BLEND);
+
+    post.debanding.shader.use();
+    post.debanding.shader.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+
+    OpenGLScreenQuad::render();
   }
 
   void OpenGLRenderer::renderForward() {

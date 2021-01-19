@@ -51,8 +51,19 @@ namespace Gamma {
       OpenGLShader geometry;
       OpenGLShader illumination;
       OpenGLShader emissives;
+      OpenGLShader debanding;
       OpenGLLightDisc lightDisc;
     } deferred;
+
+    struct PostEffect {
+      OpenGLFrameBuffer buffer;
+      OpenGLShader shader;
+    };
+
+    // @TODO create a post-processing pipeline with configurable steps
+    struct PostProcessing {
+      PostEffect debanding;
+    } post;
 
     void renderDeferred();
     void renderForward();
