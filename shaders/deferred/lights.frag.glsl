@@ -61,13 +61,6 @@ void main() {
   vec3 normal = frag_normalAndSpecularity.xyz;
   vec3 color = frag_colorAndDepth.rgb;
 
-  vec3 illuminationColor = getIlluminatedColor(light, position, normal, color);
-
-  // for (int i = 0; i < totalLights; i++) {
-  //   illuminationColor += getIlluminatedColor(lights[i], position, normal, color);
-  // }
-
-  out_color = illuminationColor;
-  // out_color = vec3(1.0, 0.0, 0.0);
-  // out_color = light.position;
+  out_color = getIlluminatedColor(light, position, normal, color);
+  // out_color = getIlluminatedColor(light, position, normal, color) + vec3(0.02, 0.0, 0.0);
 }

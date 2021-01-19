@@ -10,7 +10,7 @@
 #include "glew.h"
 
 namespace Gamma {
-  constexpr static uint32 DISC_SLICES = 10;
+  constexpr static uint32 DISC_SLICES = 16;
 
   enum GLBuffer {
     VERTEX,
@@ -119,18 +119,18 @@ namespace Gamma {
       disc.light = light;
 
       if (localLightPosition.z > 0.0f) {
-        // Define disc attributes for lights in front of the camera
+        // Light source in front of the camera
         Vec3f screenLightPosition = (projection * localLightPosition) / localLightPosition.z;
 
-        disc.offset.x = screenLightPosition.x;
-        disc.offset.y = screenLightPosition.y;
+        disc.offset = Vec2f(screenLightPosition.x, screenLightPosition.y);
         disc.scale.x = light.radius / localLightPosition.z;
-        disc.scale.y = light.radius / localLightPosition.z;
+        disc.scale.y = light.radius / localLightPosition.z * aspectRatio;
       } else {
-        // Define disc attributes for lights behind the camera
+        // Light source behind the camera
+        float scale = localLightPosition.magnitude() < light.radius ? 2.0f : 0.0f;
+
         disc.offset = Vec2f(0.0f);
-        // @TODO determine scale based on light type + distance of light behind camera
-        disc.scale = Vec2f(2.0f);
+        disc.scale = Vec2f(scale);
       }
     }
 
