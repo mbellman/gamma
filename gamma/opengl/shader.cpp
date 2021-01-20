@@ -1,14 +1,20 @@
-#include "glew.h"
+#include <chrono>
+#include <filesystem>
+
 #include "opengl/shader.h"
 #include "system/console.h"
 #include "system/file.h"
+#include "system/flags.h"
+
+#include "glew.h"
+#include "SDL.h"
 
 namespace Gamma {
   /**
    * Gm_CompileShader
    * ----------------
    */
-  GLuint Gm_CompileShader(GLenum shaderType, const char* path) {
+  GLShaderRecord Gm_CompileShader(GLenum shaderType, const char* path) {
     GLuint shader = glCreateShader(shaderType);
 
     std::string source = Gm_LoadFileContents(path);
@@ -24,18 +30,21 @@ namespace Gamma {
       char error[512];
 
       glGetShaderInfoLog(shader, 512, 0, error);
-      log("[ShaderLoader] Failed to compile shader:", path);
+      log("[Gamma] Failed to compile shader:", path);
       log(error);
     }
 
-    return shader;
+    auto& fsPath = std::filesystem::current_path() / path;
+    auto lastWriteTime = std::filesystem::last_write_time(fsPath);
+
+    return { shader, path, lastWriteTime };
   }
 
   /**
    * Gm_CompileFragmentShader
    * ------------------------
    */
-  GLuint Gm_CompileFragmentShader(const char* path) {
+  GLShaderRecord Gm_CompileFragmentShader(const char* path) {
     return Gm_CompileShader(GL_FRAGMENT_SHADER, path);
   }
 
@@ -43,7 +52,7 @@ namespace Gamma {
    * Gm_CompileGeometryShader
    * ------------------------
    */
-  GLuint Gm_CompileGeometryShader(const char* path) {
+  GLShaderRecord Gm_CompileGeometryShader(const char* path) {
     return Gm_CompileShader(GL_GEOMETRY_SHADER, path);
   }
 
@@ -51,7 +60,7 @@ namespace Gamma {
    * Gm_CompileVertexShader
    * ----------------------
    */
-  GLuint Gm_CompileVertexShader(const char* path) {
+  GLShaderRecord Gm_CompileVertexShader(const char* path) {
     return Gm_CompileShader(GL_VERTEX_SHADER, path);
   }
 
@@ -67,8 +76,10 @@ namespace Gamma {
     glDeleteProgram(program);
   }
 
-  void OpenGLShader::attachShader(GLuint shader) {
-    glAttachShader(program, shader);
+  void OpenGLShader::attachShader(const GLShaderRecord& record) {
+    glAttachShader(program, record.shader);
+
+    glShaderRecords.push_back(record);
   }
 
   GLint OpenGLShader::getUniformLocation(const char* name) const {
@@ -111,7 +122,28 @@ namespace Gamma {
     glUniform4fv(getUniformLocation(name), 1, &value.x);
   }
 
-  void OpenGLShader::use() const {
+  void OpenGLShader::use() {
+    #ifdef GAMMA_DEV_MODE
+      if ((SDL_GetTicks() - lastFileWatchTime) > 1000) {
+        for (auto& record : glShaderRecords) {
+          auto& fsPath = std::filesystem::current_path() / record.path;
+          auto lastWriteTime = std::filesystem::last_write_time(fsPath);
+
+          if (lastWriteTime != record.lastWriteTime) {
+            // @TODO recompile the shader
+
+            record.lastWriteTime = lastWriteTime;
+
+            log("Recompiled shader:", record.path);
+
+            break;
+          }
+        }
+
+        lastFileWatchTime = SDL_GetTicks();
+      }
+    #endif
+
     glUseProgram(program);
   }
 }
