@@ -12,6 +12,7 @@
 namespace Gamma {
   struct GLShaderRecord {
     GLuint shader;
+    GLenum shaderType;
     std::string path;
     std::filesystem::file_time_type lastWriteTime;
   };
@@ -38,9 +39,10 @@ namespace Gamma {
 
   private:
     GLuint program = -1;
-    uint32 lastFileWatchTime = 0;
+    uint32 lastShaderFileCheckTime = 0;
     std::vector<GLShaderRecord> glShaderRecords;
 
+    void checkAndHotReloadShaders();
     GLint getUniformLocation(const char* name) const;
     GLint getUniformLocation(std::string name) const;
   };

@@ -1,4 +1,3 @@
-#include <chrono>
 #include <filesystem>
 
 #include "opengl/shader.h"
@@ -37,7 +36,12 @@ namespace Gamma {
     auto& fsPath = std::filesystem::current_path() / path;
     auto lastWriteTime = std::filesystem::last_write_time(fsPath);
 
-    return { shader, path, lastWriteTime };
+    return {
+      shader,
+      shaderType,
+      path,
+      lastWriteTime
+    };
   }
 
   /**
@@ -82,6 +86,35 @@ namespace Gamma {
     glShaderRecords.push_back(record);
   }
 
+  void OpenGLShader::checkAndHotReloadShaders() {
+    constexpr static uint32 CHECK_INTERVAL = 1000;
+
+    if ((SDL_GetTicks() - lastShaderFileCheckTime) > CHECK_INTERVAL) {
+      for (auto& record : glShaderRecords) {
+        auto& fsPath = std::filesystem::current_path() / record.path;
+        auto lastWriteTime = std::filesystem::last_write_time(fsPath);
+
+        if (lastWriteTime != record.lastWriteTime) {
+          glDetachShader(program, record.shader);
+          glDeleteShader(record.shader);
+
+          GLShaderRecord& updatedRecord = Gm_CompileShader(record.shaderType, record.path.c_str());
+
+          glAttachShader(program, updatedRecord.shader);
+          glLinkProgram(program);
+
+          record = updatedRecord;
+
+          log("[Gamma] Hot reloaded shader:", record.path);
+
+          break;
+        }
+      }
+
+      lastShaderFileCheckTime = SDL_GetTicks();
+    }
+  }
+
   GLint OpenGLShader::getUniformLocation(const char* name) const {
     return glGetUniformLocation(program, name);
   }
@@ -124,24 +157,7 @@ namespace Gamma {
 
   void OpenGLShader::use() {
     #ifdef GAMMA_DEV_MODE
-      if ((SDL_GetTicks() - lastFileWatchTime) > 1000) {
-        for (auto& record : glShaderRecords) {
-          auto& fsPath = std::filesystem::current_path() / record.path;
-          auto lastWriteTime = std::filesystem::last_write_time(fsPath);
-
-          if (lastWriteTime != record.lastWriteTime) {
-            // @TODO recompile the shader
-
-            record.lastWriteTime = lastWriteTime;
-
-            log("Recompiled shader:", record.path);
-
-            break;
-          }
-        }
-
-        lastFileWatchTime = SDL_GetTicks();
-      }
+      checkAndHotReloadShaders();
     #endif
 
     glUseProgram(program);

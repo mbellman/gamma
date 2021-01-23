@@ -261,6 +261,7 @@
     <ClInclude Include="gamma\system\console.h" />
     <ClInclude Include="gamma\system\entities.h" />
     <ClInclude Include="gamma\system\file.h" />
+    <ClInclude Include="gamma\system\flags.h" />
     <ClInclude Include="gamma\system\InputSystem.h" />
     <ClInclude Include="gamma\system\object.h" />
     <ClInclude Include="gamma\system\Signaler.h" />

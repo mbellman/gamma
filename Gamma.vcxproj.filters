@@ -470,5 +470,8 @@
     <ClInclude Include="gamma\math\constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="gamma\system\flags.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

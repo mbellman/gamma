@@ -4,7 +4,6 @@
 // #include "benchmarks/object_management.h"
 // #include "benchmarks/matrix_multiplication.h"
 
-
 int main(int argc, char* argv[]) {
   Gamma::Window window;
 
