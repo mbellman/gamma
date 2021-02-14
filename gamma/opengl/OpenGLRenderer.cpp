@@ -9,6 +9,7 @@
 #include "system/camera.h"
 #include "system/console.h"
 #include "system/entities.h"
+#include "system/flags.h"
 #include "system/Window.h"
 
 #include "SDL.h"
@@ -76,6 +77,13 @@ namespace Gamma {
     deferred.illumination.attachShader(Gm_CompileVertexShader("shaders/deferred/lights.vert.glsl"));
     deferred.illumination.attachShader(Gm_CompileFragmentShader("shaders/deferred/lights.frag.glsl"));
     deferred.illumination.link();
+
+    #ifdef GAMMA_DEV_MODE
+      deferred.gBufferPreview.init();
+      deferred.gBufferPreview.attachShader(Gm_CompileVertexShader("shaders/quad.vert.glsl"));
+      deferred.gBufferPreview.attachShader(Gm_CompileFragmentShader("shaders/deferred/g-buffer-preview.frag.glsl"));
+      deferred.gBufferPreview.link();
+    #endif
 
     deferred.lightDisc.init();
 
@@ -231,6 +239,17 @@ namespace Gamma {
     post.debanding.shader.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
 
     OpenGLScreenQuad::render();
+
+    #ifdef GAMMA_DEV_MODE
+      deferred.g_buffer.read();
+
+      deferred.gBufferPreview.use();
+      deferred.gBufferPreview.setInt("colorAndDepth", 0);
+      deferred.gBufferPreview.setInt("normalAndSpecularity", 1);
+      deferred.gBufferPreview.setVec4f("transform", { 0.4f, 0.8f, 0.575f, 0.15f });
+
+      OpenGLScreenQuad::render();
+    #endif
   }
 
   void OpenGLRenderer::renderForward() {
