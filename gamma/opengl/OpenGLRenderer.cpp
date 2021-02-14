@@ -78,11 +78,11 @@ namespace Gamma {
     deferred.illumination.attachShader(Gm_CompileFragmentShader("shaders/deferred/lights.frag.glsl"));
     deferred.illumination.link();
 
-    #ifdef GAMMA_DEV_MODE
-      deferred.gBufferPreview.init();
-      deferred.gBufferPreview.attachShader(Gm_CompileVertexShader("shaders/quad.vert.glsl"));
-      deferred.gBufferPreview.attachShader(Gm_CompileFragmentShader("shaders/deferred/g-buffer-preview.frag.glsl"));
-      deferred.gBufferPreview.link();
+    #if GAMMA_SHOW_G_BUFFER_LAYERS
+      deferred.gBufferLayers.init();
+      deferred.gBufferLayers.attachShader(Gm_CompileVertexShader("shaders/quad.vert.glsl"));
+      deferred.gBufferLayers.attachShader(Gm_CompileFragmentShader("shaders/deferred/g-buffer-preview.frag.glsl"));
+      deferred.gBufferLayers.link();
     #endif
 
     deferred.lightDisc.init();
@@ -121,6 +121,10 @@ namespace Gamma {
     deferred.illumination.destroy();
     deferred.emissives.destroy();
     deferred.lightDisc.destroy();
+
+    #if GAMMA_SHOW_G_BUFFER_LAYERS
+      deferred.gBufferLayers.destroy();
+    #endif
 
     glDeleteBuffers(1, &forward.lightsUbo);
     glDeleteTextures(1, &screenTexture);
@@ -240,13 +244,13 @@ namespace Gamma {
 
     OpenGLScreenQuad::render();
 
-    #ifdef GAMMA_DEV_MODE
+    #if GAMMA_SHOW_G_BUFFER_LAYERS
       deferred.g_buffer.read();
 
-      deferred.gBufferPreview.use();
-      deferred.gBufferPreview.setInt("colorAndDepth", 0);
-      deferred.gBufferPreview.setInt("normalAndSpecularity", 1);
-      deferred.gBufferPreview.setVec4f("transform", { 0.4f, 0.8f, 0.575f, 0.15f });
+      deferred.gBufferLayers.use();
+      deferred.gBufferLayers.setInt("colorAndDepth", 0);
+      deferred.gBufferLayers.setInt("normalAndSpecularity", 1);
+      deferred.gBufferLayers.setVec4f("transform", { 0.4f, 0.8f, 0.575f, 0.15f });
 
       OpenGLScreenQuad::render();
     #endif

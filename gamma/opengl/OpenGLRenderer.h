@@ -52,7 +52,7 @@ namespace Gamma {
       OpenGLShader illumination;
       OpenGLShader emissives;
       OpenGLShader debanding;
-      OpenGLShader gBufferPreview;
+      OpenGLShader gBufferLayers;
       OpenGLLightDisc lightDisc;
     } deferred;
 

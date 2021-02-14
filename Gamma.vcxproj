@@ -146,6 +146,7 @@
     <ClInclude Include="demo\benchmarks\object_management.h" />
     <ClInclude Include="demo\DemoController.h" />
     <ClInclude Include="demo\DemoScene.h" />
+    <ClInclude Include="demo\gamma_flags.h" />
     <ClInclude Include="external\glew\include\eglew.h" />
     <ClInclude Include="external\glew\include\glew.h" />
     <ClInclude Include="external\glew\include\glxew.h" />

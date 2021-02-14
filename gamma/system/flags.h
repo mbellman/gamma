@@ -1,4 +1,5 @@
 #pragma once
 
-// @TODO allow defining these in user code
-#define GAMMA_DEV_MODE
+#if __has_include("gamma_flags.h")
+  #include "gamma_flags.h"
+#endif

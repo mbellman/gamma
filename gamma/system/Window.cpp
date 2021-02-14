@@ -6,6 +6,7 @@
 #include "system/AbstractController.h"
 #include "system/AbstractScene.h"
 #include "system/console.h"
+#include "system/flags.h"
 #include "system/Window.h"
 
 #include "SDL.h"
@@ -38,10 +39,11 @@ namespace Gamma {
 
   void Window::bindEvents() {
     if (AbstractScene::active != nullptr) {
-      // @TODO: subscribe to active scene mesh/light events
+      // @TODO subscribe to active scene mesh/light events
     }
 
     controller->on<AbstractScene*>("scene-created", [=](AbstractScene* scene) {
+      // @TODO clear all existing renderer meshes/lights when scenes change
       scene->on<Mesh*>("mesh-created", [=](auto* mesh) {
         renderer->createMesh(mesh);
       });
@@ -116,12 +118,16 @@ namespace Gamma {
           // @TODO create profiler helpers for this
           auto getTime = Gm_CreateTimer();
 
-          std::string fpsLabel = "FPS: " + std::to_string(fpsAverager.average());
-          std::string frameTimeLabel = "Frame time: " + std::to_string(frameTimeAverager.average()) + "us";
-
           renderer->render();
-          renderer->renderText(font_OpenSans, fpsLabel.c_str(), 50, 50);
-          renderer->renderText(font_OpenSans, frameTimeLabel.c_str(), 50, 100);
+
+          #if GAMMA_SHOW_FPS
+            std::string fpsLabel = "FPS: " + std::to_string(fpsAverager.average());
+            std::string frameTimeLabel = "Frame time: " + std::to_string(frameTimeAverager.average()) + "us";
+
+            renderer->renderText(font_OpenSans, fpsLabel.c_str(), 50, 50);
+            renderer->renderText(font_OpenSans, frameTimeLabel.c_str(), 50, 100);
+          #endif
+
           renderer->present();
 
           auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(getTime()).count();
