@@ -120,12 +120,16 @@ namespace Gamma {
 
           renderer->render();
 
-          #if GAMMA_SHOW_FPS
+          #if GAMMA_SHOW_STATS
+            auto& resolution = renderer->getInternalResolution();
+
             std::string fpsLabel = "FPS: " + std::to_string(fpsAverager.average());
             std::string frameTimeLabel = "Frame time: " + std::to_string(frameTimeAverager.average()) + "us";
+            std::string resolutionLabel = "Resolution: " + std::to_string(resolution.width) + " x " + std::to_string(resolution.height);
 
             renderer->renderText(font_OpenSans, fpsLabel.c_str(), 50, 50);
             renderer->renderText(font_OpenSans, frameTimeLabel.c_str(), 50, 100);
+            renderer->renderText(font_OpenSans, resolutionLabel.c_str(), 50, 150);
           #endif
 
           renderer->present();

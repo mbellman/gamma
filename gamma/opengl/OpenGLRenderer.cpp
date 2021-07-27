@@ -62,7 +62,7 @@ namespace Gamma {
     // Initialize deferred renderer
     // @TODO define separate OpenGLDeferredRenderer/OpenGLForwardRenderer classes
     deferred.g_buffer.init();
-    deferred.g_buffer.setSize({ 1920, 1080 });
+    deferred.g_buffer.setSize(internalResolution);
     deferred.g_buffer.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
     deferred.g_buffer.addColorAttachment(ColorFormat::RGBA);  // (RGB) Normal, (A) Specularity
     deferred.g_buffer.addDepthStencilAttachment();
@@ -89,7 +89,7 @@ namespace Gamma {
 
     // Initialize post effects
     post.debanding.buffer.init();
-    post.debanding.buffer.setSize({ 1920, 1080 });
+    post.debanding.buffer.setSize(internalResolution);
     post.debanding.buffer.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
     deferred.g_buffer.shareDepthStencilAttachment(post.debanding.buffer);
     post.debanding.buffer.bindColorAttachments();
@@ -156,10 +156,14 @@ namespace Gamma {
   }
 
   void OpenGLRenderer::renderDeferred() {
-    // Set G-Buffer as render target, reset state
+    // Set G-Buffer as render target
     deferred.g_buffer.write();
 
-    glViewport(0, 0, 1920, 1080);
+    uint32 internalWidth = internalResolution.width;
+    uint32 internalHeight = internalResolution.height;
+
+    // Clear buffers, reset state
+    glViewport(0, 0, internalWidth, internalHeight);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -173,7 +177,7 @@ namespace Gamma {
 
     // Render camera view
     auto& camera = *Camera::active;
-    Matrix4f projection = Matrix4f::projection({ 1920, 1080 }, 45.0f, 1.0f, 10000.0f).transpose();
+    Matrix4f projection = Matrix4f::projection({ internalWidth, internalHeight }, 45.0f, 1.0f, 10000.0f).transpose();
 
     Matrix4f view = (
       Matrix4f::rotation(camera.orientation.toVec3f()) *
@@ -204,7 +208,7 @@ namespace Gamma {
     deferred.g_buffer.read();
     post.debanding.buffer.write();
 
-    glViewport(0, 0, 1920, 1080);
+    glViewport(0, 0, internalWidth, internalHeight);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glDisable(GL_CULL_FACE);
