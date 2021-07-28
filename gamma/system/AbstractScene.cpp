@@ -35,14 +35,8 @@ namespace Gamma {
     return lights.back();
   }
 
-  Object& AbstractScene::createObjectFrom(std::string name) {
-    auto& mesh = *meshMap.at(name);
-
-    assert(
-      mesh.objects.max() > mesh.objects.total(),
-      "Failed to create object: a maximum of " + std::to_string(mesh.objects.max()) + " object(s) allowed for mesh '" + name + "'"
-    );
-
+  Object& AbstractScene::createObjectFrom(std::string meshName) {
+    auto& mesh = *meshMap.at(meshName);
     auto& object = mesh.objects.createObject();
 
     object._record.meshId = mesh.id;
@@ -61,21 +55,15 @@ namespace Gamma {
       return nullptr;
     }
 
-    auto& object = mesh.objects[record.index];
-
-    if (object._record.id != record.id) {
-      return nullptr;
-    }
-
-    return &object;
+    return mesh.objects.getByRecord(record);
   }
 
   const std::vector<Light>& AbstractScene::getLights() const {
     return lights;
   }
 
-  ObjectPool& AbstractScene::getMeshObjects(std::string name) {
-    return meshMap[name]->objects;
+  ObjectPool& AbstractScene::getMeshObjects(std::string meshName) {
+    return meshMap[meshName]->objects;
   }
 
   Object& AbstractScene::getObject(std::string name) {
@@ -133,7 +121,7 @@ namespace Gamma {
     auto* mesh = meshes[record.meshIndex];
 
     // @TODO (?) dispatch transform commands to separate buckets for multithreading
-    mesh->objects.transform(record.index, Matrix4f::transformation(
+    mesh->objects.transformById(record.id, Matrix4f::transformation(
       object.position,
       object.scale,
       object.rotation

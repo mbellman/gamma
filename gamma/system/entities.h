@@ -24,10 +24,10 @@ namespace Gamma {
    * integrity.
    */
   struct ObjectRecord {
-    uint16 meshIndex;
-    uint16 meshId;
-    uint16 index;
-    uint16 id;
+    uint16 meshIndex = 0;
+    uint16 meshId = 0;
+    uint16 id = 0;
+    uint16 generation = 0;
   };
 
   /**
@@ -53,22 +53,23 @@ namespace Gamma {
    */
   class ObjectPool {
   public:
-    Object& operator [](uint16 index);
-
     Object* begin() const;
     Object& createObject();
     Object* end() const;
     void free();
+    Object* getById(uint16 objectId) const;
+    Object* getByRecord(const ObjectRecord& record) const;
     Matrix4f* getMatrices() const;
     uint16 max() const;
-    void remove(uint16 index);
+    void removeById(uint16 objectId);
     void reserve(uint16 size);
     uint16 total() const;
-    void transform(uint16 index, const Matrix4f& matrix);
+    void transformById(uint16 objectId, const Matrix4f& matrix);
 
   private:
     Object* objects = nullptr;
     Matrix4f* matrices = nullptr;
+    uint16 indices[USHRT_MAX];
     uint16 maxObjects = 0;
     uint16 totalActiveObjects = 0;
     uint16 runningId = 0;

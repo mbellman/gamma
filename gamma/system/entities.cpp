@@ -3,6 +3,9 @@
 
 #include "math/vector.h"
 #include "system/entities.h"
+#include "system/assert.h"
+
+#define UNUSED_OBJECT_INDEX USHRT_MAX
 
 namespace Gamma {
   /**
@@ -45,19 +48,30 @@ namespace Gamma {
    * ObjectPool
    * ----------
    */
-  Object& ObjectPool::operator[](uint16 index) {
-    return objects[index > maxObjects ? 0 : index];
-  }
-
   Object* ObjectPool::begin() const {
     return objects;
   }
 
   Object& ObjectPool::createObject() {
-    Object& object = objects[totalActiveObjects];
+    uint16 id = runningId++;
 
-    object._record.id = runningId++;
-    object._record.index = totalActiveObjects++;
+    assert(max() > total(), "Object Pool out of space: " + std::to_string(max()) + " objects allowed in this pool");
+    assert(indices[id] == UNUSED_OBJECT_INDEX, "Attempted to create an Object in an occupied slot");
+
+    // Retrieve and initialize object
+    uint16 index = totalActiveObjects;
+    Object& object = objects[index];
+
+    object._record.id = id;
+    object._record.generation++;
+
+    // Reset object matrix
+    matrices[index] = Matrix4f::identity();
+
+    // Enable object lookup by ID -> index
+    indices[id] = index;
+
+    totalActiveObjects++;
 
     return object;
   }
@@ -67,6 +81,10 @@ namespace Gamma {
   }
 
   void ObjectPool::free() {
+    for (uint16 i = 0; i < USHRT_MAX; i++) {
+      indices[i] = UNUSED_OBJECT_INDEX;
+    }
+
     if (objects != nullptr) {
       delete[] objects;
     }
@@ -79,6 +97,28 @@ namespace Gamma {
     matrices = nullptr;
   }
 
+  Object* ObjectPool::getById(uint16 objectId) const {
+    uint16 index = indices[objectId];
+
+    return &objects[index];
+  }
+
+  Object* ObjectPool::getByRecord(const ObjectRecord& record) const {
+    uint16 index = indices[record.id];
+
+    if (index == UNUSED_OBJECT_INDEX) {
+      return nullptr;
+    }
+
+    auto* object = &objects[index];
+
+    if (object->_record.generation != record.generation) {
+      return nullptr;
+    }
+
+    return object;
+  }
+
   Matrix4f* ObjectPool::getMatrices() const {
     return matrices;
   }
@@ -87,12 +127,24 @@ namespace Gamma {
     return maxObjects;
   }
 
-  // @todo test to ensure that this works!
-  void ObjectPool::remove(uint16 index) {
+  void ObjectPool::removeById(uint16 objectId) {
+    uint16 index = indices[objectId];
+
+    if (index == UNUSED_OBJECT_INDEX) {
+      return;
+    }
+
     totalActiveObjects--;
 
-    objects[index] = objects[totalActiveObjects];
-    matrices[index] = matrices[totalActiveObjects];
+    uint16 lastIndex = totalActiveObjects;
+
+    // Swap last object/matrix into removed index
+    objects[index] = objects[lastIndex];
+    matrices[index] = matrices[lastIndex];
+
+    // Update ID -> index lookup table
+    indices[objects[index]._record.id] = index;
+    indices[objectId] = UNUSED_OBJECT_INDEX;
   }
 
   void ObjectPool::reserve(uint16 size) {
@@ -108,8 +160,8 @@ namespace Gamma {
     return totalActiveObjects;
   }
 
-  void ObjectPool::transform(uint16 index, const Matrix4f& matrix) {
-    matrices[index] = matrix;
+  void ObjectPool::transformById(uint16 objectId, const Matrix4f& matrix) {
+    matrices[indices[objectId]] = matrix;
   }
 
   /**

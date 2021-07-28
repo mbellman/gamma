@@ -56,6 +56,27 @@ void DemoScene::init() {
     if (key == Key::ESCAPE) {
       SDL_SetRelativeMouseMode(SDL_FALSE);
     }
+
+    if (key == Key::R) {
+      auto& cubes = getMeshObjects("cube");
+      auto* targetCube = cubes.getById(lastRemovedIndex);
+
+      if (targetCube != nullptr) {
+        Vec3f oldPosition = (*targetCube).position;
+
+        cubes.removeById(lastRemovedIndex);
+
+        auto& cube = cubes.createObject();
+
+        cube.position = oldPosition;
+        cube.scale = 20.0f;
+        cube.rotation = Vec3f(1.3f, 0.9f, 2.2f);
+
+        transform(cube);
+
+        lastRemovedIndex++;
+      }
+    }
   });
 }
 
