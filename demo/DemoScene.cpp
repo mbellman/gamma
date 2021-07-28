@@ -58,24 +58,7 @@ void DemoScene::init() {
     }
 
     if (key == Key::R) {
-      auto& cubes = getMeshObjects("cube");
-      auto* targetCube = cubes.getById(lastRemovedIndex);
-
-      if (targetCube != nullptr) {
-        Vec3f oldPosition = (*targetCube).position;
-
-        cubes.removeById(lastRemovedIndex);
-
-        auto& cube = cubes.createObject();
-
-        cube.position = oldPosition;
-        cube.scale = 20.0f;
-        cube.rotation = Vec3f(1.3f, 0.9f, 2.2f);
-
-        transform(cube);
-
-        lastRemovedIndex++;
-      }
+      getMeshObjects("cube").removeById(lastRemovedIndex++);
     }
   });
 }

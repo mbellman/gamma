@@ -100,19 +100,13 @@ namespace Gamma {
   Object* ObjectPool::getById(uint16 objectId) const {
     uint16 index = indices[objectId];
 
-    return &objects[index];
+    return index == UNUSED_OBJECT_INDEX ? nullptr : &objects[index];
   }
 
   Object* ObjectPool::getByRecord(const ObjectRecord& record) const {
-    uint16 index = indices[record.id];
+    auto* object = getById(record.id);
 
-    if (index == UNUSED_OBJECT_INDEX) {
-      return nullptr;
-    }
-
-    auto* object = &objects[index];
-
-    if (object->_record.generation != record.generation) {
+    if (object == nullptr || object->_record.generation != record.generation) {
       return nullptr;
     }
 
