@@ -75,11 +75,11 @@ namespace Gamma {
 
     // Buffer instance matrices
     glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::MATRIX]);
-    glBufferData(GL_ARRAY_BUFFER, mesh.totalActiveMatrices * sizeof(Matrix4f), mesh.matrices, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, mesh.objects.total() * sizeof(Matrix4f), mesh.objects.getMatrices(), GL_DYNAMIC_DRAW);
 
     // Bind VAO/EBO and draw instances
     glBindVertexArray(vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glDrawElementsInstanced(primitiveMode, mesh.faceIndexes.size(), GL_UNSIGNED_INT, (void*)0, mesh.totalActiveObjects);
+    glDrawElementsInstanced(primitiveMode, mesh.faceIndexes.size(), GL_UNSIGNED_INT, (void*)0, mesh.objects.total());
   }
 }

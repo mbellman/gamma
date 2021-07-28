@@ -10,12 +10,6 @@ void DemoScene::init() {
 
   addMesh("cube", Gm_CreateCube(), 100);
 
-  // auto& light = createLight();
-
-  // light.color = Vec3f(1.0f, 0.5f, 0.2f);
-  // light.position = Vec3f(0.0f, 50.0f, 0.0f);
-  // light.radius = 250.0f;
-
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < 10; j++) {
       auto& cube = createObjectFrom("cube");
@@ -42,12 +36,6 @@ void DemoScene::init() {
       light.radius = 250.0f;
 
       cube.rotation.y += (float)(i * 10 + j) / 10.0f;
-
-      addBehavior(cube, [&](float dt) {
-        cube.rotation.y += dt;
-
-        transform(cube);
-      });
     }
   }
 
@@ -73,4 +61,14 @@ void DemoScene::init() {
 
 void DemoScene::destroy() {}
 
-void DemoScene::update(float dt) {}
+void DemoScene::update(float dt) {
+  auto& cubes = getMeshObjects("cube");
+
+  for (int i = 0; i < cubes.total(); i++) {
+    auto& cube = cubes[i];
+
+    cube.rotation.y += dt;
+
+    transform(cube);
+  }
+}

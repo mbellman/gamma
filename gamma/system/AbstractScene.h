@@ -19,20 +19,6 @@ namespace Gamma {
     MODE_WIREFRAME = 1 << 2
   };
 
-  typedef std::function<void(float)> BehaviorHandler;
-
-  struct ObjectRecord {
-    uint32 meshId;
-    uint32 meshGeneration;
-    uint32 objectId;
-    uint32 objectGeneration;
-  };
-
-  struct Behavior {
-    ObjectRecord record;
-    BehaviorHandler handler;
-  };
-
   class AbstractScene : public Initable, public Destroyable, public Signaler {
   public:
     Camera camera;
@@ -43,10 +29,9 @@ namespace Gamma {
 
     virtual ~AbstractScene();
 
-    virtual void addBehavior(const Object& object, BehaviorHandler handler);
-    void addMesh(std::string name, Mesh* mesh, uint32 maxInstances);
+    void addMesh(std::string name, Mesh* mesh, uint16 maxInstances);
     Light& createLight();
-    Object& createObjectFrom(std::string name);
+    Object& createObjectFrom(std::string meshName);
     const std::vector<Light>& getLights() const;
     void removeMesh(std::string name);
     void transform(const Object& object);
@@ -54,17 +39,18 @@ namespace Gamma {
     virtual void updateScene(float dt) final;
 
   protected:
-    Object& get(std::string);
+    ObjectPool& getMeshObjects(std::string meshName);
+    Object& getObject(std::string name);
     float getRunningTime();
-    void store(std::string, Object& object);
+    void storeObject(std::string, Object& object);
 
   private:
     std::vector<Mesh*> meshes;
     std::map<std::string, Mesh*> meshMap;
     std::map<std::string, ObjectRecord> objectStore;
     std::vector<Light> lights;
-    std::vector<Behavior> behaviors;
     float runningTime = 0.0f;
+    uint16 runningMeshId = 0;
 
     Object* findObject(const ObjectRecord& record);
     void handleFreeCameraMode(float dt);

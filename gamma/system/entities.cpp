@@ -42,6 +42,73 @@ namespace Gamma {
   };
 
   /**
+   * ObjectPool
+   * ----------
+   */
+  Object& ObjectPool::operator[](uint16 index) {
+    return objects[index > maxObjects ? 0 : index];
+  }
+
+  Object& ObjectPool::createObject() {
+    Object& object = objects[totalActiveObjects];
+
+    object._record.id = runningId++;
+    object._record.index = totalActiveObjects++;
+
+    return object;
+  }
+
+  void ObjectPool::free() {
+    if (objects != nullptr) {
+      delete[] objects;
+    }
+
+    if (matrices != nullptr) {
+      delete[] matrices;
+    }
+
+    objects = nullptr;
+    matrices = nullptr;
+  }
+
+  Matrix4f* ObjectPool::getMatrices() const {
+    return matrices;
+  }
+
+  bool ObjectPool::isFull() const {
+    return total() >= max();
+  }
+
+  uint16 ObjectPool::max() const {
+    return maxObjects;
+  }
+
+  // @todo test to ensure that this works!
+  void ObjectPool::remove(uint16 index) {
+    totalActiveObjects--;
+
+    objects[index] = objects[totalActiveObjects];
+    matrices[index] = matrices[totalActiveObjects];
+  }
+
+  void ObjectPool::reserve(uint16 size) {
+    free();
+
+    maxObjects = size;
+    totalActiveObjects = 0;
+    objects = new Object[size];
+    matrices = new Matrix4f[size];
+  }
+
+  uint16 ObjectPool::total() const {
+    return totalActiveObjects;
+  }
+
+  void ObjectPool::transform(uint16 index, const Matrix4f& matrix) {
+    matrices[index] = matrix;
+  }
+
+  /**
    * Gm_ComputeNormals
    * -----------------
    */
@@ -151,20 +218,7 @@ namespace Gamma {
   void Gm_FreeMesh(Mesh* mesh) {
     mesh->vertices.clear();
     mesh->faceIndexes.clear();
-
-    if (mesh->objects != nullptr) {
-      delete[] mesh->objects;
-    }
-
-    if (mesh->matrices != nullptr) {
-      delete[] mesh->matrices;
-    }
-
-    mesh->objects = nullptr;
-    mesh->matrices = nullptr;
-    mesh->totalActiveMatrices = 0;
-    mesh->totalActiveObjects = 0;
-    mesh->maxInstances = 0;
+    mesh->objects.free();
   }
 
   /**

@@ -15,6 +15,22 @@ namespace Gamma {
   };
 
   /**
+   * ObjectRecord
+   * ------------
+   *
+   * A unique identifier for an object which allows it
+   * to be looked up on the appropriate Mesh and at its
+   * corresponding index, with ID checks for referential
+   * integrity.
+   */
+  struct ObjectRecord {
+    uint16 meshIndex;
+    uint16 meshId;
+    uint16 index;
+    uint16 id;
+  };
+
+  /**
    * Object
    * ------
    *
@@ -23,14 +39,38 @@ namespace Gamma {
    * each with its own transformations.
    */
   struct Object {
-    uint32 _meshId = 0;
-    uint32 _meshGeneration = 0;
-    uint32 _objectId = 0;
-    uint32 _generation = 0;
-    uint32 _matrixId = 0;
+    ObjectRecord _record;
     Vec3f position;
     Vec3f rotation;
     Vec3f scale;
+  };
+
+  /**
+   * ObjectPool
+   * ----------
+   *
+   * @todo description
+   */
+  class ObjectPool {
+  public:
+    Object& operator [](uint16 index);
+
+    Object& createObject();
+    void free();
+    Matrix4f* getMatrices() const;
+    bool isFull() const;
+    uint16 max() const;
+    void remove(uint16 index);
+    void reserve(uint16 size);
+    uint16 total() const;
+    void transform(uint16 index, const Matrix4f& matrix);
+
+  private:
+    Object* objects = nullptr;
+    Matrix4f* matrices = nullptr;
+    uint16 maxObjects = 0;
+    uint16 totalActiveObjects = 0;
+    uint16 runningId = 0;
   };
 
   /**
@@ -58,17 +98,18 @@ namespace Gamma {
    */
   struct Mesh {
     /**
-     * A unique ID for the mesh.
+     * The index of the mesh in a scene's Mesh array,
+     * used for efficient mesh lookups.
      */
-    uint32 id;
+    uint16 index = 0;
     /**
-     * Determines the number of times the mesh object has
-     * been recycled based on removal and reallocation of
-     * meshes within a scene. Mesh lookups rely on both a
-     * mesh ID and generation; if a mesh meeting these
-     * criteria can't be found, the lookup will fail.
+     * A unique ID for the mesh. If a mesh retrieved
+     * at a specific index in a scene's Mesh array
+     * does not match an expected ID (e.g., if the
+     * mesh structure has been recycled), the reference
+     * should be considered stale.
      */
-    uint32 generation = 0;
+    uint16 id = 0;
     /**
      * Static mesh vertices in model space.
      */
@@ -79,23 +120,10 @@ namespace Gamma {
      */
     std::vector<uint32> faceIndexes;
     /**
-     * Defines the maximum number of allotted instances
-     * for the mesh, determined whenever the mesh is
-     * added to a scene.
+     * A collection of objects representing unique instances
+     * of the mesh.
      */
-    uint32 maxInstances = 0;
-    /**
-     * An array of objects created from the mesh.
-     */
-    Object* objects = nullptr;
-    uint32 totalActiveObjects = 0;
-    /**
-     * An array of transformation matrices for each object
-     * created from the mesh, stored contiguously to allow
-     * the data to be easily uploaded to the GPU.
-     */
-    Matrix4f* matrices = nullptr;
-    uint32 totalActiveMatrices = 0;
+    ObjectPool objects;
   };
 
   /**

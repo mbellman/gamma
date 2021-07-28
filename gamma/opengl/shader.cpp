@@ -105,7 +105,7 @@ namespace Gamma {
 
           record = updatedRecord;
 
-          log("[Gamma] Hot reloaded shader:", record.path);
+          log("[Gamma] Hot-reloaded shader:", record.path);
 
           break;
         }
