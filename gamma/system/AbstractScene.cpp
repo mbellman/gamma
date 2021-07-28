@@ -39,7 +39,7 @@ namespace Gamma {
     auto& mesh = *meshMap.at(name);
 
     assert(
-      !mesh.objects.isFull(),
+      mesh.objects.max() > mesh.objects.total(),
       "Failed to create object: a maximum of " + std::to_string(mesh.objects.max()) + " object(s) allowed for mesh '" + name + "'"
     );
 
@@ -130,7 +130,7 @@ namespace Gamma {
 
   void AbstractScene::transform(const Object& object) {
     auto& record = object._record;
-    auto* mesh = meshes[record.meshId];
+    auto* mesh = meshes[record.meshIndex];
 
     // @TODO (?) dispatch transform commands to separate buckets for multithreading
     mesh->objects.transform(record.index, Matrix4f::transformation(

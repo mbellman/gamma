@@ -58,7 +58,6 @@ namespace Gamma {
     Object& createObject();
     void free();
     Matrix4f* getMatrices() const;
-    bool isFull() const;
     uint16 max() const;
     void remove(uint16 index);
     void reserve(uint16 size);

@@ -75,10 +75,6 @@ namespace Gamma {
     return matrices;
   }
 
-  bool ObjectPool::isFull() const {
-    return total() >= max();
-  }
-
   uint16 ObjectPool::max() const {
     return maxObjects;
   }
