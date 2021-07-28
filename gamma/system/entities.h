@@ -55,7 +55,9 @@ namespace Gamma {
   public:
     Object& operator [](uint16 index);
 
+    Object* begin() const;
     Object& createObject();
+    Object* end() const;
     void free();
     Matrix4f* getMatrices() const;
     uint16 max() const;

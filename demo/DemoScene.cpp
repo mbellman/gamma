@@ -35,7 +35,7 @@ void DemoScene::init() {
       light.position = cubePosition + Vec3f(0.0f, 50.0f, 0.0f);
       light.radius = 250.0f;
 
-      cube.rotation.y += (float)(i * 10 + j) / 10.0f;
+      cube.rotation.y += (float)(i * 10 + j) / 5.0f;
     }
   }
 
@@ -62,11 +62,7 @@ void DemoScene::init() {
 void DemoScene::destroy() {}
 
 void DemoScene::update(float dt) {
-  auto& cubes = getMeshObjects("cube");
-
-  for (int i = 0; i < cubes.total(); i++) {
-    auto& cube = cubes[i];
-
+  for (auto& cube : getMeshObjects("cube")) {
     cube.rotation.y += dt;
 
     transform(cube);

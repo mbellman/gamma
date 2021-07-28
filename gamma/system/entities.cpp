@@ -49,6 +49,10 @@ namespace Gamma {
     return objects[index > maxObjects ? 0 : index];
   }
 
+  Object* ObjectPool::begin() const {
+    return objects;
+  }
+
   Object& ObjectPool::createObject() {
     Object& object = objects[totalActiveObjects];
 
@@ -56,6 +60,10 @@ namespace Gamma {
     object._record.index = totalActiveObjects++;
 
     return object;
+  }
+
+  Object* ObjectPool::end() const {
+    return &objects[totalActiveObjects];
   }
 
   void ObjectPool::free() {
