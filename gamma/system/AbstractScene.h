@@ -50,6 +50,7 @@ namespace Gamma {
     std::map<std::string, ObjectRecord> objectStore;
     std::vector<Light> lights;
     float runningTime = 0.0f;
+    Vec3f freeCameraVelocity = Vec3f(0.0f);
     uint16 runningMeshId = 0;
 
     Object* findObject(const ObjectRecord& record);

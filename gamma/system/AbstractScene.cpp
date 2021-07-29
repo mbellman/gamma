@@ -80,21 +80,27 @@ namespace Gamma {
   }
 
   void AbstractScene::handleFreeCameraMode(float dt) {
-    float speed = 150.0f * dt;
-    Vec3f& position = camera.position;
     const Orientation& orientation = camera.orientation;
+    Vec3f direction;
 
     if (input.isKeyHeld(Key::A)) {
-      position += orientation.getLeftDirection() * speed;
+      direction += orientation.getLeftDirection();
     } else if (input.isKeyHeld(Key::D)) {
-      position += orientation.getRightDirection() * speed;
+      direction += orientation.getRightDirection();
     }
 
     if (input.isKeyHeld(Key::W)) {
-      position += orientation.getDirection() * speed;
+      direction += orientation.getDirection();
     } else if (input.isKeyHeld(Key::S)) {
-      position += orientation.getDirection().invert() * speed;
+      direction += orientation.getDirection().invert();
     }
+
+    if (direction.magnitude() > 0.0f) {
+      freeCameraVelocity += direction.unit() * 5000.0f * dt;
+    }
+
+    camera.position += freeCameraVelocity * dt;
+    freeCameraVelocity *= (1.0f - dt * 5.0f);
   }
 
   void AbstractScene::removeMesh(std::string name) {
