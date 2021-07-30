@@ -139,6 +139,7 @@
     <ClCompile Include="gamma\system\entities.cpp" />
     <ClCompile Include="gamma\system\file.cpp" />
     <ClCompile Include="gamma\system\InputSystem.cpp" />
+    <ClCompile Include="gamma\system\ObjLoader.cpp" />
     <ClCompile Include="gamma\system\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -265,6 +266,7 @@
     <ClInclude Include="gamma\system\flags.h" />
     <ClInclude Include="gamma\system\InputSystem.h" />
     <ClInclude Include="gamma\system\object.h" />
+    <ClInclude Include="gamma\system\ObjLoader.h" />
     <ClInclude Include="gamma\system\Signaler.h" />
     <ClInclude Include="gamma\system\traits.h" />
     <ClInclude Include="gamma\system\type_aliases.h" />

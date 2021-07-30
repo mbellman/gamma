@@ -2,8 +2,9 @@
 #include <cstdlib>
 
 #include "math/vector.h"
-#include "system/entities.h"
 #include "system/assert.h"
+#include "system/entities.h"
+#include "system/ObjLoader.h"
 
 #define UNUSED_OBJECT_INDEX USHRT_MAX
 
@@ -276,7 +277,29 @@ namespace Gamma {
    * -----------
    */
   Mesh* Gm_LoadMesh(const char* path) {
-    // @TODO load .obj model files
-    return new Mesh();
+    ObjLoader obj(path);
+
+    auto* mesh = new Mesh();
+    auto& vertices = mesh->vertices;
+    auto& faceIndexes = mesh->faceIndexes;
+
+    vertices.resize(obj.vertices.size());
+    faceIndexes.resize(obj.faces.size() * 3);
+
+    for (uint32 i = 0; i < vertices.size(); i++) {
+      vertices[i].position = obj.vertices[i];
+      // @todo resolve uv coordinates
+    }
+
+    for (uint32 i = 0; i < obj.faces.size(); i++) {
+      faceIndexes[i * 3] = obj.faces[i].v1.vertexIndex;
+      faceIndexes[i * 3 + 1] = obj.faces[i].v2.vertexIndex;
+      faceIndexes[i * 3 + 2] = obj.faces[i].v3.vertexIndex;
+    }
+
+    Gm_ComputeNormals(mesh);
+    Gm_ComputeTangents(mesh);
+
+    return mesh;
   }
 }

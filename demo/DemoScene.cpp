@@ -9,15 +9,32 @@ void DemoScene::init() {
   flags = SceneFlags::MODE_FREE_CAMERA;
 
   addMesh("cube", Gm_CreateCube(), 100);
+  addMesh("rabbit", Gm_LoadMesh("./demo/assets/models/rabbit.obj"), 1);
+
+  auto& rabbit = createObjectFrom("rabbit");
+
+  rabbit.scale = 50.0f;
+  rabbit.position = Vec3f(0.0f, 100.0f, 0.0f);
+
+  camera.position.z = -1000.0f;
+
+  transform(rabbit);
+
+  auto& rabbitLight = createLight();
+
+  rabbitLight.position = rabbit.position + Vec3f(0.0f, 200.0f, 0.0f);
+  rabbitLight.color = Vec3f(0.0f, 0.0f, 1.0f);
+  rabbitLight.radius = 1000.0f;
+  rabbitLight.power = 5.0f;
 
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < 10; j++) {
       auto& cube = createObjectFrom("cube");
 
       Vec3f cubePosition = Vec3f(
-        150.0f * (i - 5),
+        200.0f * (i - 5),
         0.0f,
-        150.0f * (j - 5)
+        200.0f * (j - 5)
       );
 
       cube.position = cubePosition;
