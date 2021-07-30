@@ -96,11 +96,13 @@ namespace Gamma {
     }
 
     if (direction.magnitude() > 0.0f) {
-      freeCameraVelocity += direction.unit() * 5000.0f * dt;
+      float speed = input.isKeyHeld(Key::SHIFT) ? 1000.0f : 5000.0f;
+
+      freeCameraVelocity += direction.unit() * speed * dt;
     }
 
     camera.position += freeCameraVelocity * dt;
-    freeCameraVelocity *= (1.0f - dt * 5.0f);
+    freeCameraVelocity *= (0.995f - dt * 5.0f);
   }
 
   void AbstractScene::removeMesh(std::string name) {

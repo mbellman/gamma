@@ -23,7 +23,7 @@ void DemoScene::init() {
   auto& rabbitLight = createLight();
 
   rabbitLight.position = rabbit.position + Vec3f(0.0f, 200.0f, 0.0f);
-  rabbitLight.color = Vec3f(0.0f, 0.0f, 1.0f);
+  rabbitLight.color = Vec3f(1.0f, 0.0f, 1.0f);
   rabbitLight.radius = 1000.0f;
   rabbitLight.power = 5.0f;
 
