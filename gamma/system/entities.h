@@ -120,7 +120,7 @@ namespace Gamma {
      * Vertex indices for each triangle face of the mesh,
      * defined in groups of three.
      */
-    std::vector<uint32> faceIndexes;
+    std::vector<uint32> faceElements;
     /**
      * A collection of objects representing unique instances
      * of the mesh.

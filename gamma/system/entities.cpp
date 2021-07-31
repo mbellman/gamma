@@ -1,5 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
+#include <map>
+#include <utility>
 
 #include "math/vector.h"
 #include "system/assert.h"
@@ -165,12 +167,12 @@ namespace Gamma {
    */
   void Gm_ComputeNormals(Mesh* mesh) {
     auto& vertices = mesh->vertices;
-    auto& faceIndexes = mesh->faceIndexes;
+    auto& faceElements = mesh->faceElements;
 
-    for (uint32 i = 0; i < faceIndexes.size(); i += 3) {
-      Vertex& v1 = vertices[faceIndexes[i]];
-      Vertex& v2 = vertices[faceIndexes[i + 1]];
-      Vertex& v3 = vertices[faceIndexes[i + 2]];
+    for (uint32 i = 0; i < faceElements.size(); i += 3) {
+      Vertex& v1 = vertices[faceElements[i]];
+      Vertex& v2 = vertices[faceElements[i + 1]];
+      Vertex& v3 = vertices[faceElements[i + 2]];
 
       Vec3f normal = Vec3f::cross(v2.position - v1.position, v3.position - v1.position).unit();
 
@@ -186,12 +188,12 @@ namespace Gamma {
    */
   void Gm_ComputeTangents(Mesh* mesh) {
     auto& vertices = mesh->vertices;
-    auto& faceIndexes = mesh->faceIndexes;
+    auto& faceElements = mesh->faceElements;
 
-    for (uint32 i = 0; i < faceIndexes.size(); i += 3) {
-      Vertex& v1 = vertices[faceIndexes[i]];
-      Vertex& v2 = vertices[faceIndexes[i + 1]];
-      Vertex& v3 = vertices[faceIndexes[i + 2]];
+    for (uint32 i = 0; i < faceElements.size(); i += 3) {
+      Vertex& v1 = vertices[faceElements[i]];
+      Vertex& v2 = vertices[faceElements[i + 1]];
+      Vertex& v3 = vertices[faceElements[i + 2]];
 
       Vec3f e1 = v2.position - v1.position;
       Vec3f e2 = v3.position - v1.position;
@@ -226,31 +228,31 @@ namespace Gamma {
   Mesh* Gm_CreateCube() {
     auto* mesh = new Mesh();
     auto& vertices = mesh->vertices;
-    auto& faceIndexes = mesh->faceIndexes;
+    auto& faceElements = mesh->faceElements;
 
     vertices.resize(24);
-    faceIndexes.resize(36);
+    faceElements.resize(36);
 
-    // for each cube side
+    // For each cube side
     for (uint8 i = 0; i < 6; i++) {
       auto& face = cubeFaces[i];
       uint32 f_offset = i * 6;
       uint32 v_offset = i * 4;
 
-      // define vertex indexes for the two triangle faces on each cube side
-      faceIndexes[f_offset] = v_offset;
-      faceIndexes[f_offset + 1] = v_offset + 1;
-      faceIndexes[f_offset + 2] = v_offset + 2;
+      // Define vertex indexes for the two triangle faces on each cube side
+      faceElements[f_offset] = v_offset;
+      faceElements[f_offset + 1] = v_offset + 1;
+      faceElements[f_offset + 2] = v_offset + 2;
 
-      faceIndexes[f_offset + 3] = v_offset;
-      faceIndexes[f_offset + 4] = v_offset + 2;
-      faceIndexes[f_offset + 5] = v_offset + 3;
+      faceElements[f_offset + 3] = v_offset;
+      faceElements[f_offset + 4] = v_offset + 2;
+      faceElements[f_offset + 5] = v_offset + 3;
 
-      // for each corner on this side
+      // For each corner on this side
       for (uint8 j = 0; j < 4; j++) {
         auto& vertex = vertices[v_offset++];
 
-        // define the corner vertex position/uvs
+        // Define the corner vertex position/uvs
         vertex.position = cubeCornerPositions[face[j]];
         vertex.uv = cubeUvs[j];
       }
@@ -268,7 +270,7 @@ namespace Gamma {
    */
   void Gm_FreeMesh(Mesh* mesh) {
     mesh->vertices.clear();
-    mesh->faceIndexes.clear();
+    mesh->faceElements.clear();
     mesh->objects.free();
   }
 
@@ -281,20 +283,61 @@ namespace Gamma {
 
     auto* mesh = new Mesh();
     auto& vertices = mesh->vertices;
-    auto& faceIndexes = mesh->faceIndexes;
+    auto& faceElements = mesh->faceElements;
 
-    vertices.resize(obj.vertices.size());
-    faceIndexes.resize(obj.faces.size() * 3);
+    if (obj.textureCoordinates.size() == 0) {
+      // No texture coordinates defined in the model file,
+      // so we can load the vertices/face elements directly
+      vertices.resize(obj.vertices.size());
+      faceElements.resize(obj.faces.size() * 3);
 
-    for (uint32 i = 0; i < vertices.size(); i++) {
-      vertices[i].position = obj.vertices[i];
-      // @todo resolve uv coordinates
-    }
+      for (uint32 i = 0; i < vertices.size(); i++) {
+        vertices[i].position = obj.vertices[i];
+      }
 
-    for (uint32 i = 0; i < obj.faces.size(); i++) {
-      faceIndexes[i * 3] = obj.faces[i].v1.vertexIndex;
-      faceIndexes[i * 3 + 1] = obj.faces[i].v2.vertexIndex;
-      faceIndexes[i * 3 + 2] = obj.faces[i].v3.vertexIndex;
+      for (uint32 i = 0; i < obj.faces.size(); i++) {
+        faceElements[i * 3] = obj.faces[i].v1.vertexIndex;
+        faceElements[i * 3 + 1] = obj.faces[i].v2.vertexIndex;
+        faceElements[i * 3 + 2] = obj.faces[i].v3.vertexIndex;
+      }
+    } else {
+      // Texture coordinates defined, so we need to create
+      // vertices by unique position/uv pairs, and add face
+      // elements based on created vertices
+      typedef std::pair<uint32, uint32> VertexPair;
+
+      std::map<VertexPair, uint32> pairToVertexIndexMap;
+
+      for (const auto& face : obj.faces) {
+        VertexPair pairs[3] = {
+          { face.v1.vertexIndex, face.v1.textureCoordinateIndex },
+          { face.v2.vertexIndex, face.v2.textureCoordinateIndex },
+          { face.v3.vertexIndex, face.v3.textureCoordinateIndex }
+        };
+
+        // Add face elements, creating vertices if necessary
+        for (uint32 p = 0; p < 3; p++) {
+          auto& pair = pairs[p];
+          auto indexRecord = pairToVertexIndexMap.find(pair);
+
+          if (indexRecord != pairToVertexIndexMap.end()) {
+            // Vertex already exists, so we can just add the face element
+            faceElements.push_back(indexRecord->second);
+          } else {
+            // Vertex doesn't exist, so we need to create it
+            Vertex vertex;
+            uint32 index = vertices.size();
+
+            vertex.position = obj.vertices[pair.first];
+            // @todo see if uv.y needs to be inverted
+            vertex.uv = obj.textureCoordinates[pair.second];
+            
+            vertices.push_back(vertex);
+            faceElements.push_back(index);
+            pairToVertexIndexMap.emplace(pair, index);
+          }
+        }
+      }
     }
 
     Gm_ComputeNormals(mesh);

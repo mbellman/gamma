@@ -27,7 +27,7 @@ namespace Gamma {
     glBindVertexArray(vao);
 
     auto& vertices = mesh->vertices;
-    auto& faceIndexes = mesh->faceIndexes;
+    auto& faceElements = mesh->faceElements;
 
     // Buffer vertex data
     glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::VERTEX]);
@@ -35,7 +35,7 @@ namespace Gamma {
     
     // Buffer vertex element data
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, faceIndexes.size() * sizeof(uint32), faceIndexes.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, faceElements.size() * sizeof(uint32), faceElements.data(), GL_STATIC_DRAW);
 
     // Define vertex attributes
     glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::VERTEX]);
@@ -80,6 +80,6 @@ namespace Gamma {
     // Bind VAO/EBO and draw instances
     glBindVertexArray(vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glDrawElementsInstanced(primitiveMode, mesh.faceIndexes.size(), GL_UNSIGNED_INT, (void*)0, mesh.objects.total());
+    glDrawElementsInstanced(primitiveMode, mesh.faceElements.size(), GL_UNSIGNED_INT, (void*)0, mesh.objects.total());
   }
 }
