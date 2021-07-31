@@ -19,6 +19,11 @@ namespace Gamma {
     MODE_WIREFRAME = 1 << 2
   };
 
+  struct SceneStats {
+    uint32 verts = 0;
+    uint32 tris = 0;
+  };
+
   class AbstractScene : public Initable, public Destroyable, public Signaler {
   public:
     Camera camera;
@@ -33,6 +38,7 @@ namespace Gamma {
     Light& createLight();
     Object& createObjectFrom(std::string meshName);
     const std::vector<Light>& getLights() const;
+    const SceneStats getStats() const;
     void removeMesh(std::string name);
     void transform(const Object& object);
     virtual void update(float dt) {};

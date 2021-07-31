@@ -8,21 +8,29 @@ using namespace Gamma;
 void DemoScene::init() {
   flags = SceneFlags::MODE_FREE_CAMERA;
 
-  addMesh("cube", Gm_CreateCube(), 100);
-  addMesh("rabbit", Gm_LoadMesh("./demo/assets/models/rabbit.obj"), 1);
-
-  auto& rabbit = createObjectFrom("rabbit");
-
-  rabbit.scale = 50.0f;
-  rabbit.position = Vec3f(0.0f, 100.0f, 0.0f);
-
   camera.position.z = -1000.0f;
 
-  transform(rabbit);
+  addMesh("cube", Gm_CreateCube(), 100);
+  addMesh("rabbit", Gm_LoadMesh("./demo/assets/models/rabbit.obj"), 10);
+
+  for (uint32 i = 0; i < 10; i++) {
+    auto& rabbit = createObjectFrom("rabbit");
+    float r = (float)i / 10.0f * M_PI * 2.0f;
+
+    rabbit.scale = 50.0f;
+    
+    rabbit.position = Vec3f(
+      sinf(r) * 300.0f,
+      100.0f,
+      cosf(r) * 300.0f
+    );
+
+    transform(rabbit);
+  }
 
   auto& rabbitLight = createLight();
 
-  rabbitLight.position = rabbit.position + Vec3f(0.0f, 200.0f, 0.0f);
+  rabbitLight.position = Vec3f(0.0f, 300.0f, 0.0f);
   rabbitLight.color = Vec3f(1.0f, 0.0f, 1.0f);
   rabbitLight.radius = 1000.0f;
   rabbitLight.power = 5.0f;
@@ -40,6 +48,7 @@ void DemoScene::init() {
       cube.position = cubePosition;
       cube.scale = 30.0f;
       cube.rotation = Vec3f(1.3f, 0.9f, 2.2f);
+      cube.rotation.y += (float)(i * 10 + j) / 5.0f;
 
       auto& light = createLight();
 
@@ -51,8 +60,6 @@ void DemoScene::init() {
 
       light.position = cubePosition + Vec3f(0.0f, 50.0f, 0.0f);
       light.radius = 250.0f;
-
-      cube.rotation.y += (float)(i * 10 + j) / 5.0f;
     }
   }
 

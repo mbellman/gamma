@@ -79,6 +79,17 @@ namespace Gamma {
     return runningTime;
   }
 
+  const SceneStats AbstractScene::getStats() const {
+    SceneStats stats;
+
+    for (auto* mesh : meshes) {
+      stats.verts += mesh->vertices.size() * mesh->objects.total();
+      stats.tris += (mesh->faceElements.size() / 3) * mesh->objects.total();
+    }
+
+    return stats;
+  }
+
   void AbstractScene::handleFreeCameraMode(float dt) {
     const Orientation& orientation = camera.orientation;
     Vec3f direction;

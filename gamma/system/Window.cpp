@@ -122,14 +122,20 @@ namespace Gamma {
 
           #if GAMMA_SHOW_STATS
             auto& resolution = renderer->getInternalResolution();
+            auto& sceneStats = activeScene->getStats();
 
+            // @todo write a little helper for generating labels less repetitively
             std::string fpsLabel = "FPS: " + std::to_string(fpsAverager.average());
             std::string frameTimeLabel = "Frame time: " + std::to_string(frameTimeAverager.average()) + "us";
             std::string resolutionLabel = "Resolution: " + std::to_string(resolution.width) + " x " + std::to_string(resolution.height);
+            std::string vertsLabel = "Verts: " + std::to_string(sceneStats.verts);
+            std::string trisLabel = "Tris: " + std::to_string(sceneStats.tris);
 
             renderer->renderText(font_OpenSans, fpsLabel.c_str(), 50, 50);
             renderer->renderText(font_OpenSans, frameTimeLabel.c_str(), 50, 100);
             renderer->renderText(font_OpenSans, resolutionLabel.c_str(), 50, 150);
+            renderer->renderText(font_OpenSans, vertsLabel.c_str(), 50, 200);
+            renderer->renderText(font_OpenSans, trisLabel.c_str(), 50, 250);
           #endif
 
           renderer->present();
