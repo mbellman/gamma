@@ -33,7 +33,7 @@ namespace Gamma {
   }
 
   OpenGLScreenQuad::~OpenGLScreenQuad() {
-    // @TODO
+    // @todo
   }
 
   void OpenGLScreenQuad::draw() {

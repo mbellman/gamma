@@ -63,7 +63,7 @@ namespace Gamma {
   }
 
   OpenGLMesh::~OpenGLMesh() {
-    // @TODO
+    // @todo
   }
 
   uint32 OpenGLMesh::getId() const {

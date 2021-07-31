@@ -95,11 +95,11 @@ namespace Gamma {
   }
 
   void OpenGLLightDisc::destroy() {
-    // @TODO
+    // @todo
   }
 
   void OpenGLLightDisc::draw(const std::vector<Light>& lights) {
-    // @TODO avoid reallocating/freeing the disc array on each draw
+    // @todo avoid reallocating/freeing the disc array on each draw
     Disc* discs = new Disc[lights.size()];
     auto& camera = *Camera::active;
     float aspectRatio = (float)Window::size.width / (float)Window::size.height;
@@ -120,7 +120,7 @@ namespace Gamma {
       if (localLightPosition.z > 0.0f) {
         // Light source in front of the camera
         Vec3f screenLightPosition = (projection * localLightPosition) / localLightPosition.z;
-        // @TODO use a more sophisticated radius-of-influence formula for this
+        // @todo use a more sophisticated radius-of-influence formula for this
         float scaleFactor = light.power * 1.2f;
 
         disc.offset = Vec2f(screenLightPosition.x, screenLightPosition.y);

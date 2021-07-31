@@ -49,10 +49,10 @@ namespace Gamma {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // Initialize forward renderer
-    // @TODO
+    // @todo
 
     // Initialize dynamic lights UBO
-    // @TODO buffer lights to forward renderer geometry shader
+    // @todo buffer lights to forward renderer geometry shader
     glGenBuffers(1, &forward.lightsUbo);
     glBindBuffer(GL_UNIFORM_BUFFER, forward.lightsUbo);
     glBufferData(GL_UNIFORM_BUFFER, MAX_LIGHTS * sizeof(Light), 0, GL_DYNAMIC_DRAW);
@@ -60,7 +60,7 @@ namespace Gamma {
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     // Initialize deferred renderer
-    // @TODO define separate OpenGLDeferredRenderer/OpenGLForwardRenderer classes
+    // @todo define separate OpenGLDeferredRenderer/OpenGLForwardRenderer classes
     deferred.g_buffer.init();
     deferred.g_buffer.setSize(internalResolution);
     deferred.g_buffer.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
@@ -91,6 +91,14 @@ namespace Gamma {
     post.debanding.buffer.init();
     post.debanding.buffer.setSize(internalResolution);
     post.debanding.buffer.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
+    // @todo consider using a post-fx 'accumulation' buffer
+    // (or pair of ping-pong buffers) instead of defining
+    // a unique buffer for each post effect. We just need
+    // to read/write back and forth as we iterate through
+    // the effects. Share the depth/stencil attachment with
+    // the initial accumulation buffer since it's the render
+    // target for final pre-processing steps, and depth/stencil
+    // testing may still need to be done at that stage
     deferred.g_buffer.shareDepthStencilAttachment(post.debanding.buffer);
     post.debanding.buffer.bindColorAttachments();
 
@@ -107,7 +115,7 @@ namespace Gamma {
   }
 
   void OpenGLRenderer::render() {
-    // @TODO define separate OpenGLDeferredRenderer/OpenGLForwardRenderer classes
+    // @todo define separate OpenGLDeferredRenderer/OpenGLForwardRenderer classes
     if (flags & OpenGLRenderFlags::RENDER_DEFERRED) {
       renderDeferred();
     } else {
@@ -137,17 +145,17 @@ namespace Gamma {
   }
 
   void OpenGLRenderer::createShadowcaster(Light* mesh) {
-    // @TODO
+    // @todo
     log("Shadowcaster created!");
   }
 
   void OpenGLRenderer::destroyMesh(Mesh* mesh) {
-    // @TODO
+    // @todo
     log("Mesh destroyed!");
   }
 
   void OpenGLRenderer::destroyShadowcaster(Light* mesh) {
-    // @TODO
+    // @todo
     log("Shadowcaster destroyed!");
   }
 
@@ -202,7 +210,7 @@ namespace Gamma {
 
     glStencilMask(0x00);
 
-    // @TODO render emissive objects
+    // @todo render emissive objects
 
     // Lighting pass; read from G-Buffer and preemptively write to post-processing pipeline
     deferred.g_buffer.read();
@@ -230,7 +238,7 @@ namespace Gamma {
 
     deferred.lightDisc.draw(lights);
 
-    // @TODO shadowed lighting pass
+    // @todo shadowed lighting pass
 
     // Post-processing pass
     post.debanding.buffer.read();
@@ -261,7 +269,7 @@ namespace Gamma {
   }
 
   void OpenGLRenderer::renderForward() {
-    // @TODO
+    // @todo
   }
 
   void OpenGLRenderer::renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y) {

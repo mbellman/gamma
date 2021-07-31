@@ -43,7 +43,7 @@ namespace Gamma {
 
   class OpenGLCubeMap {
   public:
-    // @TODO
+    // @todo
 
   private:
     GLuint fbo = 0;

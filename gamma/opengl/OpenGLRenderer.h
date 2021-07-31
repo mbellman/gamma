@@ -42,7 +42,7 @@ namespace Gamma {
     std::vector<OpenGLMesh*> glMeshes;
 
     struct ForwardPath {
-      // @TODO
+      // @todo
       GLuint lightsUbo = 0;
     } forward;
 
@@ -61,7 +61,7 @@ namespace Gamma {
       OpenGLShader shader;
     };
 
-    // @TODO create a post-processing pipeline with configurable steps
+    // @todo create a post-processing pipeline with configurable steps
     struct PostProcessing {
       PostEffect debanding;
     } post;

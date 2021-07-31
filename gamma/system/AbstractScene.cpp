@@ -10,10 +10,10 @@ namespace Gamma {
   AbstractScene* AbstractScene::active = nullptr;
 
   AbstractScene::~AbstractScene() {
-    // @TODO clear vectors + maps, free all resources
+    // @todo clear vectors + maps, free all resources
   }
 
-  // @TODO replace Mesh* with std::function<void(Mesh*)>, have handler
+  // @todo replace Mesh* with std::function<void(Mesh*)>, have handler
   // receive the recycled mesh and reconstruct its vertices/face indexes
   void AbstractScene::addMesh(std::string name, Mesh* mesh, uint16 maxInstances) {
     mesh->index = (uint16)meshes.size();
@@ -27,9 +27,9 @@ namespace Gamma {
   }
 
   Light& AbstractScene::createLight() {
-    // @TODO how can we determine whether the light is a shadowcaster
+    // @todo how can we determine whether the light is a shadowcaster
     // and dispatch the appropriate signal?
-    // @TODO recycle removed/deactivated Lights
+    // @todo recycle removed/deactivated Lights
     lights.push_back(Light());
 
     return lights.back();
@@ -117,7 +117,7 @@ namespace Gamma {
     Gm_FreeMesh(mesh);
 
     meshMap.erase(name);
-    // @TODO remove/reset mesh by ID, recycle when next mesh is created
+    // @todo remove/reset mesh by ID, recycle when next mesh is created
   }
 
   void AbstractScene::storeObject(std::string name, Object& object) {
@@ -128,7 +128,7 @@ namespace Gamma {
     auto& record = object._record;
     auto* mesh = meshes[record.meshIndex];
 
-    // @TODO (?) dispatch transform commands to separate buckets for multithreading
+    // @todo (?) dispatch transform commands to separate buckets for multithreading
     mesh->objects.transformById(record.id, Matrix4f::transformation(
       object.position,
       object.scale,

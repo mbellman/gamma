@@ -13,7 +13,7 @@ namespace Gamma {
     Event(T data): data(data) {};
   };
 
-  // @TODO? use a lock for listener binding/dispatch thread-safety
+  // @todo? use a lock for listener binding/dispatch thread-safety
   class Signaler {
   public:
     ~Signaler() {

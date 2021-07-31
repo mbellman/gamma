@@ -26,7 +26,7 @@ namespace Gamma {
   }
 
   void Orientation::face(const Vec3f& direction) {
-    // @TODO
+    // @todo
   }
 
   Vec3f Orientation::toVec3f() const {

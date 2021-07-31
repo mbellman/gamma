@@ -15,7 +15,7 @@
 namespace Gamma {
   enum SceneFlags {
     MODE_FREE_CAMERA = 1 << 0,
-    MODE_MOVABLE_OBJECTS = 1 << 1,  // @TODO
+    MODE_MOVABLE_OBJECTS = 1 << 1,  // @todo
     MODE_WIREFRAME = 1 << 2
   };
 

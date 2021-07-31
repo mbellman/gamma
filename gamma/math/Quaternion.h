@@ -7,7 +7,7 @@ namespace Gamma {
    * Quaternion
    * ----------
    *
-   * @TODO description
+   * @todo description
    */
   struct Quaternion {
     float w;

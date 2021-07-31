@@ -21,7 +21,7 @@ namespace Gamma {
 
     scenes.push_back(scene);
 
-    // @TODO change this to scene-changed, also signal in leaveScene()
+    // @todo change this to scene-changed, also signal in leaveScene()
     signal("scene-created", scene);
 
     scene->init();

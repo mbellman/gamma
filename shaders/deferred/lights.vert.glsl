@@ -5,7 +5,7 @@ struct Light {
   float radius;
   vec3 color;
   float power;
-  // @TODO int type;
+  // @todo int type;
 };
 
 layout (location = 0) in vec2 vertexPosition;

@@ -39,11 +39,11 @@ namespace Gamma {
 
   void Window::bindEvents() {
     if (AbstractScene::active != nullptr) {
-      // @TODO subscribe to active scene mesh/light events
+      // @todo subscribe to active scene mesh/light events
     }
 
     controller->on<AbstractScene*>("scene-created", [=](AbstractScene* scene) {
-      // @TODO clear all existing renderer meshes/lights when scenes change
+      // @todo clear all existing renderer meshes/lights when scenes change
       scene->on<Mesh*>("mesh-created", [=](auto* mesh) {
         renderer->createMesh(mesh);
       });
@@ -115,7 +115,7 @@ namespace Gamma {
         activeScene->updateScene(dt);
 
         if (renderer != nullptr) {
-          // @TODO create profiler helpers for this
+          // @todo create profiler helpers for this
           auto getTime = Gm_CreateTimer();
 
           renderer->render();
@@ -178,7 +178,7 @@ namespace Gamma {
         renderer = new OpenGLRenderer(sdl_window);
         break;
       case RenderMode::VULKAN:
-        // @TODO
+        // @todo
         break;
     }
 
@@ -186,7 +186,7 @@ namespace Gamma {
       renderer->init();
 
       if (AbstractScene::active != nullptr) {
-        // @TODO get all active meshes/lights and create them in the renderer instance
+        // @todo get all active meshes/lights and create them in the renderer instance
       }
 
       if (controller != nullptr) {
