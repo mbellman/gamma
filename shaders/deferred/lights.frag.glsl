@@ -55,9 +55,13 @@ vec3 getIlluminatedColor(Light light, vec3 position, vec3 normal, vec3 color) {
 
 void main() {
   vec4 frag_colorAndDepth = texture(colorAndDepth, fragUv);
-  vec4 frag_normalAndSpecularity = texture(normalAndSpecularity, fragUv);
-
   vec3 position = getWorldPosition(frag_colorAndDepth.w);
+
+  if (length(light.position - position) > light.radius) {
+    discard;
+  }
+
+  vec4 frag_normalAndSpecularity = texture(normalAndSpecularity, fragUv);
   vec3 normal = frag_normalAndSpecularity.xyz;
   vec3 color = frag_colorAndDepth.rgb;
 
