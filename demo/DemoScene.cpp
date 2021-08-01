@@ -7,18 +7,20 @@ using namespace Gamma;
 
 void DemoScene::init() {
   flags = SceneFlags::MODE_FREE_CAMERA;
-
   camera.position.z = -1000.0f;
 
-  addMesh("cube", Gm_CreateCube(), 100);
-  addMesh("rabbit", Gm_LoadMesh("./demo/assets/models/rabbit.obj"), 10);
+  auto* cubeMesh = addMesh("cube", 100, Gm_CreateCube());
+
+  cubeMesh->texture = "./demo/assets/images/cat.png";
+
+  addMesh("rabbit", 10, Gm_LoadMesh("./demo/assets/models/rabbit.obj"));
 
   for (uint32 i = 0; i < 10; i++) {
     auto& rabbit = createObjectFrom("rabbit");
     float r = (float)i / 10.0f * M_PI * 2.0f;
 
     rabbit.scale = 50.0f;
-    
+
     rabbit.position = Vec3f(
       sinf(r) * 300.0f,
       100.0f,
@@ -33,7 +35,7 @@ void DemoScene::init() {
   rabbitLight.position = Vec3f(0.0f, 300.0f, 0.0f);
   rabbitLight.color = Vec3f(1.0f, 0.0f, 1.0f);
   rabbitLight.radius = 1000.0f;
-  rabbitLight.power = 5.0f;
+  rabbitLight.power = 20.0f;
 
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < 10; j++) {

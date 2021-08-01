@@ -66,12 +66,33 @@ namespace Gamma {
     // @todo
   }
 
+  void OpenGLMesh::checkAndLoadTexture(std::string path, OpenGLTexture*& texture, GLenum unit) {
+    auto& mesh = *sourceMesh;
+
+    if (path.size() > 0 && texture == nullptr) {
+      // @todo use a texture factory/cache
+      texture = new OpenGLTexture(path.c_str(), unit);
+    }
+
+    if (texture != nullptr) {
+      texture->use();
+    }
+  }
+
   uint32 OpenGLMesh::getId() const {
     return sourceMesh->id;
   }
 
+  bool OpenGLMesh::hasTexture() const {
+    return glTexture != nullptr;
+  }
+
   void OpenGLMesh::render(GLenum primitiveMode) {
     auto& mesh = *sourceMesh;
+
+    checkAndLoadTexture(mesh.texture, glTexture, GL_TEXTURE0);
+    checkAndLoadTexture(mesh.normalMap, glNormalMap, GL_TEXTURE1);
+    checkAndLoadTexture(mesh.specularityMap, glSpecularityMap, GL_TEXTURE2);
 
     // Buffer instance matrices
     glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::MATRIX]);

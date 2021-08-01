@@ -2,8 +2,8 @@
 
 uniform bool hasTexture = false;
 uniform bool hasNormalMap = false;
-uniform sampler2D modelTexture;
-uniform sampler2D normalMap;
+uniform sampler2D meshTexture;
+uniform sampler2D meshNormalMap;
 
 in vec3 fragNormal;
 in vec3 fragTangent;
@@ -17,7 +17,7 @@ vec3 getNormal() {
   vec3 n_fragNormal = normalize(fragNormal);
 
   if (hasNormalMap) {
-    vec3 mappedNormal = texture(normalMap, fragUv).rgb * 2.0 - vec3(1.0);
+    vec3 mappedNormal = texture(meshNormalMap, fragUv).rgb * 2.0 - vec3(1.0);
 
     mat3 tangentMatrix = mat3(
       normalize(fragTangent),
@@ -32,7 +32,7 @@ vec3 getNormal() {
 }
 
 void main() {
-  vec3 color = vec3(1.0);
+  vec3 color = hasTexture ? texture(meshTexture, fragUv).rgb : vec3(1.0);
   float depth = gl_FragCoord.z;
 
   out_colorAndDepth = vec4(color, depth);

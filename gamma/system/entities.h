@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 #include "math/geometry.h"
 #include "math/matrix.h"
@@ -126,6 +127,18 @@ namespace Gamma {
      * of the mesh.
      */
     ObjectPool objects;
+    /**
+     * An optional albedo texture for the mesh.
+     */
+    std::string texture = "";
+    /**
+     * An optional normal map texture for the mesh.
+     */
+    std::string normalMap = "";
+    /**
+     * An optional specularity map texture for the mesh.
+     */
+    std::string specularityMap = "";
   };
 
   /**

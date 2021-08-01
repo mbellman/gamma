@@ -129,6 +129,7 @@
     <ClCompile Include="gamma\opengl\OpenGLMesh.cpp" />
     <ClCompile Include="gamma\opengl\OpenGLRenderer.cpp" />
     <ClCompile Include="gamma\opengl\OpenGLScreenQuad.cpp" />
+    <ClCompile Include="gamma\opengl\OpenGLTexture.cpp" />
     <ClCompile Include="gamma\opengl\shader.cpp" />
     <ClCompile Include="gamma\performance\benchmark.cpp" />
     <ClCompile Include="gamma\system\AbstractController.cpp" />
@@ -251,6 +252,7 @@
     <ClInclude Include="gamma\opengl\OpenGLMesh.h" />
     <ClInclude Include="gamma\opengl\OpenGLRenderer.h" />
     <ClInclude Include="gamma\opengl\OpenGLScreenQuad.h" />
+    <ClInclude Include="gamma\opengl\OpenGLTexture.h" />
     <ClInclude Include="gamma\opengl\shader.h" />
     <ClInclude Include="gamma\performance\benchmark.h" />
     <ClInclude Include="gamma\performance\tools.h" />

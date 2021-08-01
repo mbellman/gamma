@@ -34,7 +34,7 @@ namespace Gamma {
 
     virtual ~AbstractScene();
 
-    void addMesh(std::string name, Mesh* mesh, uint16 maxInstances);
+    Mesh* addMesh(std::string name, uint16 maxInstances, Mesh* mesh);
     Light& createLight();
     Object& createObjectFrom(std::string meshName);
     const std::vector<Light>& getLights() const;

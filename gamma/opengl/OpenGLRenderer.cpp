@@ -73,6 +73,9 @@ namespace Gamma {
     deferred.geometry.attachShader(Gm_CompileFragmentShader("shaders/deferred/geometry.frag.glsl"));
     deferred.geometry.link();
 
+    deferred.geometry.setInt("meshTexture", 0);
+    deferred.geometry.setInt("meshNormalMap", 1);
+
     deferred.illumination.init();
     deferred.illumination.attachShader(Gm_CompileVertexShader("shaders/deferred/lights.vert.glsl"));
     deferred.illumination.attachShader(Gm_CompileFragmentShader("shaders/deferred/lights.frag.glsl"));
@@ -205,6 +208,8 @@ namespace Gamma {
     glStencilMask(0xFF);
 
     for (auto* glMesh : glMeshes) {
+      deferred.geometry.setBool("hasTexture", glMesh->hasTexture());
+
       glMesh->render(primitiveMode);
     }
 

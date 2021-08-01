@@ -13,9 +13,7 @@ namespace Gamma {
     // @todo clear vectors + maps, free all resources
   }
 
-  // @todo replace Mesh* with std::function<void(Mesh*)>, have handler
-  // receive the recycled mesh and reconstruct its vertices/face indexes
-  void AbstractScene::addMesh(std::string name, Mesh* mesh, uint16 maxInstances) {
+  Mesh* AbstractScene::addMesh(std::string name, uint16 maxInstances, Mesh* mesh) {
     mesh->index = (uint16)meshes.size();
     mesh->id = runningMeshId++;
     mesh->objects.reserve(maxInstances);
@@ -24,6 +22,8 @@ namespace Gamma {
     meshes.push_back(mesh);
 
     signal("mesh-created", mesh);
+
+    return mesh;
   }
 
   Light& AbstractScene::createLight() {
