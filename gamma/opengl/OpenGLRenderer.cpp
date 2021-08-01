@@ -69,22 +69,23 @@ namespace Gamma {
     deferred.g_buffer.bindColorAttachments();
 
     deferred.geometry.init();
-    deferred.geometry.attachShader(Gm_CompileVertexShader("shaders/deferred/geometry.vert.glsl"));
-    deferred.geometry.attachShader(Gm_CompileFragmentShader("shaders/deferred/geometry.frag.glsl"));
+    deferred.geometry.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/deferred/geometry.vert.glsl"));
+    deferred.geometry.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/geometry.frag.glsl"));
     deferred.geometry.link();
 
+    deferred.geometry.use();
     deferred.geometry.setInt("meshTexture", 0);
     deferred.geometry.setInt("meshNormalMap", 1);
 
     deferred.illumination.init();
-    deferred.illumination.attachShader(Gm_CompileVertexShader("shaders/deferred/lights.vert.glsl"));
-    deferred.illumination.attachShader(Gm_CompileFragmentShader("shaders/deferred/lights.frag.glsl"));
+    deferred.illumination.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/deferred/lights.vert.glsl"));
+    deferred.illumination.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/lights.frag.glsl"));
     deferred.illumination.link();
 
     #if GAMMA_SHOW_G_BUFFER_LAYERS
       deferred.gBufferLayers.init();
-      deferred.gBufferLayers.attachShader(Gm_CompileVertexShader("shaders/quad.vert.glsl"));
-      deferred.gBufferLayers.attachShader(Gm_CompileFragmentShader("shaders/deferred/g-buffer-preview.frag.glsl"));
+      deferred.gBufferLayers.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
+      deferred.gBufferLayers.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/g-buffer-preview.frag.glsl"));
       deferred.gBufferLayers.link();
     #endif
 
@@ -106,14 +107,14 @@ namespace Gamma {
     post.debanding.buffer.bindColorAttachments();
 
     post.debanding.shader.init();
-    post.debanding.shader.attachShader(Gm_CompileVertexShader("shaders/quad.vert.glsl"));
-    post.debanding.shader.attachShader(Gm_CompileFragmentShader("shaders/deband.frag.glsl"));
+    post.debanding.shader.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
+    post.debanding.shader.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deband.frag.glsl"));
     post.debanding.shader.link();
 
     // Initialize remaining shaders
     screen.init();
-    screen.attachShader(Gm_CompileVertexShader("shaders/quad.vert.glsl"));
-    screen.attachShader(Gm_CompileFragmentShader("shaders/screen.frag.glsl"));
+    screen.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
+    screen.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/screen.frag.glsl"));
     screen.link();
   }
 
