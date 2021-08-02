@@ -42,7 +42,8 @@ vec3 getIlluminatedColor(Light light, vec3 position, vec3 normal, vec3 color) {
   float lightDistance = length(surfaceToLight);
   vec3 n_surfaceToLight = surfaceToLight / lightDistance;
   float incidence = max(dot(n_surfaceToLight, normal), 0.0);
-  float attenuation = pow(1.0 / lightDistance, 2);
+  float influence = 1.5 * max(1.0 - lightDistance / light.radius, 0.0);
+  float attenuation = pow(1.0 / lightDistance, 2) * influence;
   vec3 diffuseTerm = light.color * light.power * light.radius * incidence * attenuation;
 
   vec3 n_surfaceToCamera = normalize(cameraPosition - position);
@@ -57,8 +58,7 @@ void main() {
   vec4 frag_colorAndDepth = texture(colorAndDepth, fragUv);
   vec3 position = getWorldPosition(frag_colorAndDepth.w);
 
-  // @todo don't use a magic number for the radius factor
-  if (length(light.position - position) > light.radius * 1.5) {
+  if (length(light.position - position) > light.radius) {
     discard;
   }
 
