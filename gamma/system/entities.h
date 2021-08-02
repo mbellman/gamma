@@ -160,14 +160,20 @@ namespace Gamma {
   Mesh* Gm_CreateCube();
 
   /**
-   * Gm_FreeMesh
-   * -----------
+   * Gm_CreatePlane
+   * --------------
    */
-  void Gm_FreeMesh(Mesh* mesh);
+  Mesh* Gm_CreatePlane(uint32 size);
 
   /**
    * Gm_LoadMesh
    * -----------
    */
   Mesh* Gm_LoadMesh(const char* path);
+
+  /**
+   * Gm_FreeMesh
+   * -----------
+   */
+  void Gm_FreeMesh(Mesh* mesh);
 }

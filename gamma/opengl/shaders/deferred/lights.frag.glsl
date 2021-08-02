@@ -57,7 +57,8 @@ void main() {
   vec4 frag_colorAndDepth = texture(colorAndDepth, fragUv);
   vec3 position = getWorldPosition(frag_colorAndDepth.w);
 
-  if (length(light.position - position) > light.radius) {
+  // @todo don't use a magic number for the radius factor
+  if (length(light.position - position) > light.radius * 1.5) {
     discard;
   }
 

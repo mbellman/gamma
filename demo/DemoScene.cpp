@@ -14,6 +14,14 @@ void DemoScene::init() {
   cubeMesh->texture = "./demo/assets/images/cat.png";
 
   addMesh("rabbit", 10, Gm_LoadMesh("./demo/assets/models/rabbit.obj"));
+  addMesh("plane", 1, Gm_CreatePlane(10));
+
+  auto& plane = createObjectFrom("plane");
+
+  plane.scale = Vec3f(2000.0f, 1.0f, 2000.0f);
+  plane.position.y = -100.0f;
+
+  transform(plane);
 
   for (uint32 i = 0; i < 10; i++) {
     auto& rabbit = createObjectFrom("rabbit");
@@ -61,7 +69,7 @@ void DemoScene::init() {
       );
 
       light.position = cubePosition + Vec3f(0.0f, 50.0f, 0.0f);
-      light.radius = 250.0f;
+      light.radius = 150.0f;
     }
   }
 

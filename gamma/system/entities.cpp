@@ -265,13 +265,46 @@ namespace Gamma {
   }
 
   /**
-   * Gm_FreeMesh
-   * -----------
+   * Gm_CreatePlane
+   * --------------
    */
-  void Gm_FreeMesh(Mesh* mesh) {
-    mesh->vertices.clear();
-    mesh->faceElements.clear();
-    mesh->objects.free();
+  Mesh* Gm_CreatePlane(uint32 size) {
+    auto* mesh = new Mesh();
+    auto& vertices = mesh->vertices;
+    auto& faceElements = mesh->faceElements;
+
+    for (uint32 x = 0; x < size; x++) {
+      for (uint32 z = 0; z < size; z++) {
+        Vertex vertex;
+
+        float u = (float)x / (float)size;
+        float v = (float)z / (float)size;
+
+        vertex.position = Vec3f(u - 0.5f, 0.0f, -v + 0.5f);
+        vertex.uv = Vec2f(u, v);
+
+        vertices.push_back(vertex);
+      }
+    }
+
+    for (uint32 z = 0; z < size - 1; z++) {
+      for (uint32 x = 0; x < size - 1; x++) {
+        uint32 offset = z * size + x;
+
+        faceElements.push_back(offset);
+        faceElements.push_back(offset + 1 + size);
+        faceElements.push_back(offset + 1);
+
+        faceElements.push_back(offset);
+        faceElements.push_back(offset + size);
+        faceElements.push_back(offset + 1 + size);
+      }
+    }
+
+    Gm_ComputeNormals(mesh);
+    Gm_ComputeTangents(mesh);
+
+    return mesh;
   }
 
   /**
@@ -344,5 +377,15 @@ namespace Gamma {
     Gm_ComputeTangents(mesh);
 
     return mesh;
+  }
+
+  /**
+   * Gm_FreeMesh
+   * -----------
+   */
+  void Gm_FreeMesh(Mesh* mesh) {
+    mesh->vertices.clear();
+    mesh->faceElements.clear();
+    mesh->objects.free();
   }
 }
