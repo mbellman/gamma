@@ -11,6 +11,11 @@ namespace Gamma {
     1.0f, -1.0f, 1.0f, 0.0f
   };
 
+  enum GLAttribute {
+    QUAD_POSITION,
+    QUAD_UV
+  };
+
   /**
    * OpenGLScreenQuad
    * ----------------
@@ -25,11 +30,11 @@ namespace Gamma {
     glBufferData(GL_ARRAY_BUFFER, 24 * sizeof(float), glQuadData, GL_STATIC_DRAW);
 
     // Define vertex attributes
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(GLAttribute::QUAD_POSITION);
+    glVertexAttribPointer(GLAttribute::QUAD_POSITION, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(GLAttribute::QUAD_UV);
+    glVertexAttribPointer(GLAttribute::QUAD_UV, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
   }
 
   OpenGLScreenQuad::~OpenGLScreenQuad() {

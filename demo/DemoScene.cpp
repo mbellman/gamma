@@ -46,6 +46,13 @@ void DemoScene::init() {
   rabbitLight.radius = 1000.0f;
   rabbitLight.power = 20.0f;
 
+  auto& sunlight = createLight();
+
+  sunlight.type = LightType::DIRECTIONAL;
+  sunlight.direction = Vec3f(-0.1f, -1.0f, -0.2f);
+  sunlight.color = Vec3f(1.0f, 0.8f, 0.5f);
+  sunlight.power = 0.5f;
+
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < 10; j++) {
       auto& cube = createObjectFrom("cube");

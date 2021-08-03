@@ -78,9 +78,14 @@ namespace Gamma {
     deferred.geometry.setInt("meshNormalMap", 1);
 
     deferred.pointLightWithoutShadow.init();
-    deferred.pointLightWithoutShadow.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/deferred/light.vert.glsl"));
+    deferred.pointLightWithoutShadow.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/deferred/instanced-light.vert.glsl"));
     deferred.pointLightWithoutShadow.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/point-light-without-shadow.frag.glsl"));
     deferred.pointLightWithoutShadow.link();
+
+    deferred.directionalLightWithoutShadow.init();
+    deferred.directionalLightWithoutShadow.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
+    deferred.directionalLightWithoutShadow.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/directional-light-without-shadow.frag.glsl"));
+    deferred.directionalLightWithoutShadow.link();
 
     #if GAMMA_SHOW_G_BUFFER_LAYERS
       deferred.gBufferLayers.init();
@@ -131,6 +136,7 @@ namespace Gamma {
     deferred.g_buffer.destroy();
     deferred.geometry.destroy();
     deferred.pointLightWithoutShadow.destroy();
+    deferred.directionalLightWithoutShadow.destroy();
     deferred.emissives.destroy();
     deferred.lightDisc.destroy();
 
@@ -232,18 +238,60 @@ namespace Gamma {
     glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
     glStencilFunc(GL_EQUAL, 1, 0xFF);
 
-    // Non-shadowed lighting pass
+    // Non-shadowcaster lighting pass
     auto& lights = AbstractScene::active->getLights();
+    Matrix4f inverseProjection = projection.inverse();
+    Matrix4f inverseView = view.inverse();
 
-    deferred.pointLightWithoutShadow.use();
-    deferred.pointLightWithoutShadow.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
-    deferred.pointLightWithoutShadow.setInt("colorAndDepth", 0);
-    deferred.pointLightWithoutShadow.setInt("normalAndSpecularity", 1);
-    deferred.pointLightWithoutShadow.setVec3f("cameraPosition", camera.position);
-    deferred.pointLightWithoutShadow.setMatrix4f("inverseProjection", projection.inverse());
-    deferred.pointLightWithoutShadow.setMatrix4f("inverseView", view.inverse());
+    // @todo don't reallocate on every frame
+    std::vector<Light> pointLightsWithoutShadow;
+    std::vector<Light> directionalLightsWithoutShadow;
 
-    deferred.lightDisc.draw(lights);
+    for (auto& light : lights) {
+      // @todo ignore shadowcaster lights
+      switch (light.type) {
+        case LightType::POINT:
+          pointLightsWithoutShadow.push_back(light);
+          break;
+        case LightType::DIRECTIONAL:
+          directionalLightsWithoutShadow.push_back(light);
+          break;
+      }
+    }
+
+    // Render point lights (non-shadowcasters)
+    if (pointLightsWithoutShadow.size() > 0) {
+      deferred.pointLightWithoutShadow.use();
+      deferred.pointLightWithoutShadow.setInt("colorAndDepth", 0);
+      deferred.pointLightWithoutShadow.setInt("normalAndSpecularity", 1);
+      deferred.pointLightWithoutShadow.setVec3f("cameraPosition", camera.position);
+      deferred.pointLightWithoutShadow.setMatrix4f("inverseProjection", inverseProjection);
+      deferred.pointLightWithoutShadow.setMatrix4f("inverseView", inverseView);
+
+      deferred.lightDisc.draw(pointLightsWithoutShadow);
+    }
+
+    // Render directional lights (non-shadowcasters)
+    if (directionalLightsWithoutShadow.size() > 0) {
+      deferred.directionalLightWithoutShadow.use();
+      deferred.directionalLightWithoutShadow.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+      deferred.directionalLightWithoutShadow.setInt("colorAndDepth", 0);
+      deferred.directionalLightWithoutShadow.setInt("normalAndSpecularity", 1);
+      deferred.directionalLightWithoutShadow.setVec3f("cameraPosition", camera.position);
+      deferred.directionalLightWithoutShadow.setMatrix4f("inverseProjection", inverseProjection);
+      deferred.directionalLightWithoutShadow.setMatrix4f("inverseView", inverseView);
+
+      for (uint32 i = 0; i < directionalLightsWithoutShadow.size(); i++) {
+        auto& light = directionalLightsWithoutShadow[i];
+        std::string indexedLight = "lights[" + std::to_string(i) + "]";
+
+        deferred.directionalLightWithoutShadow.setVec3f(indexedLight + ".color", light.color);
+        deferred.directionalLightWithoutShadow.setFloat(indexedLight + ".power", light.power);
+        deferred.directionalLightWithoutShadow.setVec3f(indexedLight + ".direction", light.direction);
+      }
+
+      OpenGLScreenQuad::render();
+    }
 
     // @todo shadowed lighting pass
 

@@ -50,6 +50,7 @@ namespace Gamma {
       OpenGLFrameBuffer g_buffer;
       OpenGLShader geometry;
       OpenGLShader pointLightWithoutShadow;
+      OpenGLShader directionalLightWithoutShadow;
       OpenGLShader emissives;
       OpenGLShader debanding;
       OpenGLShader gBufferLayers;
