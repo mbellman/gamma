@@ -77,10 +77,10 @@ namespace Gamma {
     deferred.geometry.setInt("meshTexture", 0);
     deferred.geometry.setInt("meshNormalMap", 1);
 
-    deferred.illumination.init();
-    deferred.illumination.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/deferred/lights.vert.glsl"));
-    deferred.illumination.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/lights.frag.glsl"));
-    deferred.illumination.link();
+    deferred.pointLightWithoutShadow.init();
+    deferred.pointLightWithoutShadow.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/deferred/light.vert.glsl"));
+    deferred.pointLightWithoutShadow.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/point-light-without-shadow.frag.glsl"));
+    deferred.pointLightWithoutShadow.link();
 
     #if GAMMA_SHOW_G_BUFFER_LAYERS
       deferred.gBufferLayers.init();
@@ -130,7 +130,7 @@ namespace Gamma {
   void OpenGLRenderer::destroy() {
     deferred.g_buffer.destroy();
     deferred.geometry.destroy();
-    deferred.illumination.destroy();
+    deferred.pointLightWithoutShadow.destroy();
     deferred.emissives.destroy();
     deferred.lightDisc.destroy();
 
@@ -235,13 +235,13 @@ namespace Gamma {
     // Non-shadowed lighting pass
     auto& lights = AbstractScene::active->getLights();
 
-    deferred.illumination.use();
-    deferred.illumination.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
-    deferred.illumination.setInt("colorAndDepth", 0);
-    deferred.illumination.setInt("normalAndSpecularity", 1);
-    deferred.illumination.setVec3f("cameraPosition", camera.position);
-    deferred.illumination.setMatrix4f("inverseProjection", projection.inverse());
-    deferred.illumination.setMatrix4f("inverseView", view.inverse());
+    deferred.pointLightWithoutShadow.use();
+    deferred.pointLightWithoutShadow.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+    deferred.pointLightWithoutShadow.setInt("colorAndDepth", 0);
+    deferred.pointLightWithoutShadow.setInt("normalAndSpecularity", 1);
+    deferred.pointLightWithoutShadow.setVec3f("cameraPosition", camera.position);
+    deferred.pointLightWithoutShadow.setMatrix4f("inverseProjection", projection.inverse());
+    deferred.pointLightWithoutShadow.setMatrix4f("inverseView", view.inverse());
 
     deferred.lightDisc.draw(lights);
 

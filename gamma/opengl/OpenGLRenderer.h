@@ -42,14 +42,14 @@ namespace Gamma {
     std::vector<OpenGLMesh*> glMeshes;
 
     struct ForwardPath {
-      // @todo
+      // @todo (?)
       GLuint lightsUbo = 0;
     } forward;
 
     struct DeferredPath {
       OpenGLFrameBuffer g_buffer;
       OpenGLShader geometry;
-      OpenGLShader illumination;
+      OpenGLShader pointLightWithoutShadow;
       OpenGLShader emissives;
       OpenGLShader debanding;
       OpenGLShader gBufferLayers;

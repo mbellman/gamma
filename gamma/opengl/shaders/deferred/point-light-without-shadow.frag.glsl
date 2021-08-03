@@ -5,6 +5,7 @@ struct Light {
   float radius;
   vec3 color;
   float power;
+  vec3 direction;
 };
 
 uniform sampler2D colorAndDepth;

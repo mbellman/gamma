@@ -5,7 +5,7 @@ struct Light {
   float radius;
   vec3 color;
   float power;
-  // @todo int type;
+  vec3 direction;
 };
 
 layout (location = 0) in vec2 vertexPosition;
@@ -15,6 +15,7 @@ layout (location = 3) in vec3 lightPosition;
 layout (location = 4) in float lightRadius;
 layout (location = 5) in vec3 lightColor;
 layout (location = 6) in float lightPower;
+layout (location = 7) in vec3 lightDirection;
 
 noperspective out vec2 fragUv;
 flat out Light light;
@@ -23,5 +24,5 @@ void main() {
   gl_Position = vec4(vertexPosition * discScale + discOffset, 0.0, 1.0);
 
   fragUv = gl_Position.xy * 0.5 + 0.5;
-  light = Light(lightPosition, lightRadius, lightColor, lightPower);
+  light = Light(lightPosition, lightRadius, lightColor, lightPower, lightDirection);
 }

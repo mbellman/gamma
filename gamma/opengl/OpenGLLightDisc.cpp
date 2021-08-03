@@ -24,7 +24,8 @@ namespace Gamma {
     DISC_LIGHT_POSITION,
     DISC_LIGHT_RADIUS,
     DISC_LIGHT_COLOR,
-    DISC_LIGHT_POWER
+    DISC_LIGHT_POWER,
+    DISC_LIGHT_DIRECTION
   };
 
   struct Disc {
@@ -92,6 +93,10 @@ namespace Gamma {
     glEnableVertexAttribArray(GLAttribute::DISC_LIGHT_POWER);
     glVertexAttribPointer(GLAttribute::DISC_LIGHT_POWER, 1, GL_FLOAT, GL_FALSE, sizeof(Disc), (void*)(offsetof(Disc, light) + offsetof(Light, power)));
     glVertexAttribDivisor(GLAttribute::DISC_LIGHT_POWER, 1);
+
+    glEnableVertexAttribArray(GLAttribute::DISC_LIGHT_DIRECTION);
+    glVertexAttribPointer(GLAttribute::DISC_LIGHT_DIRECTION, 3, GL_FLOAT, GL_FALSE, sizeof(Disc), (void*)(offsetof(Disc, light) + offsetof(Light, direction)));
+    glVertexAttribDivisor(GLAttribute::DISC_LIGHT_DIRECTION, 1);
   }
 
   void OpenGLLightDisc::destroy() {

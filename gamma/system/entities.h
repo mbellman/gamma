@@ -88,6 +88,8 @@ namespace Gamma {
     float radius = 100.0f;
     Vec3f color = Vec3f(1.0f);
     float power = 1.0f;
+    Vec3f direction;
+    uint32 type = LightType::POINT;
   };
 
   /**
