@@ -81,6 +81,10 @@ namespace Gamma {
     return sourceMesh->id;
   }
 
+  bool OpenGLMesh::hasNormalMap() const {
+    return glNormalMap != nullptr;
+  }
+
   bool OpenGLMesh::hasTexture() const {
     return glTexture != nullptr;
   }

@@ -9,12 +9,13 @@ void DemoScene::init() {
   flags = SceneFlags::MODE_FREE_CAMERA;
   camera.position.z = -1000.0f;
 
+  addMesh("rabbit", 10, Gm_LoadMesh("./demo/assets/models/rabbit.obj"));
+
   auto* cubeMesh = addMesh("cube", 100, Gm_CreateCube());
+  auto* planeMesh = addMesh("plane", 1, Gm_CreatePlane(10));
 
   cubeMesh->texture = "./demo/assets/images/cat.png";
-
-  addMesh("rabbit", 10, Gm_LoadMesh("./demo/assets/models/rabbit.obj"));
-  addMesh("plane", 1, Gm_CreatePlane(10));
+  planeMesh->normalMap = "./demo/assets/images/sand-normal-map.png";
 
   auto& plane = createObjectFrom("plane");
 

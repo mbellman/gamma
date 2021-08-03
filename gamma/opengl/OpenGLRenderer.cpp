@@ -210,6 +210,7 @@ namespace Gamma {
 
     for (auto* glMesh : glMeshes) {
       deferred.geometry.setBool("hasTexture", glMesh->hasTexture());
+      deferred.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
 
       glMesh->render(primitiveMode);
     }

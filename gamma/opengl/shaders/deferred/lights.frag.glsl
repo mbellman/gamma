@@ -42,9 +42,9 @@ vec3 getIlluminatedColor(Light light, vec3 position, vec3 normal, vec3 color) {
   float lightDistance = length(surfaceToLight);
   vec3 n_surfaceToLight = surfaceToLight / lightDistance;
   float incidence = max(dot(n_surfaceToLight, normal), 0.0);
-  float influence = 1.5 * max(1.0 - lightDistance / light.radius, 0.0);
-  float attenuation = pow(1.0 / lightDistance, 2) * influence;
-  vec3 diffuseTerm = light.color * light.power * light.radius * incidence * attenuation;
+  float influence = max(1.0 - lightDistance / light.radius, 0.0);
+  float attenuation = pow(1.0 / lightDistance, 2);
+  vec3 diffuseTerm = light.color * light.power * light.radius * incidence * attenuation * sqrt(influence);
 
   vec3 n_surfaceToCamera = normalize(cameraPosition - position);
   vec3 halfVector = normalize(n_surfaceToLight + n_surfaceToCamera);

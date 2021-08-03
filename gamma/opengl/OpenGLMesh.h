@@ -13,6 +13,7 @@ namespace Gamma {
     ~OpenGLMesh();
 
     uint32 getId() const;
+    bool hasNormalMap() const;
     bool hasTexture() const;
     void render(GLenum primitiveMode);
 
