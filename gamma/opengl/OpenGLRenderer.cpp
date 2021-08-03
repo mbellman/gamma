@@ -261,33 +261,37 @@ namespace Gamma {
 
     // Render point lights (non-shadowcasters)
     if (pointLightsWithoutShadow.size() > 0) {
-      deferred.pointLightWithoutShadow.use();
-      deferred.pointLightWithoutShadow.setInt("colorAndDepth", 0);
-      deferred.pointLightWithoutShadow.setInt("normalAndSpecularity", 1);
-      deferred.pointLightWithoutShadow.setVec3f("cameraPosition", camera.position);
-      deferred.pointLightWithoutShadow.setMatrix4f("inverseProjection", inverseProjection);
-      deferred.pointLightWithoutShadow.setMatrix4f("inverseView", inverseView);
+      auto& shader = deferred.pointLightWithoutShadow;
+
+      shader.use();
+      shader.setInt("colorAndDepth", 0);
+      shader.setInt("normalAndSpecularity", 1);
+      shader.setVec3f("cameraPosition", camera.position);
+      shader.setMatrix4f("inverseProjection", inverseProjection);
+      shader.setMatrix4f("inverseView", inverseView);
 
       deferred.lightDisc.draw(pointLightsWithoutShadow);
     }
 
     // Render directional lights (non-shadowcasters)
     if (directionalLightsWithoutShadow.size() > 0) {
-      deferred.directionalLightWithoutShadow.use();
-      deferred.directionalLightWithoutShadow.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
-      deferred.directionalLightWithoutShadow.setInt("colorAndDepth", 0);
-      deferred.directionalLightWithoutShadow.setInt("normalAndSpecularity", 1);
-      deferred.directionalLightWithoutShadow.setVec3f("cameraPosition", camera.position);
-      deferred.directionalLightWithoutShadow.setMatrix4f("inverseProjection", inverseProjection);
-      deferred.directionalLightWithoutShadow.setMatrix4f("inverseView", inverseView);
+      auto& shader = deferred.directionalLightWithoutShadow;
+
+      shader.use();
+      shader.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+      shader.setInt("colorAndDepth", 0);
+      shader.setInt("normalAndSpecularity", 1);
+      shader.setVec3f("cameraPosition", camera.position);
+      shader.setMatrix4f("inverseProjection", inverseProjection);
+      shader.setMatrix4f("inverseView", inverseView);
 
       for (uint32 i = 0; i < directionalLightsWithoutShadow.size(); i++) {
         auto& light = directionalLightsWithoutShadow[i];
         std::string indexedLight = "lights[" + std::to_string(i) + "]";
 
-        deferred.directionalLightWithoutShadow.setVec3f(indexedLight + ".color", light.color);
-        deferred.directionalLightWithoutShadow.setFloat(indexedLight + ".power", light.power);
-        deferred.directionalLightWithoutShadow.setVec3f(indexedLight + ".direction", light.direction);
+        shader.setVec3f(indexedLight + ".color", light.color);
+        shader.setFloat(indexedLight + ".power", light.power);
+        shader.setVec3f(indexedLight + ".direction", light.direction);
       }
 
       OpenGLScreenQuad::render();
