@@ -50,7 +50,7 @@ void DemoScene::init() {
 
   sunlight.type = LightType::DIRECTIONAL;
   sunlight.direction = Vec3f(-0.1f, -1.0f, -0.2f);
-  sunlight.color = Vec3f(1.0f, 0.8f, 0.5f);
+  sunlight.color = Vec3f(0.7f, 0.7f, 1.0f);
   sunlight.power = 0.5f;
 
   for (int i = 0; i < 10; i++) {

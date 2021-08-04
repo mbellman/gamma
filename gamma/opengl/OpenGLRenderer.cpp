@@ -73,10 +73,6 @@ namespace Gamma {
     deferred.geometry.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/geometry.frag.glsl"));
     deferred.geometry.link();
 
-    deferred.geometry.use();
-    deferred.geometry.setInt("meshTexture", 0);
-    deferred.geometry.setInt("meshNormalMap", 1);
-
     deferred.pointLightWithoutShadow.init();
     deferred.pointLightWithoutShadow.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/deferred/instanced-light.vert.glsl"));
     deferred.pointLightWithoutShadow.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/point-light-without-shadow.frag.glsl"));
@@ -86,6 +82,11 @@ namespace Gamma {
     deferred.directionalLightWithoutShadow.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
     deferred.directionalLightWithoutShadow.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/directional-light-without-shadow.frag.glsl"));
     deferred.directionalLightWithoutShadow.link();
+
+    deferred.skybox.init();
+    deferred.skybox.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
+    deferred.skybox.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/skybox.frag.glsl"));
+    deferred.skybox.link();
 
     #if GAMMA_SHOW_G_BUFFER_LAYERS
       deferred.gBufferLayers.init();
@@ -205,6 +206,8 @@ namespace Gamma {
     deferred.geometry.use();
     deferred.geometry.setMatrix4f("projection", projection);
     deferred.geometry.setMatrix4f("view", view);
+    deferred.geometry.setInt("meshTexture", 0);
+    deferred.geometry.setInt("meshNormalMap", 1);
 
     GLenum primitiveMode = AbstractScene::active->flags & SceneFlags::MODE_WIREFRAME
       ? GL_LINE_STRIP
@@ -298,6 +301,17 @@ namespace Gamma {
     }
 
     // @todo shadowed lighting pass
+
+    // Render skybox
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+
+    deferred.skybox.use();
+    deferred.skybox.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+    deferred.skybox.setVec3f("cameraPosition", camera.position);
+    deferred.skybox.setMatrix4f("inverseProjection", inverseProjection);
+    deferred.skybox.setMatrix4f("inverseView", inverseView);
+
+    OpenGLScreenQuad::render();
 
     // Post-processing pass
     post.debanding.buffer.read();
