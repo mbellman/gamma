@@ -138,6 +138,7 @@ namespace Gamma {
     deferred.geometry.destroy();
     deferred.pointLightWithoutShadow.destroy();
     deferred.directionalLightWithoutShadow.destroy();
+    deferred.skybox.destroy();
     deferred.emissives.destroy();
     deferred.lightDisc.destroy();
 
@@ -175,11 +176,11 @@ namespace Gamma {
   }
 
   void OpenGLRenderer::renderDeferred() {
-    // Set G-Buffer as render target
-    deferred.g_buffer.write();
-
     uint32 internalWidth = internalResolution.width;
     uint32 internalHeight = internalResolution.height;
+
+    // Set G-Buffer as render target
+    deferred.g_buffer.write();
 
     // Clear buffers, reset state
     glViewport(0, 0, internalWidth, internalHeight);
