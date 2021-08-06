@@ -27,7 +27,7 @@ static uint64 benchmark_pointer_objects() {
     }
   }
 
-  return Gm_RepeatBenchmarkTest([&]() {
+  uint64 time = Gm_RepeatBenchmarkTest([&]() {
     for (uint32 i = 0; i < TOTAL_OBJECTS; i++) {
       auto& object = *ptr_objects[i];
 
@@ -36,12 +36,19 @@ static uint64 benchmark_pointer_objects() {
       object.rotation = Vec3f(0.9f, 2.3f, 1.4f);
     }
   }, TEST_ITERATIONS);
+
+  // Cleanup
+  for (uint32 i = 0; i < TOTAL_OBJECTS; i++) {
+    delete ptr_objects[i];
+  }
+
+  ptr_objects.clear();
+
+  return time;
 }
 
 static uint64 benchmark_pool_objects() {
   log("benchmark_pool_objects");
-
-  ObjectPool pool;
 
   std::vector<ObjectPool*> pools;
 
@@ -54,7 +61,7 @@ static uint64 benchmark_pool_objects() {
     }
   }
 
-  return Gm_RepeatBenchmarkTest([&]() {
+  uint64 time = Gm_RepeatBenchmarkTest([&]() {
     for (uint32 i = 0; i < TOTAL_MESHES; i++) {
       auto& pool = *pools[i];
 
@@ -65,6 +72,13 @@ static uint64 benchmark_pool_objects() {
       }
     }
   }, TEST_ITERATIONS);
+
+  // Cleanup
+  for (uint32 i = 0; i < TOTAL_MESHES; i++) {
+    pools[i]->free();
+  }
+
+  return time;
 }
 
 void benchmark_object_management() {
