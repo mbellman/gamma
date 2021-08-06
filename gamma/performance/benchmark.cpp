@@ -5,19 +5,33 @@
 #include "performance/benchmark.h"
 
 namespace Gamma {
-  void Gm_RepeatBenchmarkTest(const std::function<void()>& test, uint32 times) {
+  void Gm_CompareBenchmarks(uint64 a, uint64 b) {
+    if (a > b) {
+      uint32 improvement = (uint32)(100.0f * (1.0f - (float)b / (float)a));
+
+      std::cout << a << "ms -> " << b << "ms - " << improvement << "% improvement\n\n";
+    } else {
+      uint32 slowdown = (uint32)(100.0f * (1.0f - (float)a / (float)b));
+
+      std::cout << a << "ms -> " << b << "ms - " << slowdown << "% slowdown\n\n";
+    }
+  }
+
+  uint64 Gm_RepeatBenchmarkTest(const std::function<void()>& test, uint32 times) {
     auto getTime = Gm_CreateTimer();
 
     for (uint32 i = 0; i < times; i++) {
-      Gm_RunBenchmarkTest(test);
+      test();
     }
 
     auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(getTime()).count();
 
     std::cout << "\nFinished " << times << " iterations in " << milliseconds << "ms\n\n";
+
+    return milliseconds;
   }
 
-  void Gm_RunBenchmarkTest(const std::function<void()>& test) {
+  uint64 Gm_RunBenchmarkTest(const std::function<void()>& test) {
     auto getTime = Gm_CreateTimer();
 
     test();
@@ -27,6 +41,8 @@ namespace Gamma {
     auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(time).count();
 
     std::cout << "Benchmark finished in: " << milliseconds << "ms (" << microseconds << "us)\n";
+
+    return milliseconds;
   }
 
   void Gm_RunLoopedBenchmarkTest(const std::function<void()>& test, uint32 pause) {

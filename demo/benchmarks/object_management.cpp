@@ -7,146 +7,69 @@ using namespace Gamma;
 
 constexpr static uint32 TOTAL_MESHES = 100;
 constexpr static uint32 TOTAL_OBJECTS = 10000;
+constexpr static uint32 TEST_ITERATIONS = 10000;
 
-void benchmark_objects_optimized() {
-  // setup
-  log("benchmark_objects_optimized\n");
+static uint64 benchmark_pointer_objects() {
+  log("benchmark_pointer_objects");
 
-  struct TestObject {
-    uint32 meshId;
-    uint32 objectId;
-    uint32 matrixId;
-    Vec3f position;
-    Vec3f rotation;
-    Vec3f scale;
-  };
+  std::vector<Object*> ptr_objects;
 
-  struct TestMesh {
-    std::vector<Matrix4f> matrices;
-    std::vector<TestObject> objects;
-  };
-
-  struct TransformCommand {
-    uint32 meshId;
-    uint32 objectId;
-    uint32 matrixId;
-  };
-
-  std::vector<TestMesh*> meshes;
-  TransformCommand* commands = new TransformCommand[10000];
-  uint32 totalCommands = 0;
-
-  for (uint32 i = 0; i < 100; i++) {
-    auto* mesh = new TestMesh();
-
-    mesh->objects.resize(100);
-    mesh->matrices.resize(100);
-
-    for (uint32 j = 0; j < 100; j++) {
-      mesh->objects[j].meshId = i;
-      mesh->objects[j].objectId = j;
-      mesh->objects[j].matrixId = j;
-    }
-
-    meshes.push_back(mesh);
+  for (uint32 i = 0; i < TOTAL_OBJECTS; i++) {
+    ptr_objects.push_back(new Object());
   }
 
-  auto transform = [&](const TestObject& object) mutable {
-    commands[totalCommands++] = {
-      object.meshId,
-      object.objectId,
-      object.matrixId
-    };
-  };
+  // Simulate object recycling (memory fragmentation)
+  for (uint32 x = 5; x < 10; x += 2) {
+    for (uint32 i = 0; i < TOTAL_OBJECTS; i += x) {
+      delete ptr_objects[i];
 
-  // test
-  Gm_RepeatBenchmarkTest([&]() {
-    totalCommands = 0;
-
-    for (uint32 i = 0; i < meshes.size(); i++) {
-      auto& mesh = *meshes[i];
-
-      for (uint32 j = 0; j < mesh.objects.size(); j++) {
-        auto& object = mesh.objects[j];
-
-        object.position = Vec3f(1.0f, 0.5f, 10.0f);
-        object.rotation = Vec3f(1.0f, 1.0f, 2.0f);
-        object.scale = Vec3f(2.0f);
-
-        transform(object);
-      }
+      ptr_objects[i] = new Object();
     }
+  }
 
-    for (uint32 x = 0; x < totalCommands; x++) {
-      auto& command = commands[x];
-      auto& mesh = *meshes[command.meshId];
-      auto& object = mesh.objects[command.objectId];
-      
-      mesh.matrices[command.matrixId] = Matrix4f::transformation(
-        object.position,
-        object.scale,
-        object.rotation
-      ).transpose();
+  return Gm_RepeatBenchmarkTest([&]() {
+    for (uint32 i = 0; i < TOTAL_OBJECTS; i++) {
+      auto& object = *ptr_objects[i];
+
+      object.position = Vec3f(1.0f, 0.5f, 0.25f);
+      object.scale = 20.0f;
+      object.rotation = Vec3f(0.9f, 2.3f, 1.4f);
     }
-  }, 50);
+  }, TEST_ITERATIONS);
 }
 
-void benchmark_objects_unoptimized() {
-  // setup
-  log("benchmark_objects_unoptimized\n");
+static uint64 benchmark_pool_objects() {
+  log("benchmark_pool_objects");
 
-  struct PointerObject;
+  ObjectPool pool;
 
-  struct PointerMesh {
-    std::vector<Matrix4f> matrices;
-    std::vector<PointerObject*> objects;
-  };
-
-  struct PointerObject {
-    Vec3f position;
-    Vec3f rotation;
-    Vec3f scale;
-    uint32 id;
-    PointerMesh* parent = nullptr;
-  };
-
-  std::vector<PointerMesh*> meshes;
-  std::vector<PointerObject*> objectsToUpdate;
+  std::vector<ObjectPool*> pools;
 
   for (uint32 i = 0; i < TOTAL_MESHES; i++) {
-    auto* mesh = new PointerMesh();
+    pools.push_back(new ObjectPool());
+    pools[i]->reserve(100);
 
-    mesh->matrices.resize(TOTAL_OBJECTS);
-    meshes.push_back(mesh);
-
-    for (uint32 j = 0; j < TOTAL_OBJECTS; j++) {
-      auto* object = new PointerObject();
-
-      object->id = j;
-      object->parent = mesh;
-
-      mesh->objects.push_back(object);
-
-      if (j % 100 == 0) {
-        objectsToUpdate.push_back(object);
-      }
+    for (uint32 j = 0; j < 100; j++) {
+      pools[i]->createObject();
     }
   }
 
-  // test
-  Gm_RepeatBenchmarkTest([&]() {
-    for (auto* object : objectsToUpdate) {
-      object->position = Vec3f(1.0f, 0.5f, 10.0f);
-      object->rotation = Vec3f(1.0f, 1.0f, 2.0f);
-      object->scale = Vec3f(2.0f);
+  return Gm_RepeatBenchmarkTest([&]() {
+    for (uint32 i = 0; i < TOTAL_MESHES; i++) {
+      auto& pool = *pools[i];
 
-      auto* mesh = object->parent;
-
-      mesh->matrices[object->id] = (
-        Matrix4f::translation(object->position) *
-        Matrix4f::scale(object->scale) *
-        Matrix4f::rotation(object->rotation)
-      ).transpose();
+      for (auto& object : pool) {
+        object.position = Vec3f(1.0f, 0.5f, 0.25f);
+        object.scale = 20.0f;
+        object.rotation = Vec3f(0.9f, 2.3f, 1.4f);
+      }
     }
-  }, 50);
+  }, TEST_ITERATIONS);
+}
+
+void benchmark_object_management() {
+  Gm_CompareBenchmarks(
+    benchmark_pointer_objects(),
+    benchmark_pool_objects()
+  );
 }
