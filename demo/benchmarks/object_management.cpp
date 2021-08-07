@@ -170,35 +170,61 @@ static uint64 benchmark_soa_object_properties(uint32 iterations) {
   log("benchmark_soa_object_properties");
 
   struct SOA_Objects {
-    Vec3f *positions = nullptr;
-    Vec3f *scales = nullptr;
-    Vec3f *rotations = nullptr;
+    float *x = nullptr;
+    float *y = nullptr;
+    float *z = nullptr;
+    float *sx = nullptr;
+    float *sy = nullptr;
+    float *sz = nullptr;
+    float *rx = nullptr;
+    float *ry = nullptr;
+    float *rz = nullptr;
   };
 
   SOA_Objects objects;
 
-  objects.positions = new Vec3f[TOTAL_OBJECTS];
-  objects.scales = new Vec3f[TOTAL_OBJECTS];
-  objects.rotations = new Vec3f[TOTAL_OBJECTS];
+  objects.x = new float[TOTAL_OBJECTS];
+  objects.y = new float[TOTAL_OBJECTS];
+  objects.z = new float[TOTAL_OBJECTS];
+
+  objects.sx = new float[TOTAL_OBJECTS];
+  objects.sy = new float[TOTAL_OBJECTS];
+  objects.sz = new float[TOTAL_OBJECTS];
+
+  objects.rx = new float[TOTAL_OBJECTS];
+  objects.ry = new float[TOTAL_OBJECTS];
+  objects.rz = new float[TOTAL_OBJECTS];
 
   defer({
-    delete[] objects.positions;
-    delete[] objects.scales;
-    delete[] objects.rotations;
+    delete[] objects.x;
+    delete[] objects.y;
+    delete[] objects.z;
+
+    delete[] objects.sx;
+    delete[] objects.sy;
+    delete[] objects.sz;
+
+    delete[] objects.rx;
+    delete[] objects.ry;
+    delete[] objects.rz;
   });
 
+  #define setAll(property, value) loop(TOTAL_OBJECTS) {\
+    objects.property[idx] = value;\
+  }\
+
   return Gm_RepeatBenchmarkTest([&]() {
-    loop(TOTAL_OBJECTS) {
-      objects.positions[idx] = Vec3f(1.0f, 0.5f, 0.25f);
-    }
+    setAll(x, 1.0f);
+    setAll(y, 0.5f);
+    setAll(z, 0.25f);
 
-    loop(TOTAL_OBJECTS) {
-      objects.scales[idx] = 20.0f;
-    }
+    setAll(sx, 20.0f);
+    setAll(sy, 20.0f);
+    setAll(sz, 20.0f);
 
-    loop(TOTAL_OBJECTS) {
-      objects.rotations[idx] = Vec3f(0.9f, 2.3f, 1.4f);
-    }
+    setAll(rx, 0.9f);
+    setAll(ry, 2.3f);
+    setAll(rz, 1.4f);
   }, iterations);
 }
 
@@ -206,57 +232,85 @@ static uint64 benchmark_soa_object_matrices(uint32 iterations) {
   log("benchmark_soa_object_matrices");
 
   struct SOA_Objects {
-    Vec3f *positions = nullptr;
-    Vec3f *scales = nullptr;
-    Vec3f *rotations = nullptr;
-    Matrix4f *matrices = nullptr;
+    float *x = nullptr;
+    float *y = nullptr;
+    float *z = nullptr;
+    float *sx = nullptr;
+    float *sy = nullptr;
+    float *sz = nullptr;
+    float *rx = nullptr;
+    float *ry = nullptr;
+    float *rz = nullptr;
+    Matrix4f* matrices = nullptr;
   };
 
   SOA_Objects objects;
 
-  objects.positions = new Vec3f[TOTAL_OBJECTS];
-  objects.scales = new Vec3f[TOTAL_OBJECTS];
-  objects.rotations = new Vec3f[TOTAL_OBJECTS];
+  objects.x = new float[TOTAL_OBJECTS];
+  objects.y = new float[TOTAL_OBJECTS];
+  objects.z = new float[TOTAL_OBJECTS];
+
+  objects.sx = new float[TOTAL_OBJECTS];
+  objects.sy = new float[TOTAL_OBJECTS];
+  objects.sz = new float[TOTAL_OBJECTS];
+
+  objects.rx = new float[TOTAL_OBJECTS];
+  objects.ry = new float[TOTAL_OBJECTS];
+  objects.rz = new float[TOTAL_OBJECTS];
+
   objects.matrices = new Matrix4f[TOTAL_OBJECTS];
 
   defer({
-    delete[] objects.positions;
-    delete[] objects.scales;
-    delete[] objects.rotations;
+    delete[] objects.x;
+    delete[] objects.y;
+    delete[] objects.z;
+
+    delete[] objects.sx;
+    delete[] objects.sy;
+    delete[] objects.sz;
+
+    delete[] objects.rx;
+    delete[] objects.ry;
+    delete[] objects.rz;
+
     delete[] objects.matrices;
   });
 
+  #define setAll(property, value) loop(TOTAL_OBJECTS) {\
+    objects.property[idx] = value;\
+  }\
+
   return Gm_RepeatBenchmarkTest([&]() {
-    loop(TOTAL_OBJECTS) {
-      objects.positions[idx] = Vec3f(1.0f, 0.5f, 0.25f);
-    }
+    setAll(x, 1.0f);
+    setAll(y, 0.5f);
+    setAll(z, 0.25f);
 
-    loop(TOTAL_OBJECTS) {
-      objects.scales[idx] = 20.0f;
-    }
+    setAll(sx, 20.0f);
+    setAll(sy, 20.0f);
+    setAll(sz, 20.0f);
 
-    loop(TOTAL_OBJECTS) {
-      objects.rotations[idx] = Vec3f(0.9f, 2.3f, 1.4f);
-    }
+    setAll(rx, 0.9f);
+    setAll(ry, 2.3f);
+    setAll(rz, 1.4f);
 
     loop(TOTAL_OBJECTS) {
       objects.matrices[idx] = Matrix4f::transformation(
-        objects.positions[idx],
-        objects.scales[idx],
-        objects.rotations[idx]
+        Vec3f(1.0f, 0.5f, 0.25f),
+        20.0f,
+        Vec3f(0.9f, 2.3f, 1.4f)
       ).transpose();
     }
   }, iterations);
 }
 
 void benchmark_object_management() {
-  auto b_pointers = benchmark_pointer_object_properties(100);
-  auto b_pool = benchmark_pool_object_properties(100);
-  auto b_soa = benchmark_soa_object_properties(100);
+  // auto b_pointers = benchmark_pointer_object_properties(1);
+  // auto b_pool = benchmark_pool_object_properties(1);
+  // auto b_soa = benchmark_soa_object_properties(1);
 
-  // auto b_pointers = benchmark_pointer_object_matrices(1);
-  // auto b_pool = benchmark_pool_object_matrices(1);
-  // auto b_soa = benchmark_soa_object_matrices(1);
+  auto b_pointers = benchmark_pointer_object_matrices(1);
+  auto b_pool = benchmark_pool_object_matrices(1);
+  auto b_soa = benchmark_soa_object_matrices(1);
 
   Gm_CompareBenchmarks(
     b_pointers,
