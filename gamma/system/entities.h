@@ -42,8 +42,8 @@ namespace Gamma {
   struct Object {
     ObjectRecord _record;
     Vec3f position;
-    Vec3f rotation;
     Vec3f scale;
+    Vec3f rotation;
   };
 
   /**

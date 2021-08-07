@@ -9,11 +9,11 @@ namespace Gamma {
     if (a > b) {
       uint32 improvement = (uint32)(100.0f * (1.0f - (float)b / (float)a));
 
-      std::cout << a << "ms -> " << b << "ms - " << improvement << "% improvement\n\n";
+      std::cout << a << "ms -> " << b << "ms (-" << improvement << "%)\n\n";
     } else {
       uint32 slowdown = (uint32)(100.0f * (1.0f - (float)a / (float)b));
 
-      std::cout << a << "ms -> " << b << "ms - " << slowdown << "% slowdown\n\n";
+      std::cout << a << "ms -> " << b << "ms (+" << slowdown << "%)\n\n";
     }
   }
 
@@ -25,8 +25,9 @@ namespace Gamma {
     }
 
     auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(getTime()).count();
+    auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(getTime()).count();
 
-    std::cout << "\nFinished " << times << " iterations in " << milliseconds << "ms\n\n";
+    std::cout << "\nFinished " << times << " iterations in " << milliseconds << "ms (" << microseconds << "us)\n\n";
 
     return milliseconds;
   }

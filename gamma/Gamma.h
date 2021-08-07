@@ -7,4 +7,5 @@
 #include "system/AbstractScene.h"
 #include "system/console.h"
 #include "system/entities.h"
+#include "system/macros.h"
 #include "system/Window.h"

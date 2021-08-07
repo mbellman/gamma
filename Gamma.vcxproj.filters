@@ -488,5 +488,8 @@
     <ClInclude Include="gamma\opengl\OpenGLTexture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="gamma\system\macros.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
