@@ -89,6 +89,10 @@ namespace Gamma {
     return glTexture != nullptr;
   }
 
+  bool OpenGLMesh::isReflective() const {
+    return sourceMesh->isReflective;
+  }
+
   void OpenGLMesh::render(GLenum primitiveMode) {
     auto& mesh = *sourceMesh;
 

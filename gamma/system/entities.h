@@ -141,6 +141,10 @@ namespace Gamma {
      * An optional specularity map texture for the mesh.
      */
     std::string specularityMap = "";
+    /**
+     * Determines whether mesh objects should be reflective.
+     */
+    bool isReflective = false;
   };
 
   /**

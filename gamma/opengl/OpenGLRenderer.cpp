@@ -20,12 +20,19 @@
 namespace Gamma {
   const static uint32 MAX_LIGHTS = 1000;
 
+  const enum StencilType {
+    NON_EMISSIVE_OBJECTS = 0xFF,
+    EMISSIVE_OBJECTS = 0x00,
+    REFLECTIVE_OBJECTS = 0xF0
+  };
+
   /**
    * OpenGLRenderer
    * --------------
    */
   void OpenGLRenderer::init() {
     flags = OpenGLRenderFlags::RENDER_DEFERRED | OpenGLRenderFlags::RENDER_SHADOWS;
+    // internalResolution = { 960, 540 };
 
     // Initialize OpenGL
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -33,7 +40,7 @@ namespace Gamma {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 1);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
     glContext = SDL_GL_CreateContext(sdl_window);
     glewExperimental = true;
@@ -199,6 +206,7 @@ namespace Gamma {
     glDisable(GL_BLEND);
     glCullFace(GL_BACK);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glStencilFunc(GL_ALWAYS, 0xFF, 0xFF);
     glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
 
     // Render camera view
@@ -220,20 +228,32 @@ namespace Gamma {
       ? GL_LINE_STRIP
       : GL_TRIANGLES;
 
-    // Render non-emissive objects
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    glStencilMask(0xFF);
+    // @todo render emissive objects
+    // glStencilMask(StencilType::EMISSIVE_OBJECTS);
+
+    // Render reflective objects
+    glStencilMask(StencilType::REFLECTIVE_OBJECTS);
 
     for (auto* glMesh : glMeshes) {
-      deferred.geometry.setBool("hasTexture", glMesh->hasTexture());
-      deferred.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
+      if (glMesh->isReflective()) {
+        deferred.geometry.setBool("hasTexture", glMesh->hasTexture());
+        deferred.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
 
-      glMesh->render(primitiveMode);
+        glMesh->render(primitiveMode);
+      }
     }
 
-    glStencilMask(0x00);
+    // Render non-emissive objects
+    glStencilMask(StencilType::NON_EMISSIVE_OBJECTS);
 
-    // @todo render emissive objects
+    for (auto* glMesh : glMeshes) {
+      if (!glMesh->isReflective()) {
+        deferred.geometry.setBool("hasTexture", glMesh->hasTexture());
+        deferred.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
+
+        glMesh->render(primitiveMode);
+      }
+    }
 
     // Lighting pass; read from G-Buffer and preemptively write to post-processing pipeline
     deferred.g_buffer.read();
@@ -246,7 +266,8 @@ namespace Gamma {
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
-    glStencilFunc(GL_EQUAL, 1, 0xFF);
+    glStencilFunc(GL_LESS, StencilType::REFLECTIVE_OBJECTS - 1, 0xFF);
+    glStencilMask(0x00);
 
     // Non-shadowcaster lighting pass
     auto& lights = AbstractScene::active->getLights();
@@ -309,21 +330,27 @@ namespace Gamma {
 
     // @todo shadowed lighting pass
 
-    // Render reflections
-    glStencilFunc(GL_EQUAL, 1, 0xFF);
+    // Render reflections (screen-space + skybox)
+    // @todo this can't be done in the g-buffer-writing-to-post stage.
+    // this has to be done in the post stage, and both g-buffer data
+    // (normals/depth) and screen-space color need to be available
+    // to sample in the shader.
+    glStencilFunc(GL_EQUAL, StencilType::REFLECTIVE_OBJECTS, 0xFF);
 
     deferred.reflections.use();
     deferred.reflections.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
     deferred.reflections.setInt("colorAndDepth", 0);
     deferred.reflections.setInt("normalAndSpecularity", 1);
     deferred.reflections.setVec3f("cameraPosition", camera.position);
-    deferred.reflections.setMatrix4f("inverseProjection", inverseProjection);
+    deferred.reflections.setMatrix4f("view", view);
     deferred.reflections.setMatrix4f("inverseView", inverseView);
+    deferred.reflections.setMatrix4f("projection", projection);
+    deferred.reflections.setMatrix4f("inverseProjection", inverseProjection);
 
     OpenGLScreenQuad::render();
 
     // Render skybox
-    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    glStencilFunc(GL_EQUAL, 0x00, 0xFF);
 
     deferred.skybox.use();
     deferred.skybox.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });

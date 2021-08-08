@@ -3,8 +3,10 @@
 uniform sampler2D colorAndDepth;
 uniform sampler2D normalAndSpecularity;
 uniform vec3 cameraPosition;
-uniform mat4 inverseProjection;
+uniform mat4 view;
 uniform mat4 inverseView;
+uniform mat4 projection;
+uniform mat4 inverseProjection;
 
 noperspective in vec2 fragUv;
 
@@ -25,6 +27,9 @@ vec3 getWorldPosition(float depth) {
   return world.xyz * vec3(1.0, 1.0, -1.0);
 }
 
+// @todo allow shader imports; import this function
+// from skybox helpers or similar. track shader dependencies
+// as part of hot reloading
 vec3 getSkyColor(vec3 direction) {
   vec3 sunDirection = normalize(vec3(0.5, 0.3, 1.0));
   vec3 sunColor = vec3(1.0, 0.1, 0.2);
@@ -53,9 +58,40 @@ void main() {
   vec4 frag_colorAndDepth = texture(colorAndDepth, fragUv);
   vec4 frag_NormalAndSpecularity = texture(normalAndSpecularity, fragUv);
   vec3 position = getWorldPosition(frag_colorAndDepth.w);
+  vec3 cameraToSurface = position - cameraPosition;
   vec3 n_cameraToSurface = normalize(position - cameraPosition);
   vec3 normal = frag_NormalAndSpecularity.rgb;
   vec3 reflectionVector = reflect(n_cameraToSurface, normal);
+
+  // Screen-space reflections
+  // @todo refactor/fix artifacts
+  int maxSteps = 5;
+  float stepSize = 200.0;
+  vec3 ray = position;
+
+  for (int i = 0; i < maxSteps; i++) {
+    ray += reflectionVector * stepSize;
+
+    vec4 w_ray = vec4(ray * vec3(1, 1, -1), 1.0);
+    vec4 clip = projection * view * w_ray;
+    vec3 ndc = clip.xyz / clip.w;
+    vec2 ray_uv = vec2(ndc) * 0.5 + 0.5;
+
+    if (ray_uv.x < 0.0 || ray_uv.x > 1.0 || ray_uv.y < 0.0 || ray_uv.y > 1.0) {
+      break;
+    }
+
+    vec4 test_colorAndDepth = texture(colorAndDepth, ray_uv);
+    vec3 test_position = getWorldPosition(test_colorAndDepth.w);
+
+    // @bug surfaces farther away than the reflected object
+    // still see reflections from that object
+    if (test_colorAndDepth.w < ndc.z) {
+      out_color = test_colorAndDepth.rgb * 0.3;
+
+      return;
+    }
+  }
 
   out_color = frag_colorAndDepth.rgb * getSkyColor(reflectionVector);
 }
