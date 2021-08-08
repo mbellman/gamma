@@ -9,16 +9,24 @@ namespace Gamma {
 
   const static std::map<ColorFormat, GLint> glInternalFormatMap = {
     { ColorFormat::R, GL_R32F },
+    { ColorFormat::R16, GL_R16F },
     { ColorFormat::RG, GL_RG32F },
+    { ColorFormat::RG16, GL_RG16F },
     { ColorFormat::RGB, GL_RGB32F },
-    { ColorFormat::RGBA, GL_RGBA32F }
+    { ColorFormat::RGB16, GL_RGB16F },
+    { ColorFormat::RGBA, GL_RGBA32F },
+    { ColorFormat::RGBA16, GL_RGBA16F }
   };
 
   const static std::map<ColorFormat, GLenum> glFormatMap = {
     { ColorFormat::R, GL_R },
+    { ColorFormat::R16, GL_R },
     { ColorFormat::RG, GL_RG },
+    { ColorFormat::RG16, GL_RG },
     { ColorFormat::RGB, GL_RGB },
-    { ColorFormat::RGBA, GL_RGBA }
+    { ColorFormat::RGB16, GL_RGB },
+    { ColorFormat::RGBA, GL_RGBA },
+    { ColorFormat::RGBA16, GL_RGBA }
   };
 
   void OpenGLFrameBuffer::init() {

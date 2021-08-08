@@ -15,9 +15,13 @@ namespace Gamma {
 
   enum ColorFormat {
     R,
+    R16,
     RG,
+    RG16,
     RGB,
-    RGBA
+    RGB16,
+    RGBA,
+    RGBA16
   };
 
   class OpenGLFrameBuffer : public Initable, public Destroyable {

@@ -63,8 +63,8 @@ namespace Gamma {
     // @todo define separate OpenGLDeferredRenderer/OpenGLForwardRenderer classes
     deferred.g_buffer.init();
     deferred.g_buffer.setSize(internalResolution);
-    deferred.g_buffer.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
-    deferred.g_buffer.addColorAttachment(ColorFormat::RGBA);  // (RGB) Normal, (A) Specularity
+    deferred.g_buffer.addColorAttachment(ColorFormat::RGBA);    // (RGB) Color, (A) Depth
+    deferred.g_buffer.addColorAttachment(ColorFormat::RGBA16);  // (RGB) Normal, (A) Specularity
     deferred.g_buffer.addDepthStencilAttachment();
     deferred.g_buffer.bindColorAttachments();
 
