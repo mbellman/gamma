@@ -1,5 +1,7 @@
 #version 460 core
 
+uniform sampler2D colorAndDepth;
+uniform sampler2D normalAndSpecularity;
 uniform vec3 cameraPosition;
 uniform mat4 inverseProjection;
 uniform mat4 inverseView;
@@ -48,10 +50,12 @@ vec3 getSkyColor(vec3 direction) {
 }
 
 void main() {
-  // @todo figure out how to calculate direction
-  // from camera direction + fragUv
-  vec3 position = getWorldPosition(1) - cameraPosition;
-  vec3 direction = normalize(position);
+  vec4 frag_colorAndDepth = texture(colorAndDepth, fragUv);
+  vec4 frag_NormalAndSpecularity = texture(normalAndSpecularity, fragUv);
+  vec3 position = getWorldPosition(frag_colorAndDepth.w);
+  vec3 n_cameraToSurface = normalize(position - cameraPosition);
+  vec3 normal = frag_NormalAndSpecularity.rgb;
+  vec3 reflectionVector = reflect(n_cameraToSurface, normal);
 
-  out_color = getSkyColor(direction);
+  out_color = frag_colorAndDepth.rgb * getSkyColor(reflectionVector);
 }

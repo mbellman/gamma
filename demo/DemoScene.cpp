@@ -15,7 +15,7 @@ void DemoScene::init() {
   auto* planeMesh = addMesh("plane", 1, Gm_CreatePlane(10));
 
   cubeMesh->texture = "./demo/assets/images/cat.png";
-  planeMesh->normalMap = "./demo/assets/images/sand-normal-map.png";
+  planeMesh->normalMap = "./demo/assets/images/metal-normal-map.png";
 
   auto& plane = createObjectFrom("plane");
 
@@ -39,18 +39,18 @@ void DemoScene::init() {
     transform(rabbit);
   }
 
-  auto& rabbitLight = createLight();
+  // auto& rabbitLight = createLight();
 
-  rabbitLight.position = Vec3f(0.0f, 300.0f, 0.0f);
-  rabbitLight.color = Vec3f(1.0f, 0.0f, 1.0f);
-  rabbitLight.radius = 1000.0f;
-  rabbitLight.power = 20.0f;
+  // rabbitLight.position = Vec3f(0.0f, 300.0f, 0.0f);
+  // rabbitLight.color = Vec3f(1.0f, 0.0f, 1.0f);
+  // rabbitLight.radius = 1000.0f;
+  // rabbitLight.power = 20.0f;
 
-  auto& sunlight = createLight();
+  // auto& sunlight = createLight();
 
-  sunlight.type = LightType::DIRECTIONAL;
-  sunlight.direction = Vec3f(-0.5, -0.3, -1.0);
-  sunlight.color = Vec3f(1.0f, 0.1f, 0.2f);
+  // sunlight.type = LightType::DIRECTIONAL;
+  // sunlight.direction = Vec3f(-0.5, -0.3, -1.0);
+  // sunlight.color = Vec3f(1.0f, 0.1f, 0.2f);
 
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < 10; j++) {
@@ -67,16 +67,16 @@ void DemoScene::init() {
       cube.rotation = Vec3f(1.3f, 0.9f, 2.2f);
       cube.rotation.y += (float)(i * 10 + j) / 5.0f;
 
-      auto& light = createLight();
+      // auto& light = createLight();
 
-      light.color = Vec3f(
-        i / 10.0f,
-        sinf(i / 10.0f * 3.141592f) * sinf(j / 10.0f * 3.141592f),
-        1.0f - j / 10.0f
-      );
+      // light.color = Vec3f(
+      //   i / 10.0f,
+      //   sinf(i / 10.0f * 3.141592f) * sinf(j / 10.0f * 3.141592f),
+      //   1.0f - j / 10.0f
+      // );
 
-      light.position = cubePosition + Vec3f(0.0f, 50.0f, 0.0f);
-      light.radius = 150.0f;
+      // light.position = cubePosition + Vec3f(0.0f, 50.0f, 0.0f);
+      // light.radius = 150.0f;
     }
   }
 

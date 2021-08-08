@@ -83,6 +83,11 @@ namespace Gamma {
     deferred.directionalLightWithoutShadow.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/directional-light-without-shadow.frag.glsl"));
     deferred.directionalLightWithoutShadow.link();
 
+    deferred.reflections.init();
+    deferred.reflections.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
+    deferred.reflections.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/reflections.frag.glsl"));
+    deferred.reflections.link();
+
     deferred.skybox.init();
     deferred.skybox.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
     deferred.skybox.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/skybox.frag.glsl"));
@@ -138,6 +143,7 @@ namespace Gamma {
     deferred.geometry.destroy();
     deferred.pointLightWithoutShadow.destroy();
     deferred.directionalLightWithoutShadow.destroy();
+    deferred.reflections.destroy();
     deferred.skybox.destroy();
     deferred.emissives.destroy();
     deferred.lightDisc.destroy();
@@ -302,6 +308,19 @@ namespace Gamma {
     }
 
     // @todo shadowed lighting pass
+
+    // Render reflections
+    glStencilFunc(GL_EQUAL, 1, 0xFF);
+
+    deferred.reflections.use();
+    deferred.reflections.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+    deferred.reflections.setInt("colorAndDepth", 0);
+    deferred.reflections.setInt("normalAndSpecularity", 1);
+    deferred.reflections.setVec3f("cameraPosition", camera.position);
+    deferred.reflections.setMatrix4f("inverseProjection", inverseProjection);
+    deferred.reflections.setMatrix4f("inverseView", inverseView);
+
+    OpenGLScreenQuad::render();
 
     // Render skybox
     glStencilFunc(GL_NOTEQUAL, 1, 0xFF);

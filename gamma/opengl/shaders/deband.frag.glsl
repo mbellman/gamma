@@ -28,4 +28,5 @@ vec3 deband(vec3 color) {
 
 void main() {
   out_color = deband(texture(color, fragUv).rgb);
+  // out_color = texture(color, fragUv).rgb;
 }
