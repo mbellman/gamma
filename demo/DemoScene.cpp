@@ -40,6 +40,13 @@ void DemoScene::init() {
     transform(rabbit);
   }
 
+  // auto& rabbitLight = createLight();
+
+  // rabbitLight.position = Vec3f(0.f, 200.0f, 0.0f);
+  // rabbitLight.color = Vec3f(1.0f, 0.0f, 1.0f);
+  // rabbitLight.radius = 1000.0f;
+  // rabbitLight.power = 20.0f;
+
   auto& sunlight = createLight();
 
   sunlight.type = LightType::DIRECTIONAL;
