@@ -17,6 +17,7 @@ void DemoScene::init() {
   planeMesh->normalMap = "./demo/assets/images/metal-normal-map.png";
   planeMesh->isReflective = true;
   rabbitMesh->isReflective = true;
+  cubeMesh->isReflective = true;
 
   auto& plane = createObjectFrom("plane");
 
@@ -40,18 +41,18 @@ void DemoScene::init() {
     transform(rabbit);
   }
 
-  auto& rabbitLight = createLight();
+  // auto& rabbitLight = createLight();
 
-  rabbitLight.position = Vec3f(0.0f, 300.0f, 0.0f);
-  rabbitLight.color = Vec3f(1.0f, 0.2f, 1.0f);
-  rabbitLight.radius = 1000.0f;
-  rabbitLight.power = 20.0f;
+  // rabbitLight.position = Vec3f(0.0f, 300.0f, 0.0f);
+  // rabbitLight.color = Vec3f(1.0f, 0.2f, 1.0f);
+  // rabbitLight.radius = 1000.0f;
+  // rabbitLight.power = 20.0f;
 
-  auto& sunlight = createLight();
+  // auto& sunlight = createLight();
 
-  sunlight.type = LightType::DIRECTIONAL;
-  sunlight.direction = Vec3f(-0.5, -0.3, -1.0);
-  sunlight.color = Vec3f(1.0f, 0.1f, 0.2f);
+  // sunlight.type = LightType::DIRECTIONAL;
+  // sunlight.direction = Vec3f(-0.5, -0.3, -1.0);
+  // sunlight.color = Vec3f(1.0f, 0.1f, 0.2f);
 
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < 10; j++) {

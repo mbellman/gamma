@@ -54,6 +54,14 @@ vec3 getSkyColor(vec3 direction) {
   );
 }
 
+float getLinearizedDepth(float depth) {
+  float clip_depth = 2.0 * depth - 1.0;
+  float near = 1.0;
+  float far = 10000.0;
+
+  return 2.0 * near * far / (far + near - clip_depth * (far - near));
+}
+
 void main() {
   vec4 frag_colorAndDepth = texture(colorAndDepth, fragUv);
   vec4 frag_NormalAndSpecularity = texture(normalAndSpecularity, fragUv);
@@ -64,30 +72,33 @@ void main() {
   vec3 reflectionVector = reflect(n_cameraToSurface, normal);
 
   // Screen-space reflections
-  // @todo refactor/fix artifacts
-  int maxSteps = 5;
-  float stepSize = 200.0;
+  // @todo make up better variable names, see about using
+  // a hit test function
+  int steps = 5;
+  float stepSize = 100.0;
   vec3 ray = position;
+  float fragDepth = frag_colorAndDepth.w;
 
-  for (int i = 0; i < maxSteps; i++) {
+  for (int i = 0; i < steps; i++) {
     ray += reflectionVector * stepSize;
 
-    vec4 w_ray = vec4(ray * vec3(1, 1, -1), 1.0);
-    vec4 clip = projection * view * w_ray;
-    vec3 ndc = clip.xyz / clip.w;
-    vec2 ray_uv = vec2(ndc) * 0.5 + 0.5;
+    vec4 clip_ray = projection * view * vec4(ray * vec3(1, 1, -1), 1.0);
+    vec3 ndc_ray = clip_ray.xyz / clip_ray.w;
+    vec2 ray_uv = vec2(ndc_ray) * 0.5 + 0.5;
 
     if (ray_uv.x < 0.0 || ray_uv.x > 1.0 || ray_uv.y < 0.0 || ray_uv.y > 1.0) {
       break;
     }
 
-    vec4 test_colorAndDepth = texture(colorAndDepth, ray_uv);
-    vec3 test_position = getWorldPosition(test_colorAndDepth.w);
+    vec4 sample_colorAndDepth = texture(colorAndDepth, ray_uv);
 
-    // @bug surfaces farther away than the reflected object
-    // still see reflections from that object
-    if (test_colorAndDepth.w < ndc.z) {
-      out_color = test_colorAndDepth.rgb * 0.3;
+    if (
+      // If the sampled surface is further away than the reflecting surface...
+      sample_colorAndDepth.w > frag_colorAndDepth.w &&
+      // ...and the sampled surface depth is closer than the ray
+      getLinearizedDepth(sample_colorAndDepth.w) < clip_ray.w
+    ) {
+      out_color = sample_colorAndDepth.rgb * 0.3;
 
       return;
     }
