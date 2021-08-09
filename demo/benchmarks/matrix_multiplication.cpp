@@ -7,7 +7,7 @@ constexpr static uint32 TEST_ITERATIONS = 1;
 constexpr static uint32 TOTAL_MATRICES = 1000000;
 
 static uint64 benchmark_2_multiplications() {
-  log("benchmark_2_multiplications");
+  Console::log("benchmark_2_multiplications");
 
   struct Transformable {
     Vec3f position;
@@ -43,7 +43,7 @@ static uint64 benchmark_2_multiplications() {
 }
 
 static uint64 benchmark_Matrix4f_transformation() {
-  log("benchmark_Matrix4f_transformation");
+  Console::log("benchmark_Matrix4f_transformation");
 
   struct Transformable {
     Vec3f position;

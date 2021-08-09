@@ -9,7 +9,7 @@ constexpr static uint32 TOTAL_MESHES = 100;
 constexpr static uint32 TOTAL_OBJECTS = 1000000;
 
 static uint64 benchmark_pointer_object_properties(uint32 iterations) {
-  log("benchmark_pointer_object_properties");
+  Console::log("benchmark_pointer_object_properties");
 
   std::vector<Object*> ptr_objects;
 
@@ -46,7 +46,7 @@ static uint64 benchmark_pointer_object_properties(uint32 iterations) {
 }
 
 static uint64 benchmark_pointer_object_matrices(uint32 iterations) {
-  log("benchmark_pointer_object_matrices");
+  Console::log("benchmark_pointer_object_matrices");
 
   std::vector<Object*> ptr_objects;
   std::vector<Matrix4f> ptr_matrices;
@@ -93,7 +93,7 @@ static uint64 benchmark_pointer_object_matrices(uint32 iterations) {
 }
 
 static uint64 benchmark_pool_object_properties(uint32 iterations) {
-  log("benchmark_pool_object_properties");
+  Console::log("benchmark_pool_object_properties");
 
   std::vector<ObjectPool*> pools;
 
@@ -126,7 +126,7 @@ static uint64 benchmark_pool_object_properties(uint32 iterations) {
 }
 
 static uint64 benchmark_pool_object_matrices(uint32 iterations) {
-  log("benchmark_pool_object_matrices");
+  Console::log("benchmark_pool_object_matrices");
 
   std::vector<ObjectPool*> pools;
 
@@ -167,7 +167,7 @@ static uint64 benchmark_pool_object_matrices(uint32 iterations) {
 }
 
 static uint64 benchmark_soa_object_properties(uint32 iterations) {
-  log("benchmark_soa_object_properties");
+  Console::log("benchmark_soa_object_properties");
 
   struct SOA_Objects {
     float *x = nullptr;
@@ -229,7 +229,7 @@ static uint64 benchmark_soa_object_properties(uint32 iterations) {
 }
 
 static uint64 benchmark_soa_object_matrices(uint32 iterations) {
-  log("benchmark_soa_object_matrices");
+  Console::log("benchmark_soa_object_matrices");
 
   struct SOA_Objects {
     float *x = nullptr;

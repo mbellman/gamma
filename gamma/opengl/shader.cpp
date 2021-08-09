@@ -29,8 +29,8 @@ namespace Gamma {
       char error[512];
 
       glGetShaderInfoLog(shader, 512, 0, error);
-      log("[Gamma] Failed to compile shader:", path);
-      log(error);
+      Console::log("[Gamma] Failed to compile shader:", path);
+      Console::log(error);
     }
 
     auto& fsPath = std::filesystem::current_path() / path;
@@ -105,7 +105,7 @@ namespace Gamma {
 
           record = updatedRecord;
 
-          log("[Gamma] Hot-reloaded shader:", record.path);
+          Console::log("[Gamma] Hot-reloaded shader:", record.path);
 
           break;
         }

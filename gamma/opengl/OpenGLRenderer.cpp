@@ -173,17 +173,17 @@ namespace Gamma {
 
   void OpenGLRenderer::createShadowcaster(Light* mesh) {
     // @todo
-    log("Shadowcaster created!");
+    Console::log("Shadowcaster created!");
   }
 
   void OpenGLRenderer::destroyMesh(Mesh* mesh) {
     // @todo
-    log("Mesh destroyed!");
+    Console::log("Mesh destroyed!");
   }
 
   void OpenGLRenderer::destroyShadowcaster(Light* mesh) {
     // @todo
-    log("Shadowcaster destroyed!");
+    Console::log("Shadowcaster destroyed!");
   }
 
   void OpenGLRenderer::present() {
@@ -411,8 +411,8 @@ namespace Gamma {
   }
 
   void OpenGLRenderer::renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y) {
-    float offsetX = -1.0f + (x + surface->w) / (float)Window::size.width;
-    float offsetY = 1.0f - (y + surface->h) / (float)Window::size.height;
+    float offsetX = -1.0f + (2 * x + surface->w) / (float)Window::size.width;
+    float offsetY = 1.0f - (2 * y + surface->h) / (float)Window::size.height;
     float scaleX = surface->w / (float)Window::size.width;
     float scaleY = -1.0f * surface->h / (float)Window::size.height;
 

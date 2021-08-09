@@ -137,6 +137,7 @@
     <ClCompile Include="gamma\system\AbstractScene.cpp" />
     <ClCompile Include="gamma\system\assert.cpp" />
     <ClCompile Include="gamma\system\camera.cpp" />
+    <ClCompile Include="gamma\system\console.cpp" />
     <ClCompile Include="gamma\system\entities.cpp" />
     <ClCompile Include="gamma\system\file.cpp" />
     <ClCompile Include="gamma\system\InputSystem.cpp" />

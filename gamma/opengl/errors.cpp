@@ -26,7 +26,7 @@ namespace Gamma {
     GLenum error;
 
     while ((error = glGetError()) != GL_NO_ERROR) {
-      log("OpenGL Error:", message, glErrorMap[error]);
+      Console::log("OpenGL Error:", message, glErrorMap[error]);
     }
   }
 }

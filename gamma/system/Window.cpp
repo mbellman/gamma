@@ -131,11 +131,22 @@ namespace Gamma {
             std::string vertsLabel = "Verts: " + std::to_string(sceneStats.verts);
             std::string trisLabel = "Tris: " + std::to_string(sceneStats.tris);
 
-            renderer->renderText(font_OpenSans, fpsLabel.c_str(), 50, 50);
-            renderer->renderText(font_OpenSans, frameTimeLabel.c_str(), 50, 100);
-            renderer->renderText(font_OpenSans, resolutionLabel.c_str(), 50, 150);
-            renderer->renderText(font_OpenSans, vertsLabel.c_str(), 50, 200);
-            renderer->renderText(font_OpenSans, trisLabel.c_str(), 50, 250);
+            renderer->renderText(font_OpenSans, fpsLabel.c_str(), 25, 25);
+            renderer->renderText(font_OpenSans, frameTimeLabel.c_str(), 25, 50);
+            renderer->renderText(font_OpenSans, resolutionLabel.c_str(), 25, 75);
+            renderer->renderText(font_OpenSans, vertsLabel.c_str(), 25, 100);
+            renderer->renderText(font_OpenSans, trisLabel.c_str(), 25, 125);
+          #endif
+
+          #if GAMMA_DEVELOPER_MODE
+            auto messages = Console::getMessages();
+
+            // @todo clear messages after a set duration
+            for (uint32 i = 0; i < 5; i++) {
+              if (messages[i].size() > 0) {
+                renderer->renderText(font_OpenSans, messages[i].c_str(), 25, Window::size.height - 50 - i * 25);
+              }
+            }
           #endif
 
           renderer->present();

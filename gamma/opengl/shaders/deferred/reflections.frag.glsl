@@ -76,6 +76,7 @@ void main() {
   // a hit test function
   int steps = 5;
   float stepSize = 100.0;
+  float reflectivity = 1.0;
   vec3 ray = position;
 
   for (int i = 0; i < steps; i++) {
@@ -97,11 +98,11 @@ void main() {
       // ...and the sampled surface depth is closer than the ray
       getLinearizedDepth(sample_colorAndDepth.w) < clip_ray.w
     ) {
-      out_colorAndDepth = vec4(frag_colorAndDepth.rgb + sample_colorAndDepth.rgb * 0.3, frag_colorAndDepth.w);
+      out_colorAndDepth = vec4(frag_colorAndDepth.rgb * (1.0 - reflectivity) + sample_colorAndDepth.rgb * reflectivity, frag_colorAndDepth.w);
 
       return;
     }
   }
 
-  out_colorAndDepth = vec4(frag_colorAndDepth.rgb + getSkyColor(reflectionVector), frag_colorAndDepth.w);
+  out_colorAndDepth = vec4(frag_colorAndDepth.rgb * (1.0 - reflectivity) + getSkyColor(reflectionVector) * reflectivity, frag_colorAndDepth.w);
 }
