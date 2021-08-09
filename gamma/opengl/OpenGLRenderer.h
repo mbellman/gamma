@@ -48,6 +48,8 @@ namespace Gamma {
 
     struct DeferredPath {
       OpenGLFrameBuffer g_buffer;
+      OpenGLFrameBuffer post_buffer;
+      OpenGLLightDisc lightDisc;
       OpenGLShader geometry;
       OpenGLShader emissives;
       OpenGLShader pointLightWithoutShadow;
@@ -56,18 +58,7 @@ namespace Gamma {
       OpenGLShader skybox;
       OpenGLShader debanding;
       OpenGLShader gBufferLayers;
-      OpenGLLightDisc lightDisc;
     } deferred;
-
-    struct PostEffect {
-      OpenGLFrameBuffer buffer;
-      OpenGLShader shader;
-    };
-
-    // @todo create a post-processing pipeline with configurable steps
-    struct PostProcessing {
-      PostEffect debanding;
-    } post;
 
     void renderDeferred();
     void renderForward();

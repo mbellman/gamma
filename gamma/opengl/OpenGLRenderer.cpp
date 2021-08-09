@@ -72,8 +72,15 @@ namespace Gamma {
     deferred.g_buffer.setSize(internalResolution);
     deferred.g_buffer.addColorAttachment(ColorFormat::RGBA);    // (RGB) Color, (A) Depth
     deferred.g_buffer.addColorAttachment(ColorFormat::RGBA16);  // (RGB) Normal, (A) Specularity
+    deferred.g_buffer.addColorAttachment(ColorFormat::RGBA);    // (RGB) Color, (A) Depth - Previous frame
     deferred.g_buffer.addDepthStencilAttachment();
     deferred.g_buffer.bindColorAttachments();
+
+    deferred.post_buffer.init();
+    deferred.post_buffer.setSize(internalResolution);
+    deferred.post_buffer.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
+    deferred.g_buffer.shareDepthStencilAttachment(deferred.post_buffer);
+    deferred.post_buffer.bindColorAttachments();
 
     deferred.geometry.init();
     deferred.geometry.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/deferred/geometry.vert.glsl"));
@@ -109,25 +116,11 @@ namespace Gamma {
 
     deferred.lightDisc.init();
 
-    // Initialize post effects
-    post.debanding.buffer.init();
-    post.debanding.buffer.setSize(internalResolution);
-    post.debanding.buffer.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
-    // @todo consider using a post-fx 'accumulation' buffer
-    // (or pair of ping-pong buffers) instead of defining
-    // a unique buffer for each post effect. We just need
-    // to read/write back and forth as we iterate through
-    // the effects. Share the depth/stencil attachment with
-    // the initial accumulation buffer since it's the render
-    // target for final pre-processing steps, and depth/stencil
-    // testing may still need to be done at that stage
-    deferred.g_buffer.shareDepthStencilAttachment(post.debanding.buffer);
-    post.debanding.buffer.bindColorAttachments();
-
-    post.debanding.shader.init();
-    post.debanding.shader.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
-    post.debanding.shader.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deband.frag.glsl"));
-    post.debanding.shader.link();
+    // Initialize post shaders
+    deferred.debanding.init();
+    deferred.debanding.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
+    deferred.debanding.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deband.frag.glsl"));
+    deferred.debanding.link();
 
     // Initialize remaining shaders
     screen.init();
@@ -147,13 +140,16 @@ namespace Gamma {
 
   void OpenGLRenderer::destroy() {
     deferred.g_buffer.destroy();
+    deferred.post_buffer.destroy();
+    deferred.lightDisc.destroy();
+
     deferred.geometry.destroy();
+    deferred.emissives.destroy();
     deferred.pointLightWithoutShadow.destroy();
     deferred.directionalLightWithoutShadow.destroy();
     deferred.reflections.destroy();
     deferred.skybox.destroy();
-    deferred.emissives.destroy();
-    deferred.lightDisc.destroy();
+    deferred.debanding.destroy();
 
     #if GAMMA_SHOW_G_BUFFER_LAYERS
       deferred.gBufferLayers.destroy();
@@ -199,6 +195,8 @@ namespace Gamma {
     glViewport(0, 0, internalWidth, internalHeight);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    // @todo write previous-frame post buffer output to g-buffer attachment 2
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
@@ -255,9 +253,9 @@ namespace Gamma {
       }
     }
 
-    // Lighting pass; read from G-Buffer and preemptively write to post-processing pipeline
+    // Lighting pass; read from G-Buffer and preemptively write to post buffer
     deferred.g_buffer.read();
-    post.debanding.buffer.write();
+    deferred.post_buffer.write();
 
     glViewport(0, 0, internalWidth, internalHeight);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -331,14 +329,11 @@ namespace Gamma {
     // @todo shadowed lighting pass
 
     // Render reflections (screen-space + skybox)
-    // @todo this can't be done in the g-buffer-writing-to-post stage.
-    // this has to be done in the post stage, and both g-buffer data
-    // (normals/depth) and screen-space color need to be available
-    // to sample in the shader.
     glStencilFunc(GL_EQUAL, StencilType::REFLECTIVE_OBJECTS, 0xFF);
 
     deferred.reflections.use();
     deferred.reflections.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+    // @todo use previous-frame colorAndDepth (2)
     deferred.reflections.setInt("colorAndDepth", 0);
     deferred.reflections.setInt("normalAndSpecularity", 1);
     deferred.reflections.setVec3f("cameraPosition", camera.position);
@@ -361,7 +356,7 @@ namespace Gamma {
     OpenGLScreenQuad::render();
 
     // Post-processing pass
-    post.debanding.buffer.read();
+    deferred.post_buffer.read();
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
     glViewport(0, 0, Window::size.width, Window::size.height);
@@ -371,8 +366,10 @@ namespace Gamma {
     glDisable(GL_STENCIL_TEST);
     glStencilMask(0xFF);
 
-    post.debanding.shader.use();
-    post.debanding.shader.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+    // @todo consider removing debanding if it's not as much of a problem
+    // with fully textured/normal-mapped surfaces
+    deferred.debanding.use();
+    deferred.debanding.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
 
     OpenGLScreenQuad::render();
 
