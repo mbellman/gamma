@@ -120,9 +120,10 @@ namespace Gamma {
 
           renderer->render();
 
-          #if GAMMA_SHOW_STATS
+          #if GAMMA_DEVELOPER_MODE
             auto& resolution = renderer->getInternalResolution();
             auto& sceneStats = activeScene->getStats();
+            auto messages = Console::getMessages();
 
             // @todo write a little helper for generating labels less repetitively
             std::string fpsLabel = "FPS: " + std::to_string(fpsAverager.average());
@@ -136,10 +137,6 @@ namespace Gamma {
             renderer->renderText(font_OpenSans, resolutionLabel.c_str(), 25, 75);
             renderer->renderText(font_OpenSans, vertsLabel.c_str(), 25, 100);
             renderer->renderText(font_OpenSans, trisLabel.c_str(), 25, 125);
-          #endif
-
-          #if GAMMA_DEVELOPER_MODE
-            auto messages = Console::getMessages();
 
             // @todo clear messages after a set duration
             for (uint32 i = 0; i < 5; i++) {

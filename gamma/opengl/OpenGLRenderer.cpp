@@ -112,7 +112,7 @@ namespace Gamma {
     deferred.skybox.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/skybox.frag.glsl"));
     deferred.skybox.link();
 
-    #if GAMMA_SHOW_G_BUFFER_LAYERS
+    #if GAMMA_DEVELOPER_MODE
       deferred.gBufferLayers.init();
       deferred.gBufferLayers.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
       deferred.gBufferLayers.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/g-buffer-preview.frag.glsl"));
@@ -157,7 +157,7 @@ namespace Gamma {
     deferred.skybox.destroy();
     deferred.debanding.destroy();
 
-    #if GAMMA_SHOW_G_BUFFER_LAYERS
+    #if GAMMA_DEVELOPER_MODE
       deferred.gBufferLayers.destroy();
     #endif
 
@@ -394,7 +394,7 @@ namespace Gamma {
 
     OpenGLScreenQuad::render();
 
-    #if GAMMA_SHOW_G_BUFFER_LAYERS
+    #if GAMMA_DEVELOPER_MODE
       deferred.g_buffer.read();
 
       deferred.gBufferLayers.use();

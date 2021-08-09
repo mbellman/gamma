@@ -1,6 +1,3 @@
 #pragma once
 
-#define GAMMA_HOT_RELOAD_SHADERS 1
-#define GAMMA_SHOW_STATS 1
-#define GAMMA_SHOW_G_BUFFER_LAYERS 1
 #define GAMMA_DEVELOPER_MODE 1

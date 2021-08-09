@@ -156,7 +156,7 @@ namespace Gamma {
   }
 
   void OpenGLShader::use() {
-    #if GAMMA_HOT_RELOAD_SHADERS
+    #if GAMMA_DEVELOPER_MODE
       checkAndHotReloadShaders();
     #endif
 
