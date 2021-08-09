@@ -82,6 +82,11 @@ namespace Gamma {
     deferred.g_buffer.shareDepthStencilAttachment(deferred.post_buffer);
     deferred.post_buffer.bindColorAttachments();
 
+    deferred.copyFrame.init();
+    deferred.copyFrame.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
+    deferred.copyFrame.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/copy-frame.frag.glsl"));
+    deferred.copyFrame.link();
+
     deferred.geometry.init();
     deferred.geometry.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/deferred/geometry.vert.glsl"));
     deferred.geometry.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/geometry.frag.glsl"));
@@ -147,6 +152,7 @@ namespace Gamma {
     deferred.emissives.destroy();
     deferred.pointLightWithoutShadow.destroy();
     deferred.directionalLightWithoutShadow.destroy();
+    deferred.copyFrame.destroy();
     deferred.reflections.destroy();
     deferred.skybox.destroy();
     deferred.debanding.destroy();
@@ -195,8 +201,6 @@ namespace Gamma {
     glViewport(0, 0, internalWidth, internalHeight);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    // @todo write previous-frame post buffer output to g-buffer attachment 2
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
@@ -328,13 +332,30 @@ namespace Gamma {
 
     // @todo shadowed lighting pass
 
+    // Copy render pass up to this point back into G-Buffer, attachment 2
+    deferred.post_buffer.read();
+    deferred.g_buffer.write();
+
+    glDisable(GL_BLEND);
+
+    deferred.copyFrame.use();
+    deferred.copyFrame.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+    deferred.copyFrame.setInt("colorAndDepth", 0);
+
+    OpenGLScreenQuad::render();
+
+    // Continue writing to post buffer
+    deferred.g_buffer.read();
+    deferred.post_buffer.write();
+
     // Render reflections (screen-space + skybox)
+    // @bug unlit objects don't get reflected + if no lighting
+    // sources are defined, nothing gets reflected
     glStencilFunc(GL_EQUAL, StencilType::REFLECTIVE_OBJECTS, 0xFF);
 
     deferred.reflections.use();
     deferred.reflections.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
-    // @todo use previous-frame colorAndDepth (2)
-    deferred.reflections.setInt("colorAndDepth", 0);
+    deferred.reflections.setInt("colorAndDepth", 2);
     deferred.reflections.setInt("normalAndSpecularity", 1);
     deferred.reflections.setVec3f("cameraPosition", camera.position);
     deferred.reflections.setMatrix4f("view", view);

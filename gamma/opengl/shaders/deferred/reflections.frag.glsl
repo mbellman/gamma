@@ -10,7 +10,7 @@ uniform mat4 inverseProjection;
 
 noperspective in vec2 fragUv;
 
-layout (location = 0) out vec3 out_color;
+layout (location = 0) out vec4 out_colorAndDepth;
 
 /**
  * Reconstructs the world position from pixel depth.
@@ -77,7 +77,6 @@ void main() {
   int steps = 5;
   float stepSize = 100.0;
   vec3 ray = position;
-  float fragDepth = frag_colorAndDepth.w;
 
   for (int i = 0; i < steps; i++) {
     ray += reflectionVector * stepSize;
@@ -98,11 +97,11 @@ void main() {
       // ...and the sampled surface depth is closer than the ray
       getLinearizedDepth(sample_colorAndDepth.w) < clip_ray.w
     ) {
-      out_color = sample_colorAndDepth.rgb * 0.3;
+      out_colorAndDepth = vec4(frag_colorAndDepth.rgb + sample_colorAndDepth.rgb * 0.3, frag_colorAndDepth.w);
 
       return;
     }
   }
 
-  out_color = frag_colorAndDepth.rgb * getSkyColor(reflectionVector);
+  out_colorAndDepth = vec4(frag_colorAndDepth.rgb + getSkyColor(reflectionVector), frag_colorAndDepth.w);
 }

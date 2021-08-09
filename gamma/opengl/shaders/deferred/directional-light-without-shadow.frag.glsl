@@ -17,7 +17,7 @@ uniform DirectionalLight lights[10];
 
 noperspective in vec2 fragUv;
 
-layout (location = 0) out vec3 out_color;
+layout (location = 0) out vec4 out_colorAndDepth;
 
 /**
  * Reconstructs the world position from pixel depth.
@@ -59,5 +59,5 @@ void main() {
     accumulatedColor += color * (diffuseTerm + specularTerm);
   }
 
-  out_color = accumulatedColor;
+  out_colorAndDepth = vec4(accumulatedColor, frag_colorAndDepth.w);
 }

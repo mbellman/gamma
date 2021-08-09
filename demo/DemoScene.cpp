@@ -40,13 +40,6 @@ void DemoScene::init() {
     transform(rabbit);
   }
 
-  auto& rabbitLight = createLight();
-
-  rabbitLight.position = Vec3f(0.0f, 300.0f, 0.0f);
-  rabbitLight.color = Vec3f(1.0f, 0.2f, 1.0f);
-  rabbitLight.radius = 1000.0f;
-  rabbitLight.power = 20.0f;
-
   auto& sunlight = createLight();
 
   sunlight.type = LightType::DIRECTIONAL;
@@ -99,6 +92,7 @@ void DemoScene::destroy() {}
 void DemoScene::update(float dt) {
   for (auto& cube : getMeshObjects("cube")) {
     cube.rotation.y += dt;
+    cube.position.y = sinf(0.5f * (float)cube._record.id + getRunningTime() * 3.0f) * 20.0f;
 
     transform(cube);
   }
