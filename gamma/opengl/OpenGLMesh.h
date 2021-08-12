@@ -13,6 +13,7 @@ namespace Gamma {
     ~OpenGLMesh();
 
     uint32 getId() const;
+    uint16 getObjectCount() const;
     bool hasNormalMap() const;
     bool hasTexture() const;
     bool isReflective() const;

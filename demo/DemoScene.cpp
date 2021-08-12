@@ -9,8 +9,8 @@ void DemoScene::init() {
   flags = SceneFlags::MODE_FREE_CAMERA;
   camera.position.z = -1500.0f;
 
-  auto* rabbitMesh = addMesh("rabbit", 10, Gm_LoadMesh("./demo/assets/models/rabbit.obj"));
   auto* cubeMesh = addMesh("cube", 100, Gm_CreateCube());
+  auto* rabbitMesh = addMesh("rabbit", 10, Gm_LoadMesh("./demo/assets/models/rabbit.obj"));
   auto* planeMesh = addMesh("plane", 1, Gm_CreatePlane(10));
   auto* wallMesh = addMesh("wall", 1, Gm_CreatePlane(10));
 
@@ -44,7 +44,7 @@ void DemoScene::init() {
 
     rabbit.position = Vec3f(
       sinf(r) * 300.0f,
-      100.0f,
+      -85.0f,
       cosf(r) * 300.0f
     );
 

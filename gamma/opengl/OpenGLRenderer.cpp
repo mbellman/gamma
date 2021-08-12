@@ -21,9 +21,9 @@ namespace Gamma {
   const static uint32 MAX_LIGHTS = 1000;
 
   const enum StencilType {
-    NON_EMISSIVE_OBJECTS = 0xFF,
     EMISSIVE_OBJECTS = 0x00,
-    REFLECTIVE_OBJECTS = 0xF0
+    REFLECTIVE_OBJECTS = 0xF0,
+    NON_EMISSIVE_OBJECTS = 0xFF
   };
 
   /**
@@ -47,7 +47,7 @@ namespace Gamma {
 
     glewInit();
 
-    SDL_GL_SetSwapInterval(0);
+    SDL_GL_SetSwapInterval(1);
 
     // Initialize font texture
     glGenTextures(1, &screenTexture);
@@ -210,6 +210,7 @@ namespace Gamma {
   void OpenGLRenderer::renderDeferred() {
     uint32 internalWidth = internalResolution.width;
     uint32 internalHeight = internalResolution.height;
+    bool hasReflectiveObjects = false;
 
     // Set G-Buffer as render target
     deferred.g_buffer.write();
@@ -255,6 +256,10 @@ namespace Gamma {
 
     for (auto* glMesh : glMeshes) {
       if (glMesh->isReflective()) {
+        if (glMesh->getObjectCount() > 0) {
+          hasReflectiveObjects = true;
+        }
+
         deferred.geometry.setBool("hasTexture", glMesh->hasTexture());
         deferred.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
 
@@ -262,7 +267,7 @@ namespace Gamma {
       }
     }
 
-    // Render non-emissive objects
+    // Render non-emissive, non-reflective objects
     glStencilMask(StencilType::NON_EMISSIVE_OBJECTS);
 
     for (auto* glMesh : glMeshes) {
@@ -349,38 +354,42 @@ namespace Gamma {
 
     // @todo shadowed lighting pass
 
-    // Copy render pass up to this point back into G-Buffer, attachment 2
-    deferred.post_buffer.read();
-    deferred.g_buffer.write();
-
     glDisable(GL_BLEND);
 
-    deferred.copyFrame.use();
-    deferred.copyFrame.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
-    deferred.copyFrame.setInt("colorAndDepth", 0);
+    if (hasReflectiveObjects) {
+      // Copy render pass up to this point back into G-Buffer, attachment 2
+      deferred.post_buffer.read();
+      deferred.g_buffer.write();
 
-    OpenGLScreenQuad::render();
+      deferred.copyFrame.use();
+      deferred.copyFrame.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+      deferred.copyFrame.setInt("colorAndDepth", 0);
 
-    // Continue writing to post buffer
-    deferred.g_buffer.read();
-    deferred.post_buffer.write();
+      OpenGLScreenQuad::render();
 
-    // Render reflections (screen-space + skybox)
-    // @bug unlit objects don't get reflected + if no lighting
-    // sources are defined, nothing gets reflected
-    glStencilFunc(GL_EQUAL, StencilType::REFLECTIVE_OBJECTS, 0xFF);
+      // Continue writing to post buffer
+      deferred.g_buffer.read();
+      // @todo investigate writing into a lower-res 'reflection buffer'
+      // and writing that into the post buffer again
+      deferred.post_buffer.write();
 
-    deferred.reflections.use();
-    deferred.reflections.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
-    deferred.reflections.setInt("colorAndDepth", 2);
-    deferred.reflections.setInt("normalAndSpecularity", 1);
-    deferred.reflections.setVec3f("cameraPosition", camera.position);
-    deferred.reflections.setMatrix4f("view", view);
-    deferred.reflections.setMatrix4f("inverseView", inverseView);
-    deferred.reflections.setMatrix4f("projection", projection);
-    deferred.reflections.setMatrix4f("inverseProjection", inverseProjection);
+      // Render reflections (screen-space + skybox)
+      // @bug unlit objects don't get reflected + if no lighting
+      // sources are defined, nothing gets reflected
+      glStencilFunc(GL_EQUAL, StencilType::REFLECTIVE_OBJECTS, 0xFF);
 
-    OpenGLScreenQuad::render();
+      deferred.reflections.use();
+      deferred.reflections.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+      deferred.reflections.setInt("normalAndSpecularity", 1);
+      deferred.reflections.setInt("colorAndDepth", 2);
+      deferred.reflections.setVec3f("cameraPosition", camera.position);
+      deferred.reflections.setMatrix4f("view", view);
+      deferred.reflections.setMatrix4f("inverseView", inverseView);
+      deferred.reflections.setMatrix4f("projection", projection);
+      deferred.reflections.setMatrix4f("inverseProjection", inverseProjection);
+
+      OpenGLScreenQuad::render();
+    }
 
     // Render skybox
     glStencilFunc(GL_EQUAL, 0x00, 0xFF);

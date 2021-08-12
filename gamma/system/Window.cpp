@@ -132,7 +132,7 @@ namespace Gamma {
             std::string resolutionLabel = "Resolution: " + std::to_string(resolution.width) + " x " + std::to_string(resolution.height);
             std::string vertsLabel = "Verts: " + std::to_string(sceneStats.verts);
             std::string trisLabel = "Tris: " + std::to_string(sceneStats.tris);
-            std::string memoryLabel = "GPU Memory: " + std::to_string(memory.used) + " / " + std::to_string(memory.total);
+            std::string memoryLabel = "GPU Memory: " + std::to_string(memory.used) + "MB / " + std::to_string(memory.total) + "MB";
 
             renderer->renderText(font_OpenSans, fpsLabel.c_str(), 25, 25);
             renderer->renderText(font_OpenSans, frameTimeLabel.c_str(), 25, 50);
