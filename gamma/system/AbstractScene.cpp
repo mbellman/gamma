@@ -63,6 +63,8 @@ namespace Gamma {
   }
 
   ObjectPool& AbstractScene::getMeshObjects(std::string meshName) {
+    assert(meshMap.find(meshName) != meshMap.end(), "Mesh '" + meshName + "' does not exist!");
+
     return meshMap[meshName]->objects;
   }
 

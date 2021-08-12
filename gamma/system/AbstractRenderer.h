@@ -10,6 +10,11 @@ namespace Gamma {
   struct Mesh;
   struct Light;
 
+  struct MemoryInfo {
+    uint32 total;
+    uint32 used;
+  };
+
   class AbstractRenderer : public Initable, public Renderable, public Destroyable {
   public:
     AbstractRenderer(SDL_Window* sdl_window): sdl_window(sdl_window) {};
@@ -24,11 +29,14 @@ namespace Gamma {
       return internalResolution;
     }
 
+    virtual const MemoryInfo& getMemoryInfo() = 0;
+
     virtual void present() {};
     virtual void renderText(TTF_Font* font, const char* message, uint32 x, uint32 y) {};
 
   protected:
     SDL_Window* sdl_window = nullptr;
     Area<uint32> internalResolution = { 1920, 1080 };
+    MemoryInfo memoryInfo;
   };
 }

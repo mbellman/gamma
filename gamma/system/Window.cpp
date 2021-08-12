@@ -122,6 +122,7 @@ namespace Gamma {
 
           #if GAMMA_DEVELOPER_MODE
             auto& resolution = renderer->getInternalResolution();
+            auto& memory = renderer->getMemoryInfo();
             auto& sceneStats = activeScene->getStats();
             auto messages = Console::getMessages();
 
@@ -131,12 +132,14 @@ namespace Gamma {
             std::string resolutionLabel = "Resolution: " + std::to_string(resolution.width) + " x " + std::to_string(resolution.height);
             std::string vertsLabel = "Verts: " + std::to_string(sceneStats.verts);
             std::string trisLabel = "Tris: " + std::to_string(sceneStats.tris);
+            std::string memoryLabel = "GPU Memory: " + std::to_string(memory.used) + " / " + std::to_string(memory.total);
 
             renderer->renderText(font_OpenSans, fpsLabel.c_str(), 25, 25);
             renderer->renderText(font_OpenSans, frameTimeLabel.c_str(), 25, 50);
             renderer->renderText(font_OpenSans, resolutionLabel.c_str(), 25, 75);
             renderer->renderText(font_OpenSans, vertsLabel.c_str(), 25, 100);
             renderer->renderText(font_OpenSans, trisLabel.c_str(), 25, 125);
+            renderer->renderText(font_OpenSans, memoryLabel.c_str(), 25, 150);
 
             // @todo clear messages after a set duration
             for (uint32 i = 0; i < 5; i++) {

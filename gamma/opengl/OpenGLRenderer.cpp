@@ -187,6 +187,22 @@ namespace Gamma {
     Console::log("Shadowcaster destroyed!");
   }
 
+  const MemoryInfo& OpenGLRenderer::getMemoryInfo() {
+    GLint total = 0;
+    GLint available = 0;
+    const char* vendor = (const char*)glGetString(GL_VENDOR);
+
+    if (strcmp(vendor, "NVIDIA Corporation") == 0) {
+      glGetIntegerv(GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX, &total);
+      glGetIntegerv(GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX, &available);
+    }
+
+    memoryInfo.total = total / 1000;
+    memoryInfo.used = (total - available) / 1000;
+
+    return memoryInfo;
+  }
+
   void OpenGLRenderer::present() {
     SDL_GL_SwapWindow(sdl_window);
   }
@@ -420,7 +436,6 @@ namespace Gamma {
     float offsetY = 1.0f - (2 * y + surface->h) / (float)Window::size.height;
     float scaleX = surface->w / (float)Window::size.width;
     float scaleY = -1.0f * surface->h / (float)Window::size.height;
-
     int format = surface->format->BytesPerPixel == 4 ? GL_RGBA : GL_RGB;
 
     glActiveTexture(GL_TEXTURE0);

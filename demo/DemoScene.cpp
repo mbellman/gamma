@@ -70,14 +70,16 @@ void DemoScene::init() {
 
       Vec3f cubePosition = Vec3f(
         200.0f * (i - 5),
-        0.0f,
+        -70.0f,
         200.0f * (j - 5)
       );
 
       cube.position = cubePosition;
       cube.scale = 30.0f;
-      cube.rotation = Vec3f(1.3f, 0.9f, 2.2f);
-      cube.rotation.y += (float)(i * 10 + j) / 5.0f;
+      // cube.rotation = Vec3f(1.3f, 0.9f, 2.2f);
+      // cube.rotation.y += (float)(i * 10 + j) / 5.0f;
+
+      transform(cube);
     }
   }
 
@@ -108,10 +110,10 @@ void DemoScene::init() {
 void DemoScene::destroy() {}
 
 void DemoScene::update(float dt) {
-  for (auto& cube : getMeshObjects("cube")) {
-    cube.rotation.y += dt;
-    cube.position.y = -50.0f + sinf(0.5f * (float)cube._record.id + getRunningTime() * 3.0f) * 20.0f;
+  // for (auto& cube : getMeshObjects("cube")) {
+  //   cube.rotation.y += dt;
+  //   cube.position.y = sinf(0.5f * (float)cube._record.id + getRunningTime() * 3.0f) * 20.0f;
 
-    transform(cube);
-  }
+  //   transform(cube);
+  // }
 }

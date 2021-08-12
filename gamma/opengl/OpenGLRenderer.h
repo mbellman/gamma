@@ -31,6 +31,7 @@ namespace Gamma {
     virtual void createShadowcaster(Light* light) override;
     virtual void destroyMesh(Mesh* mesh) override;
     virtual void destroyShadowcaster(Light* light) override;
+    virtual const MemoryInfo& getMemoryInfo() override;
     virtual void present() override;
     virtual void renderText(TTF_Font* font, const char* message, uint32 x, uint32 y) override;
 
