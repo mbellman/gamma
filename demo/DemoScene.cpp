@@ -7,13 +7,15 @@ using namespace Gamma;
 
 void DemoScene::init() {
   flags = SceneFlags::MODE_FREE_CAMERA;
-  camera.position.z = -1000.0f;
+  camera.position.z = -1500.0f;
 
   auto* rabbitMesh = addMesh("rabbit", 10, Gm_LoadMesh("./demo/assets/models/rabbit.obj"));
   auto* cubeMesh = addMesh("cube", 100, Gm_CreateCube());
   auto* planeMesh = addMesh("plane", 1, Gm_CreatePlane(10));
+  auto* wallMesh = addMesh("wall", 1, Gm_CreatePlane(10));
 
   cubeMesh->texture = "./demo/assets/images/cat.png";
+  wallMesh->texture = "./demo/assets/images/cat.png";
   planeMesh->normalMap = "./demo/assets/images/metal-normal-map.png";
   planeMesh->isReflective = true;
   rabbitMesh->isReflective = true;
@@ -24,6 +26,15 @@ void DemoScene::init() {
   plane.position.y = -100.0f;
 
   transform(plane);
+
+  auto& wall = createObjectFrom("wall");
+
+  wall.scale = Vec3f(2000.0f, 2000.0f, 2000.0f);
+  wall.position = Vec3f(0.0f, 500.0f, 1100.0f);
+  wall.rotation.x = M_PI * 0.5f;
+  wall.rotation.y = M_PI;
+
+  transform(wall);
 
   for (uint32 i = 0; i < 10; i++) {
     auto& rabbit = createObjectFrom("rabbit");
@@ -50,8 +61,8 @@ void DemoScene::init() {
   auto& sunlight = createLight();
 
   sunlight.type = LightType::DIRECTIONAL;
-  sunlight.direction = Vec3f(-0.5, -0.3, -1.0);
-  sunlight.color = Vec3f(1.0f, 0.1f, 0.2f);
+  sunlight.direction = Vec3f(-0.5, -1.0f, 1.0);
+  sunlight.color = Vec3f(1.0f, 0.3f, 0.1f);
 
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < 10; j++) {
@@ -99,7 +110,7 @@ void DemoScene::destroy() {}
 void DemoScene::update(float dt) {
   for (auto& cube : getMeshObjects("cube")) {
     cube.rotation.y += dt;
-    cube.position.y = sinf(0.5f * (float)cube._record.id + getRunningTime() * 3.0f) * 20.0f;
+    cube.position.y = -50.0f + sinf(0.5f * (float)cube._record.id + getRunningTime() * 3.0f) * 20.0f;
 
     transform(cube);
   }

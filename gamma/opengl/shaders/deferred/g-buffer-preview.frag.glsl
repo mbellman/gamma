@@ -8,6 +8,8 @@ noperspective in vec2 fragUv;
 out vec3 out_color;
 
 void main() {
+  discard;
+
   if (fragUv.x < 0.25) {
     // Albedo
     vec2 uv = fragUv * vec2(4.0, 1.0);

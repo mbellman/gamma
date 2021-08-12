@@ -102,6 +102,7 @@ namespace Gamma {
     deferred.directionalLightWithoutShadow.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/directional-light-without-shadow.frag.glsl"));
     deferred.directionalLightWithoutShadow.link();
 
+    // @todo define different SSR quality levels
     deferred.reflections.init();
     deferred.reflections.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
     deferred.reflections.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/reflections.frag.glsl"));
@@ -375,6 +376,10 @@ namespace Gamma {
     deferred.skybox.setMatrix4f("inverseView", inverseView);
 
     OpenGLScreenQuad::render();
+
+    // @todo render translucent objects
+    // glEnable(GL_CULL_FACE);
+    // glEnable(GL_DEPTH_TEST);
 
     // Post-processing pass
     deferred.post_buffer.read();
