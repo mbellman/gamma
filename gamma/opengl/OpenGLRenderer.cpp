@@ -170,21 +170,28 @@ namespace Gamma {
 
   void OpenGLRenderer::createMesh(Mesh* mesh) {
     glMeshes.push_back(new OpenGLMesh(mesh));
+
+    #if GAMMA_DEVELOPER_MODE
+      uint32 totalVertices = mesh->vertices.size();
+      uint32 faces = mesh->faceElements.size() / 3;
+
+      Console::log("[Gamma] Mesh created! (", totalVertices, " vertices, ", faces, " triangles)");
+    #endif
   }
 
   void OpenGLRenderer::createShadowcaster(Light* mesh) {
     // @todo
-    Console::log("Shadowcaster created!");
+    Console::log("[Gamma] Shadowcaster created!");
   }
 
   void OpenGLRenderer::destroyMesh(Mesh* mesh) {
     // @todo
-    Console::log("Mesh destroyed!");
+    Console::log("[Gamma] Mesh destroyed!");
   }
 
   void OpenGLRenderer::destroyShadowcaster(Light* mesh) {
     // @todo
-    Console::log("Shadowcaster destroyed!");
+    Console::log("[Gamma] Shadowcaster destroyed!");
   }
 
   const RenderStats& OpenGLRenderer::getRenderStats() {
@@ -221,8 +228,16 @@ namespace Gamma {
 
     if (sceneFlags & SceneFlags::MODE_VSYNC && SDL_GL_GetSwapInterval() == 0) {
       SDL_GL_SetSwapInterval(1);
+
+      #if GAMMA_DEVELOPER_MODE
+        Console::log("[Gamma] V-Sync enabled");
+      #endif
     } else if (!(sceneFlags & SceneFlags::MODE_VSYNC) && SDL_GL_GetSwapInterval() == 1) {
       SDL_GL_SetSwapInterval(0);
+
+      #if GAMMA_DEVELOPER_MODE
+        Console::log("[Gamma] V-Sync disabled");
+      #endif
     }
 
     // Set G-Buffer as render target

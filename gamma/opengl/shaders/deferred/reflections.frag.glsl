@@ -12,11 +12,19 @@ noperspective in vec2 fragUv;
 
 layout (location = 0) out vec4 out_ColorAndDepth;
 
-struct IntersectionTest {
-  bool hit;
+struct Reflection {
   vec3 color;
   float intensity;
 };
+
+// struct ReflectionTest {
+//   vec4 sample;
+//   vec2 uv;
+// };
+
+// @todo pass these in as uniforms
+const float Z_NEAR = 1.0;
+const float Z_FAR = 10000.0;
 
 /**
  * Reconstructs the world position from pixel depth.
@@ -64,20 +72,20 @@ vec3 getSkyColor(vec3 direction) {
 float getLinearizedDepth(float depth) {
   float clip_depth = 2.0 * depth - 1.0;
   // @todo pass in near/far terms as uniforms
-  float near = 1.0;
-  float far = 10000.0;
+  float near = Z_NEAR;
+  float far = Z_FAR;
 
   return 2.0 * near * far / (far + near - clip_depth * (far - near));
 }
 
-vec2 ViewToScreenCoords(vec4 viewSpace) {
-  vec4 proj = projection * viewSpace;
+vec2 viewToScreenCoords(vec4 viewCoords) {
+  vec4 proj = projection * viewCoords;
   vec3 clip = proj.xyz / proj.w;
 
   return clip.xy * 0.5 + 0.5;
 }
 
-bool isOutOfBounds(vec2 uv) {
+bool isOffScreen(vec2 uv) {
   return uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1;
 }
 
@@ -91,11 +99,15 @@ float noise() {
   return fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.545312);
 }
 
+float random(float low, float high) {
+  return low + (noise() * 0.5 + 0.5) * (high - low);
+}
+
 /**
  * Returns a reflected light intensity factor, reduced
  * by proximity of the sample to the screen edges.
  */
-float GetSampleIntensity(vec2 uv) {
+float getReflectionIntensity(vec2 uv) {
   const float X_TAPER = 0.05;
   const float Y_TAPER = 0.2;
 
@@ -112,104 +124,137 @@ float GetSampleIntensity(vec2 uv) {
 /**
  * @todo description
  */
-IntersectionTest GetRefinedIntersection(float stepSize, vec3 view_RayBounce, vec3 view_RayContinuation, vec3 view_RayDirection) {
+Reflection getRefinedReflection(
+  vec3 view_reflecting_surface_position,
+  vec3 normalized_view_reflection_ray,
+  vec3 view_starting_position,
+  float march_step_size
+) {
   const int REFINEMENT_STEPS = 6;
 
-  // @todo march in screen space instead of view space
-  vec3 ray = view_RayContinuation;
-  vec3 rayStep = view_RayDirection * stepSize;
-  vec3 finalColor = vec3(0);
+  vec3 ray = view_starting_position;
+  vec3 ray_step = normalized_view_reflection_ray * march_step_size;
+  vec3 final_color = vec3(0);
   vec2 uv = vec2(0);
 
   for (int i = 0; i < REFINEMENT_STEPS; i++) {
-    rayStep *= 0.5;
-    ray += rayStep;
+    ray_step *= 0.5;
+    ray += ray_step;
 
     // @todo fix negative z hack
-    uv = ViewToScreenCoords(vec4(ray, 1.0) * vec4(1, 1, -1, 1));
+    uv = viewToScreenCoords(vec4(ray, 1.0) * vec4(1, 1, -1, 1));
 
-    vec4 sampled = texture(colorAndDepth, uv);
-    float sampleDepth = getLinearizedDepth(sampled.w);
+    vec4 test = texture(colorAndDepth, uv);
+    float test_depth = getLinearizedDepth(test.w);
 
-    finalColor = sampled.rgb;
+    final_color = test.rgb;
 
-    if (sampleDepth < ray.z && sampleDepth > view_RayBounce.z) {
-      ray -= rayStep;
+    if (test_depth < ray.z && test_depth > view_reflecting_surface_position.z) {
+      ray -= ray_step;
     }
   }
 
-  return IntersectionTest(true, finalColor, GetSampleIntensity(uv));
+  return Reflection(final_color, getReflectionIntensity(uv));
 }
 
 /**
  * @todo description
  */
-IntersectionTest TestRayIntersection(
-  vec3 view_RayBounce,
-  vec3 view_RayDirection,
-  vec3 rayOffset,
-  float stepSize
+Reflection getReflection(
+  vec3 view_reflecting_surface_position,
+  vec3 normalized_view_reflection_ray,
+  vec3 march_offset,
+  float march_step_size
 ) {
-  const int TEST_STEPS = 16;
+  const float STRIDE_TEST_STEP_SIZES[4] = { 5.0, 20.0, 50.0, 75.0 };
+  const int REFLECTION_TEST_STEPS = 16;
 
-  // @todo march in screen space instead of view space
-  vec3 ray = view_RayBounce + rayOffset;
-  vec3 rayStep = view_RayDirection * stepSize;
-  vec3 previousRay = ray;
+  vec3 ray = view_reflecting_surface_position + march_offset;
+  vec3 previous_ray = ray;
+  int total_stride_test_hits = 0;
 
-  for (int i = 0; i < TEST_STEPS; i++) {
-    ray += rayStep;
+  // First, cast a couple close-proximity rays to determine
+  // what the ideal ray stride should be
+  for (int i = 0; i < 4; i++) {
+    vec3 test_ray = ray + normalized_view_reflection_ray * STRIDE_TEST_STEP_SIZES[i];
 
-    // @todo fix negative z hack (note: will go away with screen-space ray marching)
-    vec2 uv = ViewToScreenCoords(vec4(ray, 1.0) * vec4(1, 1, -1, 1));
+    // @todo fix negative z hack
+    vec2 uv = viewToScreenCoords(vec4(test_ray * vec3(1, 1, -1), 1.0));
 
-    if (isOutOfBounds(uv) || ray.z > 10000.0) {
+    if (isOffScreen(uv)) {
       break;
     }
 
-    vec4 sampled = texture(colorAndDepth, uv);
-    float sampleDepth = getLinearizedDepth(sampled.w);
+    vec4 test = texture(colorAndDepth, uv);
+    float test_depth = getLinearizedDepth(test.w);
 
-    if (sampleDepth < ray.z && (sampleDepth - previousRay.z) > -20.0) {
-      return GetRefinedIntersection(stepSize, view_RayBounce, ray - rayStep, view_RayDirection);
+    if (test_ray.z > test_depth) {
+      march_step_size *= 0.6;
+    } else {
+      march_step_size *= 1.2;
     }
-
-    previousRay = ray;
   }
 
-  return IntersectionTest(false, vec3(0.0), 0.0);
+  if (total_stride_test_hits == 0) {
+    march_step_size *= 1.2;
+  }
+
+  vec3 ray_step = normalized_view_reflection_ray * march_step_size;
+
+  for (int i = 0; i < REFLECTION_TEST_STEPS; i++) {
+    ray += ray_step;
+
+    // @todo fix negative z hack
+    vec2 uv = viewToScreenCoords(vec4(ray, 1.0) * vec4(1, 1, -1, 1));
+
+    if (isOffScreen(uv) || ray.z > Z_FAR) {
+      break;
+    }
+
+    vec4 test = texture(colorAndDepth, uv);
+    float test_depth = getLinearizedDepth(test.w);
+
+    if (test_depth < ray.z && (test_depth - previous_ray.z) > -20.0) {
+      return getRefinedReflection(view_reflecting_surface_position, normalized_view_reflection_ray, ray - ray_step, march_step_size);
+    }
+
+    previous_ray = ray;
+  }
+
+  return Reflection(vec3(0.0), 0.0);
 }
 
 void main() {
-  vec4 frag_ColorAndDepth = texture(colorAndDepth, fragUv);
-  vec4 frag_NormalAndSpecularity = texture(normalAndSpecularity, fragUv);
-  vec3 frag_Position = getWorldPosition(frag_ColorAndDepth.w);
-  vec3 cameraToFragment = frag_Position - cameraPosition;
-  vec3 normal = frag_NormalAndSpecularity.rgb;
+  vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
+  vec4 frag_normal_and_specularity = texture(normalAndSpecularity, fragUv);
+  vec3 frag_world_position = getWorldPosition(frag_color_and_depth.w);
+  vec3 camera_to_fragment = frag_world_position - cameraPosition;
+  vec3 normalized_camera_to_fragment = normalize(camera_to_fragment);
+  vec3 frag_world_normal = frag_normal_and_specularity.rgb;
 
   // Screen-space reflections
-  float minStepSize = 5.0;
-  float maxStepSize = 100.0;
+  float min_step_size = 5.0;
+  float max_step_size = 75.0;
   float jitter = 5.0;
-  float baseColorFactor = 0.0;
-  float reflectivity = 1.0;
+  float base_color_factor = 0.0;
+  float reflection_color_factor = 1.0;
 
   // @todo these -z hacks are ridiculous; determine
   // a better way to regularize the vectors to the
   // camera's left-handed coordinate system
-  vec4 frag_ViewPosition = view * vec4(frag_Position * vec3(1, 1, -1), 1.0) * vec4(1, 1, -1, 1);
-  vec4 viewNormal = transpose(inverseView) * vec4(normal * vec3(1, 1, -1), 1.0) * vec4(1, 1, -1, 1);
-  vec3 worldReflectionVector = reflect(normalize(cameraToFragment), normal);
-  vec3 viewReflectionVector = reflect(normalize(frag_ViewPosition.xyz), viewNormal.xyz);
+  vec4 frag_view_position = view * vec4(frag_world_position * vec3(1, 1, -1), 1.0) * vec4(1, 1, -1, 1);
+  vec4 frag_view_normal = transpose(inverseView) * vec4(frag_world_normal * vec3(1, 1, -1), 1.0) * vec4(1, 1, -1, 1);
+  vec3 world_reflection_vector = reflect(normalized_camera_to_fragment, frag_world_normal);
+  vec3 normalized_normalized_view_reflection_ray = reflect(normalize(frag_view_position.xyz), frag_view_normal.xyz);
 
-  float glance = max(dot(normalize(cameraToFragment), worldReflectionVector), 0.0);
-  float stepSize = mix(minStepSize, maxStepSize, glance);
-  vec3 rayOffset = viewReflectionVector * jitter * noise();
+  float glance = max(dot(normalized_camera_to_fragment, world_reflection_vector), 0.0);
+  float march_step_size = mix(min_step_size, max_step_size, glance);
+  vec3 march_offset = normalized_normalized_view_reflection_ray * jitter * random(-2.0, 2.0);
 
-  IntersectionTest result = TestRayIntersection(frag_ViewPosition.xyz, viewReflectionVector, rayOffset, stepSize);
-  vec3 baseColor = frag_ColorAndDepth.rgb * baseColorFactor;
-  vec3 reflectionColor = result.color * result.intensity;
-  vec3 skyColor = getSkyColor(worldReflectionVector) * reflectivity * (1.0 - result.intensity);
+  Reflection reflection = getReflection(frag_view_position.xyz, normalized_normalized_view_reflection_ray, march_offset, march_step_size);
+  vec3 baseColor = frag_color_and_depth.rgb * base_color_factor;
+  vec3 reflectionColor = reflection.color * reflection.intensity;
+  vec3 skyColor = getSkyColor(world_reflection_vector) * reflection_color_factor * (1.0 - reflection.intensity);
 
-  out_ColorAndDepth = vec4(baseColor + reflectionColor + skyColor, frag_ColorAndDepth.w);
+  out_ColorAndDepth = vec4(baseColor + reflectionColor + skyColor, frag_color_and_depth.w);
 }
