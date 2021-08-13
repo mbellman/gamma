@@ -19,6 +19,7 @@ void DemoScene::init() {
   wallMesh->texture = "./demo/assets/images/cat.png";
   planeMesh->normalMap = "./demo/assets/images/metal-normal-map.png";
   planeMesh->isReflective = true;
+  daVinciMesh->isReflective = true;
   rabbitMesh->isReflective = true;
 
   auto& daVinci = createObjectFrom("daVinci");
@@ -43,6 +44,7 @@ void DemoScene::init() {
   wall.rotation.y = M_PI;
 
   transform(wall);
+
   for (uint32 i = 0; i < 10; i++) {
     auto& rabbit = createObjectFrom("rabbit");
     float r = (float)i / 10.0f * M_PI * 2.0f;
@@ -77,12 +79,12 @@ void DemoScene::init() {
 
       Vec3f cubePosition = Vec3f(
         200.0f * (i - 5),
-        -70.0f,
+        -60.0f,
         200.0f * (j - 5)
       );
 
       cube.position = cubePosition;
-      cube.scale = 30.0f;
+      cube.scale = 40.0f;
       // cube.rotation = Vec3f(1.3f, 0.9f, 2.2f);
       // cube.rotation.y += (float)(i * 10 + j) / 5.0f;
 

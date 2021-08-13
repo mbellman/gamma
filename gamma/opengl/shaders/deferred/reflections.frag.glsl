@@ -14,13 +14,9 @@ layout (location = 0) out vec4 out_ColorAndDepth;
 
 struct Reflection {
   vec3 color;
+  vec2 uv;
   float intensity;
 };
-
-// struct ReflectionTest {
-//   vec4 sample;
-//   vec2 uv;
-// };
 
 // @todo pass these in as uniforms
 const float Z_NEAR = 1.0;
@@ -48,7 +44,7 @@ vec3 getSkyColor(vec3 direction) {
   vec3 sunDirection = normalize(vec3(0.5, 1.0, -1.0));
   vec3 sunColor = vec3(1.0, 0.1, 0.2);
   float sunBrightness = 10;
-  float altitude = 0.6;
+  float altitude = 0.2;
 
   float y = direction.y + altitude;
   float z = direction.z;
@@ -78,8 +74,11 @@ float getLinearizedDepth(float depth) {
   return 2.0 * near * far / (far + near - clip_depth * (far - near));
 }
 
-vec2 viewToScreenCoords(vec4 viewCoords) {
-  vec4 proj = projection * viewCoords;
+vec2 viewToScreenCoordinates(vec3 view_position) {
+  // @hack
+  view_position.z *= -1;
+
+  vec4 proj = projection * vec4(view_position, 1.0);
   vec3 clip = proj.xyz / proj.w;
 
   return clip.xy * 0.5 + 0.5;
@@ -118,7 +117,42 @@ float getReflectionIntensity(vec2 uv) {
   if (uv.y < Y_TAPER) intensity *= (uv.y / Y_TAPER);
   if (uv.y > (1.0 - Y_TAPER)) intensity *= 1.0 - (uv.y - (1.0 - Y_TAPER)) * (1.0 / Y_TAPER);
 
-  return intensity;
+  return clamp(intensity, 0, 1);
+}
+
+/**
+ * @todo description
+ */
+float getRayDistance(vec3 test_ray) {
+  vec2 test_uv = viewToScreenCoordinates(test_ray);
+  vec4 test_sample = texture(colorAndDepth, test_uv);
+  float test_depth = getLinearizedDepth(test_sample.w);
+
+  return test_depth - test_ray.z;
+}
+
+/**
+ * Performs a 'contact test' to capture close-proximity
+ * reflections which the predetermined ray march step
+ * size might miss.
+ */
+bool hasContactReflection(vec3 view_ray, vec3 normalized_view_reflection_ray) {
+  return getRayDistance(view_ray + normalized_view_reflection_ray * 10.0) < 0;
+}
+
+/**
+ * Determines whether a reflecting surface might have a
+ * reflection from a more distant object, where a preliminary
+ * march along the reflection ray sees increasing distance
+ * from the underlying geometry.
+ */
+bool maybeHasDistantReflection(vec3 view_ray, vec3 normalized_view_reflection_ray) {
+  float r1 = getRayDistance(view_ray + normalized_view_reflection_ray * 20.0);
+  float r2 = getRayDistance(view_ray + normalized_view_reflection_ray * 40.0);
+  float r3 = getRayDistance(view_ray + normalized_view_reflection_ray * 60.0);
+  float r4 = getRayDistance(view_ray + normalized_view_reflection_ray * 80.0);
+
+  return r4 > r3 && r3 > r2 && r2 > r1;
 }
 
 /**
@@ -130,7 +164,7 @@ Reflection getRefinedReflection(
   vec3 view_starting_position,
   float march_step_size
 ) {
-  const int REFINEMENT_STEPS = 6;
+  const int REFINEMENT_STEPS = 4;
 
   vec3 ray = view_starting_position;
   vec3 ray_step = normalized_view_reflection_ray * march_step_size;
@@ -141,8 +175,7 @@ Reflection getRefinedReflection(
     ray_step *= 0.5;
     ray += ray_step;
 
-    // @todo fix negative z hack
-    uv = viewToScreenCoords(vec4(ray, 1.0) * vec4(1, 1, -1, 1));
+    uv = viewToScreenCoordinates(ray);
 
     vec4 test = texture(colorAndDepth, uv);
     float test_depth = getLinearizedDepth(test.w);
@@ -154,7 +187,7 @@ Reflection getRefinedReflection(
     }
   }
 
-  return Reflection(final_color, getReflectionIntensity(uv));
+  return Reflection(final_color, uv, getReflectionIntensity(uv));
 }
 
 /**
@@ -166,62 +199,69 @@ Reflection getReflection(
   vec3 march_offset,
   float march_step_size
 ) {
-  const float STRIDE_TEST_STEP_SIZES[4] = { 5.0, 20.0, 50.0, 75.0 };
-  const int REFLECTION_TEST_STEPS = 16;
+  const int TOTAL_MARCH_STEPS = 16;
 
   vec3 ray = view_reflecting_surface_position + march_offset;
   vec3 previous_ray = ray;
-  int total_stride_test_hits = 0;
+  float adjusted_march_step_size = march_step_size;
 
-  // First, cast a couple close-proximity rays to determine
-  // what the ideal ray stride should be
-  for (int i = 0; i < 4; i++) {
-    vec3 test_ray = ray + normalized_view_reflection_ray * STRIDE_TEST_STEP_SIZES[i];
-
-    // @todo fix negative z hack
-    vec2 uv = viewToScreenCoords(vec4(test_ray * vec3(1, 1, -1), 1.0));
-
-    if (isOffScreen(uv)) {
-      break;
-    }
-
-    vec4 test = texture(colorAndDepth, uv);
-    float test_depth = getLinearizedDepth(test.w);
-
-    if (test_ray.z > test_depth) {
-      march_step_size *= 0.6;
-    } else {
-      march_step_size *= 1.2;
-    }
+  if (hasContactReflection(ray, normalized_view_reflection_ray)) {
+    adjusted_march_step_size = 5.0;
+  } else if (maybeHasDistantReflection(ray, normalized_view_reflection_ray)) {
+    adjusted_march_step_size *= 2.0;
   }
 
-  if (total_stride_test_hits == 0) {
-    march_step_size *= 1.2;
-  }
+  adjusted_march_step_size *= random(0.9, 1.1);
 
-  vec3 ray_step = normalized_view_reflection_ray * march_step_size;
+  float current_step_size = adjusted_march_step_size;
 
-  for (int i = 0; i < REFLECTION_TEST_STEPS; i++) {
+  for (int i = 0; i < TOTAL_MARCH_STEPS; i++) {
+    vec3 ray_step = normalized_view_reflection_ray * current_step_size;
+
     ray += ray_step;
 
-    // @todo fix negative z hack
-    vec2 uv = viewToScreenCoords(vec4(ray, 1.0) * vec4(1, 1, -1, 1));
+    vec2 uv = viewToScreenCoordinates(ray);
 
-    if (isOffScreen(uv) || ray.z > Z_FAR) {
+    if (isOffScreen(uv) || ray.z >= Z_FAR) {
       break;
     }
 
     vec4 test = texture(colorAndDepth, uv);
     float test_depth = getLinearizedDepth(test.w);
+    float ray_to_geometry_distance = abs(ray.z - test_depth);
 
-    if (test_depth < ray.z && (test_depth - previous_ray.z) > -20.0) {
-      return getRefinedReflection(view_reflecting_surface_position, normalized_view_reflection_ray, ray - ray_step, march_step_size);
+    // A reflection occurs when:
+    if (
+      // 1) The ray is behind the geometry
+      ray.z > test_depth &&
+      (normalized_view_reflection_ray.z > 0
+        // 2) For outgoing rays, the previous ray
+        // was 'in front' of the geometry, within
+        // a thickness threshold
+        ? (test_depth - previous_ray.z > -50.0)
+        // 3) For incoming rays, the previous ray
+        // was behind the geometry, within a thickness
+        // threshold
+        : (previous_ray.z - test_depth < 50)
+      )
+    ) {
+      return getRefinedReflection(view_reflecting_surface_position, normalized_view_reflection_ray, ray - ray_step, adjusted_march_step_size);
+    } else if (ray_to_geometry_distance < 150) {
+      // If a reflection did not occur, but the ray is
+      // within close proximity to geometry, reduce the
+      // step size to mitigate undersampling
+      current_step_size = adjusted_march_step_size * 0.75;
+    } else {
+      // If a reflection did not occur and the geometry behind
+      // the ray is more distant, increase the step size to
+      // mitigate oversampling
+      current_step_size = adjusted_march_step_size * 1.5;
     }
 
     previous_ray = ray;
   }
 
-  return Reflection(vec3(0.0), 0.0);
+  return Reflection(vec3(0), vec2(0), 0);
 }
 
 void main() {
@@ -245,13 +285,13 @@ void main() {
   vec4 frag_view_position = view * vec4(frag_world_position * vec3(1, 1, -1), 1.0) * vec4(1, 1, -1, 1);
   vec4 frag_view_normal = transpose(inverseView) * vec4(frag_world_normal * vec3(1, 1, -1), 1.0) * vec4(1, 1, -1, 1);
   vec3 world_reflection_vector = reflect(normalized_camera_to_fragment, frag_world_normal);
-  vec3 normalized_normalized_view_reflection_ray = reflect(normalize(frag_view_position.xyz), frag_view_normal.xyz);
+  vec3 normalized_view_reflection_ray = reflect(normalize(frag_view_position.xyz), frag_view_normal.xyz);
 
   float glance = max(dot(normalized_camera_to_fragment, world_reflection_vector), 0.0);
   float march_step_size = mix(min_step_size, max_step_size, glance);
-  vec3 march_offset = normalized_normalized_view_reflection_ray * jitter * random(-2.0, 2.0);
+  vec3 march_offset = normalized_view_reflection_ray * jitter * random(-2.0, 2.0);
 
-  Reflection reflection = getReflection(frag_view_position.xyz, normalized_normalized_view_reflection_ray, march_offset, march_step_size);
+  Reflection reflection = getReflection(frag_view_position.xyz, normalized_view_reflection_ray, march_offset, march_step_size);
   vec3 baseColor = frag_color_and_depth.rgb * base_color_factor;
   vec3 reflectionColor = reflection.color * reflection.intensity;
   vec3 skyColor = getSkyColor(world_reflection_vector) * reflection_color_factor * (1.0 - reflection.intensity);

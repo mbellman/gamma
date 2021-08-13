@@ -173,9 +173,9 @@ namespace Gamma {
 
     #if GAMMA_DEVELOPER_MODE
       uint32 totalVertices = mesh->vertices.size();
-      uint32 faces = mesh->faceElements.size() / 3;
+      uint32 totalTriangles = mesh->faceElements.size() / 3;
 
-      Console::log("[Gamma] Mesh created! (", totalVertices, " vertices, ", faces, " triangles)");
+      Console::log("[Gamma] Mesh created!", totalVertices, "vertices,", totalTriangles, "triangles");
     #endif
   }
 
