@@ -10,6 +10,7 @@ void DemoScene::init() {
   camera.position.z = -1500.0f;
 
   auto* cubeMesh = addMesh("cube", 100, Gm_CreateCube());
+  auto* daVinciMesh = addMesh("daVinci", 1, Gm_LoadMesh("./demo/assets/models/da-vinci.obj"));
   auto* rabbitMesh = addMesh("rabbit", 10, Gm_LoadMesh("./demo/assets/models/rabbit.obj"));
   auto* planeMesh = addMesh("plane", 1, Gm_CreatePlane(10));
   auto* wallMesh = addMesh("wall", 1, Gm_CreatePlane(10));
@@ -19,6 +20,13 @@ void DemoScene::init() {
   planeMesh->normalMap = "./demo/assets/images/metal-normal-map.png";
   planeMesh->isReflective = true;
   rabbitMesh->isReflective = true;
+
+  auto& daVinci = createObjectFrom("daVinci");
+
+  daVinci.position = Vec3f(0.0f, 100.0f, 0.0f);
+  daVinci.scale = 250.0f;
+
+  transform(daVinci);
 
   auto& plane = createObjectFrom("plane");
 
@@ -35,7 +43,6 @@ void DemoScene::init() {
   wall.rotation.y = M_PI;
 
   transform(wall);
-
   for (uint32 i = 0; i < 10; i++) {
     auto& rabbit = createObjectFrom("rabbit");
     float r = (float)i / 10.0f * M_PI * 2.0f;

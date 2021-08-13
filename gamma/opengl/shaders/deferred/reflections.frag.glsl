@@ -12,14 +12,14 @@ noperspective in vec2 fragUv;
 
 layout (location = 0) out vec4 out_ColorAndDepth;
 
-struct Reflection {
+struct IntersectionTest {
   bool hit;
   vec3 color;
-  vec2 uv;
+  float intensity;
 };
 
 /**
- * Reconstructs a world position from pixel depth.
+ * Reconstructs the world position from pixel depth.
  */
 vec3 getWorldPosition(float depth) {
   float z = depth * 2.0 - 1.0;
@@ -40,7 +40,7 @@ vec3 getSkyColor(vec3 direction) {
   vec3 sunDirection = normalize(vec3(0.5, 1.0, -1.0));
   vec3 sunColor = vec3(1.0, 0.1, 0.2);
   float sunBrightness = 10;
-  float altitude = 0.2;
+  float altitude = 0.6;
 
   float y = direction.y + altitude;
   float z = direction.z;
@@ -70,8 +70,15 @@ float getLinearizedDepth(float depth) {
   return 2.0 * near * far / (far + near - clip_depth * (far - near));
 }
 
-bool isRayOutOfBounds(vec3 ray) {
-  return ray.x < 0.0 || ray.x > 1.0 || ray.y < 0.0 || ray.y > 1.0 || ray.z >= 1.0 || ray.z <= 0.0;
+vec2 ViewToScreenCoords(vec4 viewSpace) {
+  vec4 proj = projection * viewSpace;
+  vec3 clip = proj.xyz / proj.w;
+
+  return clip.xy * 0.5 + 0.5;
+}
+
+bool isOutOfBounds(vec2 uv) {
+  return uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1;
 }
 
 /**
@@ -84,42 +91,33 @@ float noise() {
   return fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.545312);
 }
 
-float random(float low, float high) {
-  float n = (noise() * 0.5 + 0.5);
-
-  return low + n * (high - low);
-}
-
-float mixClamped(float low, float high, float alpha) {
-  return clamp(mix(low, high, alpha), low, high);
-}
-
 /**
  * Returns a reflected light intensity factor, reduced
  * by proximity of the sample to the screen edges.
  */
-float getReflectionIntensity(Reflection reflection) {
-  if (!reflection.hit) {
-    return 0.0;
-  }
-
+float GetSampleIntensity(vec2 uv) {
   const float X_TAPER = 0.05;
   const float Y_TAPER = 0.2;
 
-  vec2 uv = reflection.uv - 0.5;
-  float factor = sqrt(uv.x * uv.x + uv.y * uv.y);
+  float intensity = 1.0;
 
-  return (1.0 - factor);
+  if (uv.x < X_TAPER) intensity *= (uv.x / X_TAPER);
+  if (uv.x > (1.0 - X_TAPER)) intensity *= 1.0 - (uv.x - (1.0 - X_TAPER)) * (1.0 / X_TAPER);
+  if (uv.y < Y_TAPER) intensity *= (uv.y / Y_TAPER);
+  if (uv.y > (1.0 - Y_TAPER)) intensity *= 1.0 - (uv.y - (1.0 - Y_TAPER)) * (1.0 / Y_TAPER);
+
+  return intensity;
 }
 
 /**
  * @todo description
  */
-Reflection getRefinedReflection(float stepSize, vec3 rayContinuation, vec3 stepCoords) {
+IntersectionTest GetRefinedIntersection(float stepSize, vec3 view_RayBounce, vec3 view_RayContinuation, vec3 view_RayDirection) {
   const int REFINEMENT_STEPS = 6;
 
-  vec3 ray = rayContinuation;
-  vec3 rayStep = stepCoords * stepSize;
+  // @todo march in screen space instead of view space
+  vec3 ray = view_RayContinuation;
+  vec3 rayStep = view_RayDirection * stepSize;
   vec3 finalColor = vec3(0);
   vec2 uv = vec2(0);
 
@@ -127,98 +125,91 @@ Reflection getRefinedReflection(float stepSize, vec3 rayContinuation, vec3 stepC
     rayStep *= 0.5;
     ray += rayStep;
 
-    vec4 sampled = texture(colorAndDepth, ray.xy);
+    // @todo fix negative z hack
+    uv = ViewToScreenCoords(vec4(ray, 1.0) * vec4(1, 1, -1, 1));
+
+    vec4 sampled = texture(colorAndDepth, uv);
+    float sampleDepth = getLinearizedDepth(sampled.w);
 
     finalColor = sampled.rgb;
 
-    if (sampled.w < ray.z) {
+    if (sampleDepth < ray.z && sampleDepth > view_RayBounce.z) {
       ray -= rayStep;
     }
   }
 
-  return Reflection(true, finalColor, ray.xy);
+  return IntersectionTest(true, finalColor, GetSampleIntensity(uv));
 }
 
 /**
  * @todo description
  */
-Reflection getReflection(vec3 startCoords, vec3 stepCoords, float fragDistance) {
+IntersectionTest TestRayIntersection(
+  vec3 view_RayBounce,
+  vec3 view_RayDirection,
+  vec3 rayOffset,
+  float stepSize
+) {
   const int TEST_STEPS = 16;
 
-  float stepSize = 0.05;
-  vec3 rayStep = stepCoords;
-  vec3 ray = startCoords;
+  // @todo march in screen space instead of view space
+  vec3 ray = view_RayBounce + rayOffset;
+  vec3 rayStep = view_RayDirection * stepSize;
   vec3 previousRay = ray;
-  float linearPreviousRayDepth = getLinearizedDepth(ray.z);
-
-  // ray += rayStep * random(-stepSize * 0.1, stepSize * 0.1);
 
   for (int i = 0; i < TEST_STEPS; i++) {
-    ray += rayStep * stepSize;
+    ray += rayStep;
 
-    if (isRayOutOfBounds(ray)) {
+    // @todo fix negative z hack (note: will go away with screen-space ray marching)
+    vec2 uv = ViewToScreenCoords(vec4(ray, 1.0) * vec4(1, 1, -1, 1));
+
+    if (isOutOfBounds(uv) || ray.z > 10000.0) {
       break;
     }
 
-    vec4 sampled = texture(colorAndDepth, ray.xy);
-    float linearSampleDepth = getLinearizedDepth(sampled.w);
-    float linearRayDepth = getLinearizedDepth(ray.z);
+    vec4 sampled = texture(colorAndDepth, uv);
+    float sampleDepth = getLinearizedDepth(sampled.w);
 
-    if (
-      // 1) The sample point is not at the far plane
-      sampled.w < 1.0 &&
-      // 2) The ray is behind/'intersecting' the sample
-      ray.z > sampled.w &&
-      (stepCoords.z > 0
-        // 3) An outgoing ray intersected the object from the front
-        ? (linearSampleDepth - linearPreviousRayDepth > -20)
-        // 4) An incoming ray intersected the object from the back
-        : (linearRayDepth - linearSampleDepth < 50)
-      )
-    ) {
-      return getRefinedReflection(stepSize, ray - rayStep * stepSize, stepCoords);
+    if (sampleDepth < ray.z && (sampleDepth - previousRay.z) > -20.0) {
+      return GetRefinedIntersection(stepSize, view_RayBounce, ray - rayStep, view_RayDirection);
     }
 
     previousRay = ray;
-    linearPreviousRayDepth = linearRayDepth;
   }
 
-  return Reflection(false, vec3(0), vec2(0));
+  return IntersectionTest(false, vec3(0.0), 0.0);
 }
 
 void main() {
   vec4 frag_ColorAndDepth = texture(colorAndDepth, fragUv);
   vec4 frag_NormalAndSpecularity = texture(normalAndSpecularity, fragUv);
   vec3 frag_Position = getWorldPosition(frag_ColorAndDepth.w);
-  float frag_Depth = getLinearizedDepth(frag_ColorAndDepth.w);
   vec3 cameraToFragment = frag_Position - cameraPosition;
   vec3 normal = frag_NormalAndSpecularity.rgb;
 
   // Screen-space reflections
+  float minStepSize = 5.0;
+  float maxStepSize = 100.0;
+  float jitter = 5.0;
   float baseColorFactor = 0.0;
   float reflectivity = 1.0;
 
-  vec3 n_cameraToFragment = normalize(cameraToFragment);
-  vec3 reflectionRay = reflect(n_cameraToFragment, normal);
-  vec4 startCoords = vec4(fragUv.x, fragUv.y, frag_ColorAndDepth.w, 1.0);
+  // @todo these -z hacks are ridiculous; determine
+  // a better way to regularize the vectors to the
+  // camera's left-handed coordinate system
+  vec4 frag_ViewPosition = view * vec4(frag_Position * vec3(1, 1, -1), 1.0) * vec4(1, 1, -1, 1);
+  vec4 viewNormal = transpose(inverseView) * vec4(normal * vec3(1, 1, -1), 1.0) * vec4(1, 1, -1, 1);
+  vec3 worldReflectionVector = reflect(normalize(cameraToFragment), normal);
+  vec3 viewReflectionVector = reflect(normalize(frag_ViewPosition.xyz), viewNormal.xyz);
 
-  vec3 firstBounce = frag_Position + reflectionRay * 50.0;
-  vec4 firstBounceCoords = projection * view * vec4(firstBounce * vec3(1, 1, -1), 1.0);
-  firstBounceCoords /= firstBounceCoords.w;
-  firstBounceCoords.xy *= 0.5;
-  firstBounceCoords.xy += 0.5;
-  // @todo why do we have to do this? is there something
-  // wrong with the projection/perspective divide?
-  firstBounceCoords.z = sqrt(firstBounceCoords.z);
+  float glance = max(dot(normalize(cameraToFragment), worldReflectionVector), 0.0);
+  float stepSize = mix(minStepSize, maxStepSize, glance);
+  vec3 rayOffset = viewReflectionVector * jitter * noise();
 
-  vec3 stepCoords = normalize(firstBounceCoords.xyz - startCoords.xyz);
-
-  Reflection reflection = getReflection(startCoords.xyz, stepCoords, frag_Depth);
-  float intensity = getReflectionIntensity(reflection);
-
+  IntersectionTest result = TestRayIntersection(frag_ViewPosition.xyz, viewReflectionVector, rayOffset, stepSize);
   vec3 baseColor = frag_ColorAndDepth.rgb * baseColorFactor;
-  vec3 reflectionColor = reflection.color * intensity;
-  vec3 skyColor = getSkyColor(reflectionRay) * reflectivity * (1.0 - intensity);
+  vec3 reflectionColor = result.color * result.intensity;
+  vec3 skyColor = getSkyColor(worldReflectionVector) * reflectivity * (1.0 - result.intensity);
 
   out_ColorAndDepth = vec4(baseColor + reflectionColor + skyColor, frag_ColorAndDepth.w);
 }

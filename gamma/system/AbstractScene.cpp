@@ -14,6 +14,8 @@ namespace Gamma {
   }
 
   Mesh* AbstractScene::addMesh(std::string name, uint16 maxInstances, Mesh* mesh) {
+    assert(meshMap.find(name) == meshMap.end(), "Mesh '" + name + "' already exists!");
+
     mesh->index = (uint16)meshes.size();
     mesh->id = runningMeshId++;
     mesh->objects.reserve(maxInstances);
