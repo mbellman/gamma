@@ -122,17 +122,17 @@ namespace Gamma {
 
           #if GAMMA_DEVELOPER_MODE
             auto& resolution = renderer->getInternalResolution();
-            auto& memory = renderer->getMemoryInfo();
+            auto& renderStats = renderer->getRenderStats();
             auto& sceneStats = activeScene->getStats();
             auto messages = Console::getMessages();
 
             // @todo write a little helper for generating labels less repetitively
-            std::string fpsLabel = "FPS: " + std::to_string(fpsAverager.average());
+            std::string fpsLabel = "FPS: " + std::to_string(fpsAverager.average()) + " (V-Sync " + (renderStats.isVSynced ? "ON" : "OFF") + ")";
             std::string frameTimeLabel = "Frame time: " + std::to_string(frameTimeAverager.average()) + "us";
             std::string resolutionLabel = "Resolution: " + std::to_string(resolution.width) + " x " + std::to_string(resolution.height);
             std::string vertsLabel = "Verts: " + std::to_string(sceneStats.verts);
             std::string trisLabel = "Tris: " + std::to_string(sceneStats.tris);
-            std::string memoryLabel = "GPU Memory: " + std::to_string(memory.used) + "MB / " + std::to_string(memory.total) + "MB";
+            std::string memoryLabel = "GPU Memory: " + std::to_string(renderStats.gpuMemoryUsed) + "MB / " + std::to_string(renderStats.gpuMemoryTotal) + "MB";
 
             renderer->renderText(font_OpenSans, fpsLabel.c_str(), 25, 25);
             renderer->renderText(font_OpenSans, frameTimeLabel.c_str(), 25, 50);

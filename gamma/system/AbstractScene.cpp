@@ -48,6 +48,14 @@ namespace Gamma {
     return object;
   }
 
+  void AbstractScene::disableFlags(SceneFlags flags) {
+    this->flags &= ~flags;
+  }
+
+  void AbstractScene::enableFlags(SceneFlags flags) {
+    this->flags |= flags;
+  }
+
   Object* AbstractScene::findObject(const ObjectRecord& record) {
     auto& mesh = *meshes[record.meshIndex];
 
@@ -56,6 +64,10 @@ namespace Gamma {
     }
 
     return mesh.objects.getByRecord(record);
+  }
+
+  uint32 AbstractScene::getFlags() const {
+    return flags;
   }
 
   const std::vector<Light>& AbstractScene::getLights() const {

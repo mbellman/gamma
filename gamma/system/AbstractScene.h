@@ -16,7 +16,8 @@ namespace Gamma {
   enum SceneFlags {
     MODE_FREE_CAMERA = 1 << 0,
     MODE_MOVABLE_OBJECTS = 1 << 1,  // @todo
-    MODE_WIREFRAME = 1 << 2
+    MODE_WIREFRAME = 1 << 2,
+    MODE_VSYNC = 1 << 3
   };
 
   struct SceneStats {
@@ -28,27 +29,31 @@ namespace Gamma {
   public:
     Camera camera;
     InputSystem input;
-    uint32 flags = 0;
 
     static AbstractScene* active;
 
     virtual ~AbstractScene();
 
-    Mesh* addMesh(std::string name, uint16 maxInstances, Mesh* mesh);
-    Light& createLight();
-    Object& createObjectFrom(std::string meshName);
+    uint32 getFlags() const;
     const std::vector<Light>& getLights() const;
     const SceneStats getStats() const;
-    void removeMesh(std::string name);
-    void transform(const Object& object);
-    virtual void update(float dt) {};
     virtual void updateScene(float dt) final;
 
   protected:
+    uint32 flags = 0;
+
+    Mesh* addMesh(std::string name, uint16 maxInstances, Mesh* mesh);
+    Light& createLight();
+    Object& createObjectFrom(std::string meshName);
+    void disableFlags(SceneFlags flags);
     ObjectPool& getMeshObjects(std::string meshName);
     Object& getObject(std::string name);
     float getRunningTime();
+    void enableFlags(SceneFlags flags);
+    void removeMesh(std::string name);
+    void transform(const Object& object);
     void storeObject(std::string, Object& object);
+    virtual void update(float dt) {};
 
   private:
     std::vector<Mesh*> meshes;

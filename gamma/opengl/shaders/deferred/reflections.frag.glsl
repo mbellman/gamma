@@ -13,6 +13,7 @@ noperspective in vec2 fragUv;
 layout (location = 0) out vec4 out_ColorAndDepth;
 
 struct Reflection {
+  bool hit;
   vec3 color;
   vec2 uv;
 };
@@ -98,6 +99,10 @@ float mixClamped(float low, float high, float alpha) {
  * by proximity of the sample to the screen edges.
  */
 float getReflectionIntensity(Reflection reflection) {
+  if (!reflection.hit) {
+    return 0.0;
+  }
+
   const float X_TAPER = 0.05;
   const float Y_TAPER = 0.2;
 
@@ -131,7 +136,7 @@ Reflection getRefinedReflection(float stepSize, vec3 rayContinuation, vec3 stepC
     }
   }
 
-  return Reflection(finalColor, ray.xy);
+  return Reflection(true, finalColor, ray.xy);
 }
 
 /**
@@ -178,7 +183,7 @@ Reflection getReflection(vec3 startCoords, vec3 stepCoords, float fragDistance) 
     linearPreviousRayDepth = linearRayDepth;
   }
 
-  return Reflection(vec3(0), vec2(0));
+  return Reflection(false, vec3(0), vec2(0));
 }
 
 void main() {

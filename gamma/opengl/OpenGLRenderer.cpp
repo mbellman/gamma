@@ -47,7 +47,7 @@ namespace Gamma {
 
     glewInit();
 
-    SDL_GL_SetSwapInterval(1);
+    SDL_GL_SetSwapInterval(0);
 
     // Initialize font texture
     glGenTextures(1, &screenTexture);
@@ -187,7 +187,7 @@ namespace Gamma {
     Console::log("Shadowcaster destroyed!");
   }
 
-  const MemoryInfo& OpenGLRenderer::getMemoryInfo() {
+  const RenderStats& OpenGLRenderer::getRenderStats() {
     GLint total = 0;
     GLint available = 0;
     const char* vendor = (const char*)glGetString(GL_VENDOR);
@@ -197,10 +197,11 @@ namespace Gamma {
       glGetIntegerv(GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX, &available);
     }
 
-    memoryInfo.total = total / 1000;
-    memoryInfo.used = (total - available) / 1000;
+    stats.gpuMemoryTotal = total / 1000;
+    stats.gpuMemoryUsed = (total - available) / 1000;
+    stats.isVSynced = SDL_GL_GetSwapInterval() == 1;
 
-    return memoryInfo;
+    return stats;
   }
 
   void OpenGLRenderer::present() {
@@ -208,9 +209,21 @@ namespace Gamma {
   }
 
   void OpenGLRenderer::renderDeferred() {
+    if (AbstractScene::active == nullptr) {
+      return;
+    }
+  
     uint32 internalWidth = internalResolution.width;
     uint32 internalHeight = internalResolution.height;
+    AbstractScene& scene = *AbstractScene::active;
+    uint32 sceneFlags = scene.getFlags();
     bool hasReflectiveObjects = false;
+
+    if (sceneFlags & SceneFlags::MODE_VSYNC && SDL_GL_GetSwapInterval() == 0) {
+      SDL_GL_SetSwapInterval(1);
+    } else if (!(sceneFlags & SceneFlags::MODE_VSYNC) && SDL_GL_GetSwapInterval() == 1) {
+      SDL_GL_SetSwapInterval(0);
+    }
 
     // Set G-Buffer as render target
     deferred.g_buffer.write();
@@ -244,7 +257,7 @@ namespace Gamma {
     deferred.geometry.setInt("meshTexture", 0);
     deferred.geometry.setInt("meshNormalMap", 1);
 
-    GLenum primitiveMode = AbstractScene::active->flags & SceneFlags::MODE_WIREFRAME
+    GLenum primitiveMode = sceneFlags & SceneFlags::MODE_WIREFRAME
       ? GL_LINE_STRIP
       : GL_TRIANGLES;
 
@@ -294,7 +307,7 @@ namespace Gamma {
     glStencilMask(0x00);
 
     // Non-shadowcaster lighting pass
-    auto& lights = AbstractScene::active->getLights();
+    auto& lights = scene.getLights();
     Matrix4f inverseProjection = projection.inverse();
     Matrix4f inverseView = view.inverse();
 

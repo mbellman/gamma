@@ -83,26 +83,34 @@ void DemoScene::init() {
     }
   }
 
-  input.on<MouseMoveEvent>("mousemove", [=](MouseMoveEvent& event) {
+  input.on<MouseMoveEvent>("mousemove", [&](MouseMoveEvent& event) {
     if (SDL_GetRelativeMouseMode()) {
       camera.orientation.pitch += event.deltaY / 1000.0f;
       camera.orientation.yaw += event.deltaX / 1000.0f;
     }
   });
 
-  input.on<MouseButtonEvent>("mousedown", [=](MouseButtonEvent& event) {
+  input.on<MouseButtonEvent>("mousedown", [&](MouseButtonEvent& event) {
     if (!SDL_GetRelativeMouseMode()) {
       SDL_SetRelativeMouseMode(SDL_TRUE);
     }
   });
 
-  input.on<Key>("keyup", [=](Key key) {
+  input.on<Key>("keyup", [&](Key key) {
     if (key == Key::ESCAPE) {
       SDL_SetRelativeMouseMode(SDL_FALSE);
     }
 
     if (key == Key::R) {
       getMeshObjects("cube").removeById(lastRemovedIndex++);
+    }
+
+    if (key == Key::V) {
+      if (flags & SceneFlags::MODE_VSYNC) {
+        disableFlags(SceneFlags::MODE_VSYNC);
+      } else {
+        enableFlags(SceneFlags::MODE_VSYNC);
+      }
     }
   });
 }
