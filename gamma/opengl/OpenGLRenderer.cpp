@@ -82,6 +82,17 @@ namespace Gamma {
     deferred.g_buffer.shareDepthStencilAttachment(deferred.post_buffer);
     deferred.post_buffer.bindColorAttachments();
 
+    deferred.reflections_buffer.init();
+    deferred.reflections_buffer.setSize({ internalResolution.width, internalResolution.height });
+    deferred.reflections_buffer.addColorAttachment(ColorFormat::RGBA);
+    deferred.g_buffer.shareDepthStencilAttachment(deferred.reflections_buffer);
+    deferred.reflections_buffer.bindColorAttachments();
+
+    // deferred.reflections_buffer.init();
+    // deferred.reflections_buffer.setSize({ internalResolution.width / 2, internalResolution.height /2 });
+    // deferred.reflections_buffer.addColorAttachment(ColorFormat::RGBA);
+    // deferred.reflections_buffer.bindColorAttachments();
+
     deferred.copyFrame.init();
     deferred.copyFrame.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
     deferred.copyFrame.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/copy-frame.frag.glsl"));
@@ -107,6 +118,11 @@ namespace Gamma {
     deferred.reflections.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
     deferred.reflections.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/reflections.frag.glsl"));
     deferred.reflections.link();
+
+    deferred.reflectionsDenoise.init();
+    deferred.reflectionsDenoise.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
+    deferred.reflectionsDenoise.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/reflections-denoise.frag.glsl"));
+    deferred.reflectionsDenoise.link();
 
     deferred.skybox.init();
     deferred.skybox.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
@@ -397,14 +413,13 @@ namespace Gamma {
 
       // Continue writing to post buffer
       deferred.g_buffer.read();
-      // @todo investigate writing into a lower-res 'reflection buffer'
-      // and writing that into the post buffer again
-      deferred.post_buffer.write();
+      deferred.reflections_buffer.write();
 
       // Render reflections (screen-space + skybox)
       // @bug unlit objects don't get reflected + if no lighting
       // sources are defined, nothing gets reflected
       glStencilFunc(GL_EQUAL, StencilType::REFLECTIVE_OBJECTS, 0xFF);
+      // glViewport(0, 0, internalWidth / 2, internalHeight / 2);
 
       deferred.reflections.use();
       deferred.reflections.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
@@ -415,6 +430,16 @@ namespace Gamma {
       deferred.reflections.setMatrix4f("inverseView", inverseView);
       deferred.reflections.setMatrix4f("projection", projection);
       deferred.reflections.setMatrix4f("inverseProjection", inverseProjection);
+
+      OpenGLScreenQuad::render();
+      // glViewport(0, 0, internalWidth, internalHeight);
+
+      deferred.reflections_buffer.read();
+      deferred.post_buffer.write();
+
+      deferred.reflectionsDenoise.use();
+      deferred.reflectionsDenoise.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+      deferred.reflectionsDenoise.setInt("colorAndDepth", 0);
 
       OpenGLScreenQuad::render();
     }

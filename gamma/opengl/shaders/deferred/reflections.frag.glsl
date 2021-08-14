@@ -161,33 +161,33 @@ bool maybeHasDistantReflection(vec3 view_ray, vec3 normalized_view_reflection_ra
 Reflection getRefinedReflection(
   vec3 view_reflecting_surface_position,
   vec3 normalized_view_reflection_ray,
-  vec3 view_starting_position,
+  vec3 view_starting_ray,
   float march_step_size
 ) {
   const int REFINEMENT_STEPS = 4;
 
-  vec3 ray = view_starting_position;
+  vec3 ray = view_starting_ray;
   vec3 ray_step = normalized_view_reflection_ray * march_step_size;
-  vec3 final_color = vec3(0);
-  vec2 uv = vec2(0);
+  vec3 refined_color = vec3(0);
+  vec2 refined_uv = vec2(0);
 
   for (int i = 0; i < REFINEMENT_STEPS; i++) {
     ray_step *= 0.5;
     ray += ray_step;
 
-    uv = viewToScreenCoordinates(ray);
+    refined_uv = viewToScreenCoordinates(ray);
 
-    vec4 test = texture(colorAndDepth, uv);
+    vec4 test = texture(colorAndDepth, refined_uv);
     float test_depth = getLinearizedDepth(test.w);
 
-    final_color = test.rgb;
+    refined_color = test.rgb;
 
     if (test_depth < ray.z && test_depth > view_reflecting_surface_position.z) {
       ray -= ray_step;
     }
   }
 
-  return Reflection(final_color, uv, getReflectionIntensity(uv));
+  return Reflection(refined_color, refined_uv, getReflectionIntensity(refined_uv));
 }
 
 /**
@@ -265,6 +265,12 @@ Reflection getReflection(
 }
 
 void main() {
+  // @todo can we write to alternate rows each frame,
+  // since the reflection buffer is preserved across frames?
+  // if (int(fragUv.x * 1920.0) % 2 == 0) {
+  //   discard;
+  // }
+
   vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
   vec4 frag_normal_and_specularity = texture(normalAndSpecularity, fragUv);
   vec3 frag_world_position = getWorldPosition(frag_color_and_depth.w);

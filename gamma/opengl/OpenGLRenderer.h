@@ -49,6 +49,7 @@ namespace Gamma {
 
     struct DeferredPath {
       OpenGLFrameBuffer g_buffer;
+      OpenGLFrameBuffer reflections_buffer;
       OpenGLFrameBuffer post_buffer;
       OpenGLLightDisc lightDisc;
       OpenGLShader copyFrame;
@@ -57,6 +58,7 @@ namespace Gamma {
       OpenGLShader pointLightWithoutShadow;
       OpenGLShader directionalLightWithoutShadow;
       OpenGLShader reflections;
+      OpenGLShader reflectionsDenoise;
       OpenGLShader skybox;
       OpenGLShader debanding;
       OpenGLShader gBufferLayers;
