@@ -146,7 +146,7 @@ bool hasContactReflection(vec3 view_ray, vec3 normalized_view_reflection_ray) {
  * march along the reflection ray sees increasing distance
  * from the underlying geometry.
  */
-bool maybeHasDistantReflection(vec3 view_ray, vec3 normalized_view_reflection_ray) {
+bool mightHaveDistantReflection(vec3 view_ray, vec3 normalized_view_reflection_ray) {
   float r1 = getRayDistance(view_ray + normalized_view_reflection_ray * 20.0);
   float r2 = getRayDistance(view_ray + normalized_view_reflection_ray * 40.0);
   float r3 = getRayDistance(view_ray + normalized_view_reflection_ray * 60.0);
@@ -164,7 +164,7 @@ Reflection getRefinedReflection(
   vec3 view_starting_ray,
   float march_step_size
 ) {
-  const int REFINEMENT_STEPS = 4;
+  const int REFINEMENT_STEPS = 6;
 
   vec3 ray = view_starting_ray;
   vec3 ray_step = normalized_view_reflection_ray * march_step_size;
@@ -207,7 +207,7 @@ Reflection getReflection(
 
   if (hasContactReflection(ray, normalized_view_reflection_ray)) {
     adjusted_march_step_size = 5.0;
-  } else if (maybeHasDistantReflection(ray, normalized_view_reflection_ray)) {
+  } else if (mightHaveDistantReflection(ray, normalized_view_reflection_ray)) {
     adjusted_march_step_size *= 2.0;
   }
 
@@ -299,7 +299,7 @@ void main() {
 
   Reflection reflection = getReflection(frag_view_position.xyz, normalized_view_reflection_ray, march_offset, march_step_size);
   vec3 baseColor = frag_color_and_depth.rgb * base_color_factor;
-  vec3 reflectionColor = reflection.color * reflection.intensity;
+  vec3 reflectionColor = reflection.color * reflection.intensity * reflection_color_factor;
   vec3 skyColor = getSkyColor(world_reflection_vector) * reflection_color_factor * (1.0 - reflection.intensity);
 
   out_ColorAndDepth = vec4(baseColor + reflectionColor + skyColor, frag_color_and_depth.w);
