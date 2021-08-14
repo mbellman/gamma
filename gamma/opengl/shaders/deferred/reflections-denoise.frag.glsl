@@ -24,6 +24,9 @@ void main() {
   vec2 texel = 1.0 / vec2(1920.0, 1080.0);
 
   vec4 frag = texture(colorAndDepth, fragUv);
+
+  // out_ColorAndDepth = vec4(frag.rgb, frag.w);
+  // return;
   vec4 top = texture(colorAndDepth, fragUv + texel * vec2(0.0, 1.0));
   vec4 bottom = texture(colorAndDepth, fragUv + texel * vec2(0.0, -1.0));
   vec4 left = texture(colorAndDepth, fragUv + texel * vec2(-1.0, 0.0));
@@ -35,15 +38,12 @@ void main() {
   float left_luminance = luminance(left.rgb);
   float right_luminance = luminance(right.rgb);
 
-  if (
-    length(frag_luminance - top_luminance) > 0.05 ||
-    length(frag_luminance - left_luminance) > 0.05 ||
-    length(frag_luminance - right_luminance) > 0.05 ||
-    length(frag_luminance - bottom_luminance) > 0.05
-  ) {
-    vec2 o = vec2(noise(1.0), noise(2.0)) * 4.0;
-    vec2 o2 = vec2(noise(3.0), noise(4.0)) * 4.0;
-    vec2 o3 = vec2(noise(5.0), noise(6.0)) * 4.0;
+  float average_local_luminance = (top_luminance + bottom_luminance + left_luminance + right_luminance) / 4.0;
+
+  if (length(frag_luminance - average_local_luminance) > 0.05) {
+    vec2 o = vec2(noise(1.0), noise(2.0)) * 3.0;
+    vec2 o2 = vec2(noise(3.0), noise(4.0)) * 3.0;
+    vec2 o3 = vec2(noise(5.0), noise(6.0)) * 3.0;
 
     vec3 rc = texture(colorAndDepth, fragUv + texel * o).rgb;
     vec3 rc2 = texture(colorAndDepth, fragUv + texel * o2).rgb;
@@ -51,7 +51,7 @@ void main() {
 
     vec3 av = (rc + rc2 + rc3 + top.rgb + bottom.rgb + left.rgb + right.rgb) / 7.0;
 
-    out_ColorAndDepth = vec4(av, 1.0);
+    out_ColorAndDepth = vec4(av, frag.w);
   } else {
     out_ColorAndDepth = vec4(frag.rgb, frag.w);
   }

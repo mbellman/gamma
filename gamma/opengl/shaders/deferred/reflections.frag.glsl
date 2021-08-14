@@ -94,12 +94,12 @@ bool isOffScreen(vec2 uv) {
  *
  * @todo move to helpers/allow shader imports
  */
-float noise() {
-  return fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.545312);
+float noise(float seed) {
+  return 2.0 * (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * seed * 43758.545312) - 0.5);
 }
 
 float random(float low, float high) {
-  return low + (noise() * 0.5 + 0.5) * (high - low);
+  return low + (noise(1.0) * 0.5 + 0.5) * (high - low);
 }
 
 /**
@@ -295,7 +295,7 @@ void main() {
 
   float glance = max(dot(normalized_camera_to_fragment, world_reflection_vector), 0.0);
   float march_step_size = mix(min_step_size, max_step_size, glance);
-  vec3 march_offset = normalized_view_reflection_ray * jitter * random(-2.0, 2.0);
+  vec3 march_offset = normalized_view_reflection_ray * random(0.0, jitter);
 
   Reflection reflection = getReflection(frag_view_position.xyz, normalized_view_reflection_ray, march_offset, march_step_size);
   vec3 baseColor = frag_color_and_depth.rgb * base_color_factor;
