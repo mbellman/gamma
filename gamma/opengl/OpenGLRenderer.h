@@ -36,7 +36,7 @@ namespace Gamma {
     virtual void renderText(TTF_Font* font, const char* message, uint32 x, uint32 y) override;
 
   private:
-    int flags = 0;
+    uint32 flags = 0;
     SDL_GLContext glContext;
     GLuint screenTexture = 0;
     OpenGLShader screen;

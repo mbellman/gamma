@@ -238,11 +238,11 @@ Reflection getReflection(
         // 2) For outgoing rays, the previous ray
         // was 'in front' of the geometry, within
         // a thickness threshold
-        ? (test_depth - previous_ray.z > -50.0)
+        ? (test_depth - previous_ray.z > -40.0)
         // 3) For incoming rays, the previous ray
         // was behind the geometry, within a thickness
         // threshold
-        : (previous_ray.z - test_depth < 50)
+        : (previous_ray.z - test_depth < 40)
       )
     ) {
       return getRefinedReflection(view_reflecting_surface_position, normalized_view_reflection_ray, ray - ray_step, adjusted_march_step_size);

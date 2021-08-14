@@ -20,7 +20,6 @@ void DemoScene::init() {
   planeMesh->normalMap = "./demo/assets/images/metal-normal-map.png";
   planeMesh->isReflective = true;
   daVinciMesh->isReflective = true;
-  rabbitMesh->isReflective = true;
 
   auto& daVinci = createObjectFrom("daVinci");
 
@@ -60,12 +59,12 @@ void DemoScene::init() {
     transform(rabbit);
   }
 
-  // auto& rabbitLight = createLight();
+  // auto& daVinciLight = createLight();
 
-  // rabbitLight.position = Vec3f(0.f, 200.0f, 0.0f);
-  // rabbitLight.color = Vec3f(1.0f, 0.0f, 1.0f);
-  // rabbitLight.radius = 1000.0f;
-  // rabbitLight.power = 20.0f;
+  // daVinciLight.position = Vec3f(0.f, 100.0f, 0.0f);
+  // daVinciLight.color = Vec3f(1.0f, 0.0f, 1.0f);
+  // daVinciLight.radius = 1000.0f;
+  // daVinciLight.power = 10.0f;
 
   auto& sunlight = createLight();
 
@@ -85,8 +84,13 @@ void DemoScene::init() {
 
       cube.position = cubePosition;
       cube.scale = 40.0f;
-      // cube.rotation = Vec3f(1.3f, 0.9f, 2.2f);
-      // cube.rotation.y += (float)(i * 10 + j) / 5.0f;
+
+      // auto& cubeLight = createLight();
+
+      // cubeLight.color = Vec3f(0.1f, 0.3f, 1.0f);
+      // cubeLight.radius = 250.0f;
+      // cubeLight.position = cubePosition + Vec3f(0.0f, 50.0f, 0.0f);
+      // cubeLight.power = 2.0f;
 
       transform(cube);
     }

@@ -40,23 +40,23 @@ vec3 getWorldPosition(float depth) {
  */
 vec3 getIlluminatedColor(Light light, vec3 position, vec3 normal, vec3 color) {
   vec3 adjustedLightColor = light.color * light.power * light.radius;
-
   vec3 surfaceToLight = light.position - position;
   float lightDistance = length(surfaceToLight);
   vec3 n_surfaceToLight = surfaceToLight / lightDistance;
-  float incidence = max(dot(n_surfaceToLight, normal), 0.0);
-  float attenuation = pow(1.0 / lightDistance, 2);
-
-  // @hack have light intensity 'fall off' toward radius boundary
-  float hack_radialInfluence = max(1.0 - lightDistance / light.radius, 0.0);
-  // @hack taper light intensity more softly to preserve light with distance
-  float hack_softTapering = (20.0 * (lightDistance / light.radius));
-
-  vec3 diffuseTerm = adjustedLightColor * incidence * attenuation * hack_radialInfluence * hack_softTapering;
-
   vec3 n_surfaceToCamera = normalize(cameraPosition - position);
   vec3 halfVector = normalize(n_surfaceToLight + n_surfaceToCamera);
+  float incidence = max(dot(n_surfaceToLight, normal), 0.0);
+  float attenuation = pow(1.0 / lightDistance, 2);
   float specularity = pow(max(dot(halfVector, normal), 0.0), 50);
+
+  // Have light intensity 'fall off' toward radius boundary
+  float hack_radial_influence = max(1.0 - lightDistance / light.radius, 0.0);
+  // Taper light intensity more softly to preserve light with distance
+  float hack_soft_tapering = (20.0 * (lightDistance / light.radius));
+  // Loosely approximates ambient/indirect lighting
+  vec3 hack_ambient_light = light.color * pow(max(1.0 - dot(n_surfaceToCamera, normal), 0.0), 2) * 0.05;
+
+  vec3 diffuseTerm = adjustedLightColor * incidence * attenuation * hack_radial_influence * hack_soft_tapering + hack_ambient_light;
   vec3 specularTerm = adjustedLightColor * specularity * attenuation;
 
   return color * (diffuseTerm + specularTerm);

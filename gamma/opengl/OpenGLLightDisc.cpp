@@ -127,8 +127,9 @@ namespace Gamma {
         Vec3f screenLightPosition = (projection * localLightPosition) / localLightPosition.z;
 
         disc.offset = Vec2f(screenLightPosition.x, screenLightPosition.y);
-        disc.scale.x = light.power * light.radius / localLightPosition.z;
-        disc.scale.y = light.power * light.radius / localLightPosition.z * aspectRatio;
+        // @todo use 1 + log(light.power) or similar for scaling term
+        disc.scale.x = 1.3f * light.radius / localLightPosition.z;
+        disc.scale.y = 1.3f * light.radius / localLightPosition.z * aspectRatio;
       } else {
         // Light source behind the camera
         float scale = localLightPosition.magnitude() < light.radius ? 2.0f : 0.0f;
