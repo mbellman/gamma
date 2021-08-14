@@ -114,7 +114,6 @@ float getReflectionIntensity(vec2 uv) {
 
   if (uv.x < X_TAPER) intensity *= (uv.x / X_TAPER);
   if (uv.x > (1.0 - X_TAPER)) intensity *= 1.0 - (uv.x - (1.0 - X_TAPER)) * (1.0 / X_TAPER);
-  if (uv.y < Y_TAPER) intensity *= (uv.y / Y_TAPER);
   if (uv.y > (1.0 - Y_TAPER)) intensity *= 1.0 - (uv.y - (1.0 - Y_TAPER)) * (1.0 / Y_TAPER);
 
   return clamp(intensity, 0, 1);
@@ -265,12 +264,6 @@ Reflection getReflection(
 }
 
 void main() {
-  // @todo can we write to alternate rows each frame,
-  // since the reflection buffer is preserved across frames?
-  // if (int(fragUv.x * 1920.0) % 2 == 0) {
-  //   discard;
-  // }
-
   vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
   vec4 frag_normal_and_specularity = texture(normalAndSpecularity, fragUv);
   vec3 frag_world_position = getWorldPosition(frag_color_and_depth.w);

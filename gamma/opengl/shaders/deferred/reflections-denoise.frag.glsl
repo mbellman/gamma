@@ -24,9 +24,6 @@ void main() {
   vec2 texel = 1.0 / vec2(1920.0, 1080.0);
 
   vec4 frag = texture(colorAndDepth, fragUv);
-
-  // out_ColorAndDepth = vec4(frag.rgb, frag.w);
-  // return;
   vec4 top = texture(colorAndDepth, fragUv + texel * vec2(0.0, 1.0));
   vec4 bottom = texture(colorAndDepth, fragUv + texel * vec2(0.0, -1.0));
   vec4 left = texture(colorAndDepth, fragUv + texel * vec2(-1.0, 0.0));
