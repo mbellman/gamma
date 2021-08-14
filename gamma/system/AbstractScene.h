@@ -13,6 +13,8 @@
 #include "system/type_aliases.h"
 
 namespace Gamma {
+  // @todo create/use global Gamma flags instead of tying
+  // any particular features to scenes, renders, etc.
   enum SceneFlags {
     MODE_FREE_CAMERA = 1 << 0,
     MODE_MOVABLE_OBJECTS = 1 << 1,  // @todo

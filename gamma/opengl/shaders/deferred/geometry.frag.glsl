@@ -10,8 +10,8 @@ in vec3 fragTangent;
 in vec3 fragBitangent;
 in vec2 fragUv;
 
-layout (location = 0) out vec4 out_colorAndDepth;
-layout (location = 1) out vec4 out_normalAndSpecularity;
+layout (location = 0) out vec4 out_color_and_depth;
+layout (location = 1) out vec4 out_normal_and_specularity;
 
 vec3 getNormal() {
   vec3 n_fragNormal = normalize(fragNormal);
@@ -33,8 +33,7 @@ vec3 getNormal() {
 
 void main() {
   vec3 color = hasTexture ? texture(meshTexture, fragUv).rgb : vec3(1.0);
-  float depth = gl_FragCoord.z;
 
-  out_colorAndDepth = vec4(color, depth);
-  out_normalAndSpecularity = vec4(getNormal(), 1.0);
+  out_color_and_depth = vec4(color, gl_FragCoord.z);
+  out_normal_and_specularity = vec4(getNormal(), 1.0);
 }

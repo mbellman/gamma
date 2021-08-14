@@ -16,6 +16,28 @@ namespace Gamma {
   };
 
   /**
+   * @todo description
+   */
+  enum MeshType {
+    /**
+     * @todo description
+     */
+    EMISSIVE = 0x00,
+    /**
+     * @todo description
+     */
+    REFLECTIVE = 0xF0,
+    /**
+     * @todo description
+     */
+    TRANSLUCENT = 0xFA,
+    /**
+     * @todo description
+     */
+    NON_EMISSIVE = 0xFF
+  };
+
+  /**
    * ObjectRecord
    * ------------
    *
@@ -144,7 +166,7 @@ namespace Gamma {
     /**
      * Determines whether mesh objects should be reflective.
      */
-    bool isReflective = false;
+    uint8 type = MeshType::NON_EMISSIVE;
   };
 
   /**

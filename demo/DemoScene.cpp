@@ -18,8 +18,8 @@ void DemoScene::init() {
   cubeMesh->texture = "./demo/assets/images/cat.png";
   wallMesh->texture = "./demo/assets/images/cat.png";
   planeMesh->normalMap = "./demo/assets/images/metal-normal-map.png";
-  planeMesh->isReflective = true;
-  daVinciMesh->isReflective = true;
+  planeMesh->type = MeshType::REFLECTIVE;
+  daVinciMesh->type = MeshType::TRANSLUCENT;
 
   auto& daVinci = createObjectFrom("daVinci");
 

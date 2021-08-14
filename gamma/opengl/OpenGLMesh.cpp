@@ -93,16 +93,24 @@ namespace Gamma {
     return glTexture != nullptr;
   }
 
-  bool OpenGLMesh::isReflective() const {
-    return sourceMesh->isReflective;
+  bool OpenGLMesh::isMeshType(MeshType type) const {
+    return sourceMesh->type == type;
   }
 
   void OpenGLMesh::render(GLenum primitiveMode) {
     auto& mesh = *sourceMesh;
 
-    checkAndLoadTexture(mesh.texture, glTexture, GL_TEXTURE0);
-    checkAndLoadTexture(mesh.normalMap, glNormalMap, GL_TEXTURE1);
-    checkAndLoadTexture(mesh.specularityMap, glSpecularityMap, GL_TEXTURE2);
+    if (mesh.type != MeshType::TRANSLUCENT) {
+      // Don't bind textures for translucent objects, since in
+      // the translucent geometry frag shader we need to read
+      // from the G-Buffer color texture.
+      //
+      // @todo if we use texture units which won't conflict with
+      // the G-Buffer, we can have textured translucent objects.
+      checkAndLoadTexture(mesh.texture, glTexture, GL_TEXTURE0);
+      checkAndLoadTexture(mesh.normalMap, glNormalMap, GL_TEXTURE1);
+      checkAndLoadTexture(mesh.specularityMap, glSpecularityMap, GL_TEXTURE2);
+    }
 
     // Buffer instance matrices
     glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::MATRIX]);

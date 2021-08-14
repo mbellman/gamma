@@ -16,7 +16,7 @@ namespace Gamma {
     uint16 getObjectCount() const;
     bool hasNormalMap() const;
     bool hasTexture() const;
-    bool isReflective() const;
+    bool isMeshType(MeshType type) const;
     void render(GLenum primitiveMode);
 
   private:

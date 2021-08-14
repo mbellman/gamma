@@ -60,6 +60,7 @@ namespace Gamma {
       OpenGLShader reflections;
       OpenGLShader reflectionsDenoise;
       OpenGLShader skybox;
+      OpenGLShader translucentGeometry;
       OpenGLShader debanding;
       OpenGLShader gBufferLayers;
     } deferred;
