@@ -75,12 +75,17 @@ bool isOffScreen(vec2 uv) {
 }
 
 void main() {
-  const float REFRACTION_INTENSITY = 30.0;
+  const float REFRACTION_INTENSITY = 15.0;
+  const vec3 GEOMETRY_COLOR = vec3(1, 1, 1);
 
   vec3 position = getWorldPosition(gl_FragCoord.z);
   vec3 color = vec3(1.0);
   vec3 normal = normalize(fragNormal);
-  vec3 world_refraction_ray = position + normal * REFRACTION_INTENSITY;
+
+  // @todo The refraction ray should be either Snell's Law-based
+  // or some approximation using angle of incidence vs. normal/
+  // index of refraction - mix(normalized_fragment_to_camera, normal, ratio)
+  vec3 world_refraction_ray = position - normal * REFRACTION_INTENSITY;
 
   // @todo Fix these z hacks! We can't keep doing this!
   vec4 view_normal = transpose(inverseView) * vec4(normal * vec3(1, 1, -1), 1.0) * vec4(1, 1, -1, 1);
@@ -97,15 +102,13 @@ void main() {
   vec4 refracted_color_and_depth = texture(colorAndDepth, refracted_color_coords);
 
   if (refracted_color_and_depth.w == 1.0) {
-    // @todo Write the skybox to the post buffer before copying back
-    // into G-Buffer attachment 2 (used for reflections + refractions).
-    // This way we won't need to recalculate it; we need to read the
-    // texture anyway and in the renderer it should just include disabling
-    // stencil testing after the skybox draw
+    // Skybox
     vec3 direction = normalize(world_refraction_ray - cameraPosition);
 
     refracted_color_and_depth.rgb = getSkyColor(direction);
   }
+
+  refracted_color_and_depth.rgb *= GEOMETRY_COLOR;
 
   out_color_and_depth = refracted_color_and_depth;
 }

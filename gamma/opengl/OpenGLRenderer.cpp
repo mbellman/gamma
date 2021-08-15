@@ -398,14 +398,25 @@ namespace Gamma {
 
     glDisable(GL_BLEND);
 
+    // Render skybox (considered an emissive type)
+    glStencilFunc(GL_EQUAL, MeshType::EMISSIVE, 0xFF);
+
+    deferred.skybox.use();
+    deferred.skybox.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+    deferred.skybox.setVec3f("cameraPosition", camera.position);
+    deferred.skybox.setMatrix4f("inverseProjection", inverseProjection);
+    deferred.skybox.setMatrix4f("inverseView", inverseView);
+
+    OpenGLScreenQuad::render();
+
     // Copy render pass up to this point back into G-Buffer, attachment 2
     //
     // @todo Only do this if there is reflective/refractive geometry in
     // the scene. If only refractive, we'll only have to do this once.
     //
-    // @todo This will have to be done again after the reflections pass
-    // to make reflection colors available to refractive geometry. Only
-    // do this a second time if there is any refractive geometry to render.
+    // @todo This is an isolated unit of work and can be moved into its own method.
+    glDisable(GL_STENCIL_TEST);
+
     deferred.post_buffer.read();
     deferred.g_buffer.write();
 
@@ -424,6 +435,7 @@ namespace Gamma {
       // Render reflections (screen-space + skybox)
       // @bug unlit objects don't get reflected + if no lighting
       // sources are defined, nothing gets reflected
+      glEnable(GL_STENCIL_TEST);
       glStencilFunc(GL_EQUAL, MeshType::REFLECTIVE, 0xFF);
       // glViewport(0, 0, internalWidth / 2, internalHeight / 2);
 
@@ -452,17 +464,17 @@ namespace Gamma {
       deferred.g_buffer.read();
     }
 
-    // Render skybox (considered an emissive type)
-    // @todo move to pre-reflections/refractions step
-    glStencilFunc(GL_EQUAL, MeshType::EMISSIVE, 0xFF);
+    deferred.post_buffer.read();
+    deferred.g_buffer.write();
 
-    deferred.skybox.use();
-    deferred.skybox.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
-    deferred.skybox.setVec3f("cameraPosition", camera.position);
-    deferred.skybox.setMatrix4f("inverseProjection", inverseProjection);
-    deferred.skybox.setMatrix4f("inverseView", inverseView);
+    deferred.copyFrame.use();
+    deferred.copyFrame.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+    deferred.copyFrame.setInt("colorAndDepth", 0);
 
     OpenGLScreenQuad::render();
+
+    deferred.g_buffer.read();
+    deferred.post_buffer.write();
 
     // Render translucent geometry
     glEnable(GL_CULL_FACE);
@@ -495,8 +507,6 @@ namespace Gamma {
     glClear(GL_COLOR_BUFFER_BIT);
     glStencilMask(0xFF);
 
-    // @todo consider removing debanding if it's not as much of a problem
-    // with fully textured/normal-mapped surfaces
     deferred.debanding.use();
     deferred.debanding.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
 
