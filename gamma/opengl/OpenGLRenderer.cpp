@@ -516,7 +516,7 @@ namespace Gamma {
       deferred.gBufferLayers.use();
       deferred.gBufferLayers.setInt("colorAndDepth", 0);
       deferred.gBufferLayers.setInt("normalAndSpecularity", 1);
-      deferred.gBufferLayers.setVec4f("transform", { 0.4f, 0.8f, 0.575f, 0.15f });
+      deferred.gBufferLayers.setVec4f("transform", { 0.53f, 0.82f, 0.43f, 0.11f });
 
       OpenGLScreenQuad::render();
     #endif
