@@ -30,7 +30,7 @@ namespace Gamma {
     /**
      * @todo description
      */
-    TRANSLUCENT = 0xFA,
+    REFRACTIVE = 0xFA,
     /**
      * @todo description
      */

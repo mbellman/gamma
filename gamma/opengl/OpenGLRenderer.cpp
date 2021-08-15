@@ -123,10 +123,10 @@ namespace Gamma {
     deferred.skybox.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/skybox.frag.glsl"));
     deferred.skybox.link();
 
-    deferred.translucentGeometry.init();
-    deferred.translucentGeometry.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/deferred/geometry.vert.glsl"));
-    deferred.translucentGeometry.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/translucent-geometry.frag.glsl"));
-    deferred.translucentGeometry.link();
+    deferred.refractiveGeometry.init();
+    deferred.refractiveGeometry.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/deferred/geometry.vert.glsl"));
+    deferred.refractiveGeometry.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/refractive-geometry.frag.glsl"));
+    deferred.refractiveGeometry.link();
 
     #if GAMMA_DEVELOPER_MODE
       deferred.gBufferLayers.init();
@@ -240,6 +240,17 @@ namespace Gamma {
     AbstractScene& scene = *AbstractScene::active;
     uint32 sceneFlags = scene.getFlags();
     bool hasReflectiveObjects = false;
+    bool hasRefractiveObjects = false;
+
+    for (auto* glMesh : glMeshes) {
+      if (glMesh->getObjectCount() > 0) {
+        if (glMesh->isMeshType(MeshType::REFLECTIVE)) {
+          hasReflectiveObjects = true;
+        } else if (glMesh->isMeshType(MeshType::REFRACTIVE)) {
+          hasRefractiveObjects = true;
+        }
+      }
+    }
 
     if (sceneFlags & SceneFlags::MODE_VSYNC && SDL_GL_GetSwapInterval() == 0) {
       SDL_GL_SetSwapInterval(1);
@@ -292,17 +303,13 @@ namespace Gamma {
       : GL_TRIANGLES;
 
     // @todo render emissive objects
-    // glStencilMask(StencilType::EMISSIVE_OBJECTS);
+    // glStencilMask(MeshType::EMISSIVE);
 
     // Render reflective objects
     glStencilMask(MeshType::REFLECTIVE);
 
     for (auto* glMesh : glMeshes) {
       if (glMesh->isMeshType(MeshType::REFLECTIVE)) {
-        if (glMesh->getObjectCount() > 0) {
-          hasReflectiveObjects = true;
-        }
-
         deferred.geometry.setBool("hasTexture", glMesh->hasTexture());
         deferred.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
 
@@ -332,7 +339,7 @@ namespace Gamma {
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
-    glStencilFunc(GL_LESS, MeshType::REFLECTIVE - 1, 0xFF);
+    glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
     glStencilMask(0x00);
 
     // Non-shadowcaster lighting pass
@@ -396,9 +403,8 @@ namespace Gamma {
 
     // @todo shadowed lighting pass
 
+    // Render skybox
     glDisable(GL_BLEND);
-
-    // Render skybox (considered an emissive type)
     glStencilFunc(GL_EQUAL, MeshType::EMISSIVE, 0xFF);
 
     deferred.skybox.use();
@@ -409,33 +415,24 @@ namespace Gamma {
 
     OpenGLScreenQuad::render();
 
-    // Copy render pass up to this point back into G-Buffer, attachment 2
-    //
-    // @todo Only do this if there is reflective/refractive geometry in
-    // the scene. If only refractive, we'll only have to do this once.
-    //
-    // @todo This is an isolated unit of work and can be moved into its own method.
-    glDisable(GL_STENCIL_TEST);
-
-    deferred.post_buffer.read();
-    deferred.g_buffer.write();
-
-    deferred.copyFrame.use();
-    deferred.copyFrame.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
-    deferred.copyFrame.setInt("colorAndDepth", 0);
-
-    OpenGLScreenQuad::render();
-
-    deferred.g_buffer.read();
-    deferred.post_buffer.write();
-
     if (hasReflectiveObjects) {
+      // Write all non-skybox pixels back into the accumulated
+      // color buffer. If the sky is reflected on a surface, its
+      // color is computed in the reflections shader rather than
+      // being read from the color buffer.
+      //
+      // @todo distinguish between skybox and emissive pixels so
+      // emissive geometry can still be reflected
+      glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
+
+      writeAccumulatedEffectsBackIntoGBuffer();
+
+      deferred.g_buffer.read();
       deferred.reflections_buffer.write();
 
       // Render reflections (screen-space + skybox)
       // @bug unlit objects don't get reflected + if no lighting
       // sources are defined, nothing gets reflected
-      glEnable(GL_STENCIL_TEST);
       glStencilFunc(GL_EQUAL, MeshType::REFLECTIVE, 0xFF);
       // glViewport(0, 0, internalWidth / 2, internalHeight / 2);
 
@@ -460,44 +457,44 @@ namespace Gamma {
       deferred.reflectionsDenoise.setInt("colorAndDepth", 0);
 
       OpenGLScreenQuad::render();
+    }
+
+    if (hasRefractiveObjects) {
+      // Write all non-skybox pixels back into the accumulated
+      // color buffer. If refraction rays point toward the sky,
+      // we compute the sky color in the shader, rather than
+      // reading from the color buffer.
+      //
+      // @todo distinguish between skybox and emissive pixels so
+      // emissive geometry can still be refracted
+      glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
+
+      writeAccumulatedEffectsBackIntoGBuffer();
 
       deferred.g_buffer.read();
-    }
+      deferred.post_buffer.write();
 
-    deferred.post_buffer.read();
-    deferred.g_buffer.write();
+      glEnable(GL_CULL_FACE);
+      glEnable(GL_DEPTH_TEST);
+      glDisable(GL_STENCIL_TEST);
 
-    deferred.copyFrame.use();
-    deferred.copyFrame.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
-    deferred.copyFrame.setInt("colorAndDepth", 0);
+      deferred.refractiveGeometry.use();
+      deferred.refractiveGeometry.setInt("colorAndDepth", 2);
+      deferred.refractiveGeometry.setMatrix4f("projection", projection);
+      deferred.refractiveGeometry.setMatrix4f("inverseProjection", inverseProjection);
+      deferred.refractiveGeometry.setMatrix4f("view", view);
+      deferred.refractiveGeometry.setMatrix4f("inverseView", inverseView);
+      deferred.refractiveGeometry.setVec3f("cameraPosition", camera.position);
 
-    OpenGLScreenQuad::render();
-
-    deferred.g_buffer.read();
-    deferred.post_buffer.write();
-
-    // Render translucent geometry
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_STENCIL_TEST);
-    glStencilMask(MeshType::TRANSLUCENT);
-
-    deferred.translucentGeometry.use();
-    deferred.translucentGeometry.setInt("colorAndDepth", 2);
-    deferred.translucentGeometry.setMatrix4f("projection", projection);
-    deferred.translucentGeometry.setMatrix4f("inverseProjection", inverseProjection);
-    deferred.translucentGeometry.setMatrix4f("view", view);
-    deferred.translucentGeometry.setMatrix4f("inverseView", inverseView);
-    deferred.translucentGeometry.setVec3f("cameraPosition", camera.position);
-
-    for (auto* glMesh : glMeshes) {
-      if (glMesh->isMeshType(MeshType::TRANSLUCENT)) {
-        glMesh->render(primitiveMode);
+      for (auto* glMesh : glMeshes) {
+        if (glMesh->isMeshType(MeshType::REFRACTIVE)) {
+          glMesh->render(primitiveMode);
+        }
       }
-    }
 
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+      glDisable(GL_DEPTH_TEST);
+      glDisable(GL_CULL_FACE);
+    }
 
     // Post-processing pass
     deferred.post_buffer.read();
@@ -505,6 +502,7 @@ namespace Gamma {
 
     glViewport(0, 0, Window::size.width, Window::size.height);
     glClear(GL_COLOR_BUFFER_BIT);
+    glDisable(GL_STENCIL_TEST);
     glStencilMask(0xFF);
 
     deferred.debanding.use();
@@ -557,5 +555,27 @@ namespace Gamma {
     renderSurfaceToScreen(text, x, y);
 
     SDL_FreeSurface(text);
+  }
+
+  /**
+   * Copies the accumulated results of the current frame
+   * back into the G-Buffer, color attachment 2. Certain
+   * effects require normal/specularity information from
+   * the G-Buffer, as well as more up-to-date color information
+   * from lighting and other secondary effects, before the final
+   * post-processing stage. Color attachment 2 is designated
+   * as an alternate color buffer containing more than just the
+   * raw geometry albedo, which does not represent the final
+   * on-screen image.
+   */
+  void OpenGLRenderer::writeAccumulatedEffectsBackIntoGBuffer() {
+    deferred.post_buffer.read();
+    deferred.g_buffer.write();
+
+    deferred.copyFrame.use();
+    deferred.copyFrame.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+    deferred.copyFrame.setInt("colorAndDepth", 0);
+
+    OpenGLScreenQuad::render();
   }
 }

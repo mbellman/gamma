@@ -100,13 +100,13 @@ namespace Gamma {
   void OpenGLMesh::render(GLenum primitiveMode) {
     auto& mesh = *sourceMesh;
 
-    if (mesh.type != MeshType::TRANSLUCENT) {
-      // Don't bind textures for translucent objects, since in
-      // the translucent geometry frag shader we need to read
+    if (mesh.type != MeshType::REFRACTIVE) {
+      // Don't bind textures for refractive objects, since in
+      // the refractive geometry frag shader we need to read
       // from the G-Buffer color texture.
       //
       // @todo if we use texture units which won't conflict with
-      // the G-Buffer, we can have textured translucent objects.
+      // the G-Buffer, we can have textured refractive objects.
       checkAndLoadTexture(mesh.texture, glTexture, GL_TEXTURE0);
       checkAndLoadTexture(mesh.normalMap, glNormalMap, GL_TEXTURE1);
       checkAndLoadTexture(mesh.specularityMap, glSpecularityMap, GL_TEXTURE2);

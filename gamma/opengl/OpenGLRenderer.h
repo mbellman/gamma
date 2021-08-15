@@ -60,7 +60,7 @@ namespace Gamma {
       OpenGLShader reflections;
       OpenGLShader reflectionsDenoise;
       OpenGLShader skybox;
-      OpenGLShader translucentGeometry;
+      OpenGLShader refractiveGeometry;
       OpenGLShader debanding;
       OpenGLShader gBufferLayers;
     } deferred;
@@ -68,5 +68,6 @@ namespace Gamma {
     void renderDeferred();
     void renderForward();
     void renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y);
+    void writeAccumulatedEffectsBackIntoGBuffer();
   };
 }

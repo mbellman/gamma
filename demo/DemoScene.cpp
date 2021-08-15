@@ -19,7 +19,7 @@ void DemoScene::init() {
   wallMesh->texture = "./demo/assets/images/cat.png";
   planeMesh->normalMap = "./demo/assets/images/metal-normal-map.png";
   planeMesh->type = MeshType::REFLECTIVE;
-  daVinciMesh->type = MeshType::TRANSLUCENT;
+  daVinciMesh->type = MeshType::REFRACTIVE;
 
   auto& daVinci = createObjectFrom("daVinci");
 
