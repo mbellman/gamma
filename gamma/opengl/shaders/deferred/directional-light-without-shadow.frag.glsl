@@ -53,7 +53,7 @@ void main() {
     float specularity = pow(max(dot(halfVector, normal), 0.0), 50);
 
     // Loosely approximates ambient/indirect lighting
-    vec3 hack_ambient_light = light.color * pow(max(1.0 - dot(n_surfaceToCamera, normal), 0.0), 2) * 0.2;
+    vec3 hack_ambient_light = light.color * light.power * pow(max(1.0 - dot(n_surfaceToCamera, normal), 0.0), 2) * 0.2;
 
     vec3 diffuseTerm = light.color * light.power * incidence + hack_ambient_light;
     vec3 specularTerm = light.color * light.power * specularity;

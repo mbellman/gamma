@@ -54,7 +54,7 @@ vec3 getIlluminatedColor(Light light, vec3 position, vec3 normal, vec3 color) {
   // Taper light intensity more softly to preserve light with distance
   float hack_soft_tapering = (20.0 * (lightDistance / light.radius));
   // Loosely approximates ambient/indirect lighting
-  vec3 hack_ambient_light = light.color * pow(max(1.0 - dot(n_surfaceToCamera, normal), 0.0), 2) * 0.05;
+  vec3 hack_ambient_light = light.color * light.power * pow(max(1.0 - dot(n_surfaceToCamera, normal), 0.0), 2) * 0.01;
 
   vec3 diffuseTerm = adjustedLightColor * incidence * attenuation * hack_radial_influence * hack_soft_tapering + hack_ambient_light;
   vec3 specularTerm = adjustedLightColor * specularity * attenuation;
