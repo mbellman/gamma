@@ -6,7 +6,8 @@
 using namespace Gamma;
 
 void DemoScene::init() {
-  flags = SceneFlags::MODE_FREE_CAMERA;
+  Gm_EnableFlags(GammaFlags::FREE_CAMERA_MODE);
+
   camera.position.z = -1500.0f;
 
   auto* cubeMesh = addMesh("cube", 100, Gm_CreateCube());
@@ -119,10 +120,10 @@ void DemoScene::init() {
     }
 
     if (key == Key::V) {
-      if (flags & SceneFlags::MODE_VSYNC) {
-        disableFlags(SceneFlags::MODE_VSYNC);
+      if (Gm_GetFlags() & GammaFlags::VSYNC) {
+        Gm_DisableFlags(GammaFlags::VSYNC);
       } else {
-        enableFlags(SceneFlags::MODE_VSYNC);
+        Gm_EnableFlags(GammaFlags::VSYNC);
       }
     }
   });

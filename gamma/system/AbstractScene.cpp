@@ -1,6 +1,7 @@
 #include "system/AbstractScene.h"
 #include "system/assert.h"
 #include "system/console.h"
+#include "system/flags.h"
 
 namespace Gamma {
   /**
@@ -50,14 +51,6 @@ namespace Gamma {
     return object;
   }
 
-  void AbstractScene::disableFlags(SceneFlags flags) {
-    this->flags &= ~flags;
-  }
-
-  void AbstractScene::enableFlags(SceneFlags flags) {
-    this->flags |= flags;
-  }
-
   Object* AbstractScene::findObject(const ObjectRecord& record) {
     auto& mesh = *meshes[record.meshIndex];
 
@@ -66,10 +59,6 @@ namespace Gamma {
     }
 
     return mesh.objects.getByRecord(record);
-  }
-
-  uint32 AbstractScene::getFlags() const {
-    return flags;
   }
 
   const std::vector<Light>& AbstractScene::getLights() const {
@@ -164,7 +153,7 @@ namespace Gamma {
   }
 
   void AbstractScene::updateScene(float dt) {
-    if (flags & SceneFlags::MODE_FREE_CAMERA) {
+    if (Gm_GetFlags() & GammaFlags::FREE_CAMERA_MODE) {
       handleFreeCameraMode(dt);
     }
 

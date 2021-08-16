@@ -141,6 +141,7 @@
     <ClCompile Include="gamma\system\console.cpp" />
     <ClCompile Include="gamma\system\entities.cpp" />
     <ClCompile Include="gamma\system\file.cpp" />
+    <ClCompile Include="gamma\system\flags.cpp" />
     <ClCompile Include="gamma\system\InputSystem.cpp" />
     <ClCompile Include="gamma\system\ObjLoader.cpp" />
     <ClCompile Include="gamma\system\Window.cpp" />

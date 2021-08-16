@@ -237,8 +237,6 @@ namespace Gamma {
   
     uint32 internalWidth = internalResolution.width;
     uint32 internalHeight = internalResolution.height;
-    AbstractScene& scene = *AbstractScene::active;
-    uint32 sceneFlags = scene.getFlags();
     bool hasReflectiveObjects = false;
     bool hasRefractiveObjects = false;
 
@@ -252,13 +250,13 @@ namespace Gamma {
       }
     }
 
-    if (sceneFlags & SceneFlags::MODE_VSYNC && SDL_GL_GetSwapInterval() == 0) {
+    if (Gm_GetFlags() & GammaFlags::VSYNC && SDL_GL_GetSwapInterval() == 0) {
       SDL_GL_SetSwapInterval(1);
 
       #if GAMMA_DEVELOPER_MODE
         Console::log("[Gamma] V-Sync enabled");
       #endif
-    } else if (!(sceneFlags & SceneFlags::MODE_VSYNC) && SDL_GL_GetSwapInterval() == 1) {
+    } else if (!(Gm_GetFlags() & GammaFlags::VSYNC) && SDL_GL_GetSwapInterval() == 1) {
       SDL_GL_SetSwapInterval(0);
 
       #if GAMMA_DEVELOPER_MODE
@@ -298,7 +296,7 @@ namespace Gamma {
     deferred.geometry.setInt("meshTexture", 0);
     deferred.geometry.setInt("meshNormalMap", 1);
 
-    GLenum primitiveMode = sceneFlags & SceneFlags::MODE_WIREFRAME
+    GLenum primitiveMode = Gm_GetFlags() & GammaFlags::WIREFRAME_MODE
       ? GL_LINE_STRIP
       : GL_TRIANGLES;
 
@@ -343,7 +341,7 @@ namespace Gamma {
     glStencilMask(0x00);
 
     // Non-shadowcaster lighting pass
-    auto& lights = scene.getLights();
+    auto& lights = AbstractScene::active->getLights();
     Matrix4f inverseProjection = projection.inverse();
     Matrix4f inverseView = view.inverse();
 
@@ -415,7 +413,7 @@ namespace Gamma {
 
     OpenGLScreenQuad::render();
 
-    if (hasReflectiveObjects) {
+    if (hasReflectiveObjects && (Gm_GetFlags() & GammaFlags::RENDER_REFLECTIONS)) {
       // Write all non-skybox pixels back into the accumulated
       // color buffer. If the sky is reflected on a surface, its
       // color is computed in the reflections shader rather than
@@ -459,7 +457,7 @@ namespace Gamma {
       OpenGLScreenQuad::render();
     }
 
-    if (hasRefractiveObjects) {
+    if (hasRefractiveObjects && (Gm_GetFlags() & GammaFlags::RENDER_REFRACTIONS)) {
       // Write all non-skybox pixels back into the accumulated
       // color buffer. If refraction rays point toward the sky,
       // we compute the sky color in the shader, rather than

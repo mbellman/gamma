@@ -21,6 +21,7 @@ namespace Gamma {
     bool isEnteringCommand = false;
     std::string currentCommand = "";
 
+    bool currentCommandIncludes(std::string match);
     void processCurrentCommand();
     void resetCurrentCommand();
   };
