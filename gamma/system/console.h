@@ -8,6 +8,12 @@
 #include "system/type_aliases.h"
 
 namespace Gamma {
+  struct ConsoleMessage {
+    uint32 time;
+    std::string text;
+    ConsoleMessage* next = nullptr;
+  };
+
   class Console {
   public:
     template<typename ...Args>
@@ -16,16 +22,17 @@ namespace Gamma {
       std::cout << "\n";
     }
 
-    static std::string* getMessages() {
-      return Console::messages;
+    static void clearMessages();
+
+    static const ConsoleMessage* getFirstMessage() {
+      return Console::firstMessage;
     }
 
   private:
     static std::stringstream output;
-    // @todo store timestamps of each message so they
-    // can eventually be cleared automatically
-    static std::string messages[5];
-    static uint32 index;
+    static ConsoleMessage* firstMessage;
+    static ConsoleMessage* lastMessage;
+    static uint32 messageCounter;
 
     template<typename Arg, typename ...Args>
     static void out(Arg& arg, Args&& ...args) {
@@ -35,24 +42,17 @@ namespace Gamma {
         output << " ";
         out(args...);
       } else {
-        std::cout << output.str();
+        std::string outputString = output.str();
+        std::cout << outputString;
 
-        // @todo instead of shifting each old message back,
-        // cycle through message slots when adding new messages
-        // and retrieve/display them by iterating from index ->
-        // index + 5 with overflow back to 0
-        for (uint32 i = 4; i > 0; i--) {
-          if (messages[i - 1].size() > 0) {
-            messages[i] = messages[i - 1];
-          }
-        }
-
-        messages[0] = output.str();
+        Console::storeMessage(outputString);
 
         // Reset output stream
         output.str(std::string());
         output.clear();
       }
     }
+
+    static void storeMessage(const std::string message);
   };
 }

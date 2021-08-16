@@ -121,14 +121,16 @@ namespace Gamma {
           renderer->render();
 
           #if GAMMA_DEVELOPER_MODE
+            // Display stats
             auto& resolution = renderer->getInternalResolution();
             auto& renderStats = renderer->getRenderStats();
             auto& sceneStats = activeScene->getStats();
-            auto messages = Console::getMessages();
+            uint64 averageFrameTime = frameTimeAverager.average();
+            uint32 frameTimeBudget = uint32(100.0f * (float)averageFrameTime / 16667.0f);
 
             // @todo write a little helper for generating labels less repetitively
             std::string fpsLabel = "FPS: " + std::to_string(fpsAverager.average()) + " (V-Sync " + (renderStats.isVSynced ? "ON" : "OFF") + ")";
-            std::string frameTimeLabel = "Frame time: " + std::to_string(frameTimeAverager.average()) + "us";
+            std::string frameTimeLabel = "Frame time: " + std::to_string(averageFrameTime) + "us (" + std::to_string(frameTimeBudget) + "%)";
             std::string resolutionLabel = "Resolution: " + std::to_string(resolution.width) + " x " + std::to_string(resolution.height);
             std::string vertsLabel = "Verts: " + std::to_string(sceneStats.verts);
             std::string trisLabel = "Tris: " + std::to_string(sceneStats.tris);
@@ -141,11 +143,15 @@ namespace Gamma {
             renderer->renderText(font_OpenSans, trisLabel.c_str(), 25, 125);
             renderer->renderText(font_OpenSans, memoryLabel.c_str(), 25, 150);
 
+            // Display console messages
+            auto* message = Console::getFirstMessage();
+            uint8 messageIndex = 0;
+
             // @todo clear messages after a set duration
-            for (uint32 i = 0; i < 5; i++) {
-              if (messages[i].size() > 0) {
-                renderer->renderText(font_OpenSans, messages[i].c_str(), 25, Window::size.height - 50 - i * 25);
-              }
+            while (message != nullptr) {
+              renderer->renderText(font_OpenSans, message->text.c_str(), 25, Window::size.height - 150 + (messageIndex++) * 25);
+
+              message = message->next;
             }
           #endif
 
