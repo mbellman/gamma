@@ -32,7 +32,8 @@ namespace Gamma {
       SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI
     );
 
-    font_OpenSans = TTF_OpenFont("./demo/assets/fonts/OpenSans-Regular.ttf", 16);
+    font_OpenSans_sm = TTF_OpenFont("./demo/assets/fonts/OpenSans-Regular.ttf", 16);
+    font_OpenSans_lg = TTF_OpenFont("./demo/assets/fonts/OpenSans-Regular.ttf", 22);
 
     Window::size = { 640, 480 };
   }
@@ -140,15 +141,20 @@ namespace Gamma {
             std::string trisLabel = "Tris: " + std::to_string(sceneStats.tris);
             std::string memoryLabel = "GPU Memory: " + std::to_string(renderStats.gpuMemoryUsed) + "MB / " + std::to_string(renderStats.gpuMemoryTotal) + "MB";
 
-            renderer->renderText(font_OpenSans, fpsLabel.c_str(), 25, 25);
-            renderer->renderText(font_OpenSans, frameTimeLabel.c_str(), 25, 50);
-            renderer->renderText(font_OpenSans, resolutionLabel.c_str(), 25, 75);
-            renderer->renderText(font_OpenSans, vertsLabel.c_str(), 25, 100);
-            renderer->renderText(font_OpenSans, trisLabel.c_str(), 25, 125);
-            renderer->renderText(font_OpenSans, memoryLabel.c_str(), 25, 150);
+            renderer->renderText(font_OpenSans_sm, fpsLabel.c_str(), 25, 25);
+            renderer->renderText(font_OpenSans_sm, frameTimeLabel.c_str(), 25, 50);
+            renderer->renderText(font_OpenSans_sm, resolutionLabel.c_str(), 25, 75);
+            renderer->renderText(font_OpenSans_sm, vertsLabel.c_str(), 25, 100);
+            renderer->renderText(font_OpenSans_sm, trisLabel.c_str(), 25, 125);
+            renderer->renderText(font_OpenSans_sm, memoryLabel.c_str(), 25, 150);
 
+            // Display command line
             if (commander.isOpen()) {
-              renderer->renderText(font_OpenSans, ("> " + commander.getCommand()).c_str(), 25, 175);
+              std::string caret = SDL_GetTicks() % 1000 < 500 ? "_" : "  ";
+              Vec3f fg = Vec3f(0.0f, 1.0f, 0.0f);
+              Vec4f bg = Vec4f(0.0f, 0.0f, 0.0f, 0.8f);
+
+              renderer->renderText(font_OpenSans_lg, ("> " + commander.getCommand() + caret).c_str(), 25, Window::size.height - 200, fg, bg);
             }
 
             // Display console messages
@@ -157,7 +163,7 @@ namespace Gamma {
 
             // @todo clear messages after a set duration
             while (message != nullptr) {
-              renderer->renderText(font_OpenSans, message->text.c_str(), 25, Window::size.height - 150 + (messageIndex++) * 25);
+              renderer->renderText(font_OpenSans_sm, message->text.c_str(), 25, Window::size.height - 150 + (messageIndex++) * 25);
 
               message = message->next;
             }
@@ -184,7 +190,8 @@ namespace Gamma {
 
     IMG_Quit();
 
-    TTF_CloseFont(font_OpenSans);
+    TTF_CloseFont(font_OpenSans_sm);
+    TTF_CloseFont(font_OpenSans_lg);
     TTF_Quit();
 
     SDL_DestroyWindow(sdl_window);

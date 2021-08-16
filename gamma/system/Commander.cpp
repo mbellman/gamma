@@ -3,23 +3,25 @@
 
 namespace Gamma {
   Commander::Commander() {
-    input.on<Key>("keyup", [&](Key key) {
-      if (key == Key::C || key == Key::TAB) {
-        if (input.isKeyHeld(Key::CONTROL)) {
+    input.on<Key>("keydown", [&](Key key) {
+      if (key == Key::C && input.isKeyHeld(Key::CONTROL) && isEnteringCommand) {
+        resetCurrentCommand();
+      } else if (key == Key::TAB) {
+        if (isEnteringCommand) {
           resetCurrentCommand();
         } else {
           isEnteringCommand = true;
         }
+      } else if (key == Key::BACKSPACE && isEnteringCommand && currentCommand.length() > 0) {
+        currentCommand.pop_back();
       } else if (key == Key::ESCAPE && isEnteringCommand) {
         resetCurrentCommand();
-      } else if (key == Key::ENTER && isEnteringCommand) {
-        processCurrentCommand();
       }
     });
 
-    input.on<Key>("keydown", [&](Key key) {
-      if (key == Key::BACKSPACE && isEnteringCommand && currentCommand.length() > 0) {
-        currentCommand.pop_back();
+    input.on<Key>("keyup", [&](Key key) {
+      if (key == Key::ENTER && isEnteringCommand) {
+        processCurrentCommand();
       }
     });
 

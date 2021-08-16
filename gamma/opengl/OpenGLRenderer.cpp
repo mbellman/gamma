@@ -526,7 +526,7 @@ namespace Gamma {
     // @todo
   }
 
-  void OpenGLRenderer::renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y) {
+  void OpenGLRenderer::renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background) {
     float offsetX = -1.0f + (2 * x + surface->w) / (float)Window::size.width;
     float offsetY = 1.0f - (2 * y + surface->h) / (float)Window::size.height;
     float scaleX = surface->w / (float)Window::size.width;
@@ -544,15 +544,16 @@ namespace Gamma {
 
     screen.use();
     screen.setVec4f("transform", { offsetX, offsetY, scaleX, scaleY });
+    screen.setVec3f("color", color);
+    screen.setVec4f("background", background);
 
     OpenGLScreenQuad::render();
   }
 
-  void OpenGLRenderer::renderText(TTF_Font* font, const char* message, uint32 x, uint32 y) {
-    SDL_Color color = { 255, 255, 255 };
-    SDL_Surface* text = TTF_RenderText_Blended(font, message, color);
+  void OpenGLRenderer::renderText(TTF_Font* font, const char* message, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background) {
+    SDL_Surface* text = TTF_RenderText_Blended(font, message, { 255, 255, 255 });
 
-    renderSurfaceToScreen(text, x, y);
+    renderSurfaceToScreen(text, x, y, color, background);
 
     SDL_FreeSurface(text);
   }

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <string>
-
-
 #include "math/plane.h"
 #include "system/Commander.h"
 #include "system/traits.h"
@@ -33,7 +30,8 @@ namespace Gamma {
   private:
     Commander commander;
     SDL_Window* sdl_window = nullptr;
-    TTF_Font* font_OpenSans = nullptr;
+    TTF_Font* font_OpenSans_sm = nullptr;
+    TTF_Font* font_OpenSans_lg = nullptr;
     AbstractController* controller = nullptr;
     AbstractRenderer* renderer = nullptr;
 

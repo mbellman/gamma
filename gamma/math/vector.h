@@ -40,5 +40,9 @@ namespace Gamma {
     float y = 0.0f;
     float z = 0.0f;
     float w = 0.0f;
+
+    Vec4f() {};
+    Vec4f(float f) : x(f), y(f), z(f), w(f) {};
+    Vec4f(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {};
   };
 }

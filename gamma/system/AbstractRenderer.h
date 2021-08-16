@@ -32,7 +32,7 @@ namespace Gamma {
 
     virtual const RenderStats& getRenderStats() = 0;
     virtual void present() {};
-    virtual void renderText(TTF_Font* font, const char* message, uint32 x, uint32 y) {};
+    virtual void renderText(TTF_Font* font, const char* message, uint32 x, uint32 y, const Vec3f& color = Vec3f(1.0f), const Vec4f& background = Vec4f(0.0f)) {};
 
   protected:
     SDL_Window* sdl_window = nullptr;

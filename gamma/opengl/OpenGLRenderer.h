@@ -9,6 +9,7 @@
 #include "system/AbstractRenderer.h"
 #include "system/entities.h"
 #include "system/type_aliases.h"
+#include "math/vector.h"
 
 #include "SDL.h"
 #include "SDL_ttf.h"
@@ -33,7 +34,7 @@ namespace Gamma {
     virtual void destroyShadowcaster(Light* light) override;
     virtual const RenderStats& getRenderStats() override;
     virtual void present() override;
-    virtual void renderText(TTF_Font* font, const char* message, uint32 x, uint32 y) override;
+    virtual void renderText(TTF_Font* font, const char* message, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background) override;
 
   private:
     uint32 flags = 0;
@@ -67,7 +68,7 @@ namespace Gamma {
 
     void renderDeferred();
     void renderForward();
-    void renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y);
+    void renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background);
     void writeAccumulatedEffectsBackIntoGBuffer();
   };
 }
