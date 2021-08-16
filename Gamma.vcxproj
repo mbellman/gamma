@@ -137,6 +137,7 @@
     <ClCompile Include="gamma\system\AbstractScene.cpp" />
     <ClCompile Include="gamma\system\assert.cpp" />
     <ClCompile Include="gamma\system\camera.cpp" />
+    <ClCompile Include="gamma\system\Commander.cpp" />
     <ClCompile Include="gamma\system\console.cpp" />
     <ClCompile Include="gamma\system\entities.cpp" />
     <ClCompile Include="gamma\system\file.cpp" />
@@ -263,6 +264,7 @@
     <ClInclude Include="gamma\system\AbstractScene.h" />
     <ClInclude Include="gamma\system\assert.h" />
     <ClInclude Include="gamma\system\camera.h" />
+    <ClInclude Include="gamma\system\Commander.h" />
     <ClInclude Include="gamma\system\console.h" />
     <ClInclude Include="gamma\system\entities.h" />
     <ClInclude Include="gamma\system\file.h" />

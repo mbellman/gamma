@@ -1,6 +1,10 @@
 #pragma once
 
+#include <string>
+
+
 #include "math/plane.h"
+#include "system/Commander.h"
 #include "system/traits.h"
 #include "system/type_aliases.h"
 
@@ -27,10 +31,11 @@ namespace Gamma {
     void setScreenRegion(const Region<uint32>& region);
 
   private:
+    Commander commander;
     SDL_Window* sdl_window = nullptr;
+    TTF_Font* font_OpenSans = nullptr;
     AbstractController* controller = nullptr;
     AbstractRenderer* renderer = nullptr;
-    TTF_Font* font_OpenSans = nullptr;
 
     void bindEvents();
     void destroyRenderer();

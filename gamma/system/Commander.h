@@ -1,0 +1,27 @@
+#pragma once
+
+#include <string>
+
+#include "system/InputSystem.h"
+#include "system/traits.h"
+
+#include "SDL_events.h"
+
+namespace Gamma {
+  class Commander {
+  public:
+    InputSystem input;
+
+    Commander();
+
+    const std::string& getCommand() const;
+    bool isOpen() const;
+
+  private:
+    bool isEnteringCommand = false;
+    std::string currentCommand = "";
+
+    void processCurrentCommand();
+    void resetCurrentCommand();
+  };
+}

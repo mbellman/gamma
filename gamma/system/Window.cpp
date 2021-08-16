@@ -102,9 +102,13 @@ namespace Gamma {
             break;
         }
 
-        if (activeScene != nullptr) {
+        if (activeScene != nullptr && !commander.isOpen()) {
           activeScene->input.handleEvent(event);
         }
+
+        #if GAMMA_DEVELOPER_MODE
+          commander.input.handleEvent(event);
+        #endif
       }
 
       if (activeScene != nullptr) {
@@ -142,6 +146,10 @@ namespace Gamma {
             renderer->renderText(font_OpenSans, vertsLabel.c_str(), 25, 100);
             renderer->renderText(font_OpenSans, trisLabel.c_str(), 25, 125);
             renderer->renderText(font_OpenSans, memoryLabel.c_str(), 25, 150);
+
+            if (commander.isOpen()) {
+              renderer->renderText(font_OpenSans, ("> " + commander.getCommand()).c_str(), 25, 175);
+            }
 
             // Display console messages
             auto* message = Console::getFirstMessage();

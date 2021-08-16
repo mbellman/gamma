@@ -44,7 +44,11 @@ namespace Gamma {
     { SDLK_SPACE, Key::SPACE },
     { SDLK_LSHIFT, Key::SHIFT },
     { SDLK_RSHIFT, Key::SHIFT },
-    { SDLK_ESCAPE, Key::ESCAPE }
+    { SDLK_ESCAPE, Key::ESCAPE },
+    { SDLK_RETURN, Key::ENTER },
+    { SDLK_LCTRL, Key::CONTROL },
+    { SDLK_BACKSPACE, Key::BACKSPACE },
+    { SDLK_TAB, Key::TAB }
   };
 
   void InputSystem::handleEvent(const SDL_Event& event) {
@@ -60,6 +64,9 @@ namespace Gamma {
         break;
       case SDL_MOUSEBUTTONDOWN:
         handleMouseDown(event.button);
+        break;
+      case SDL_TEXTINPUT:
+        handleTextInput(event.text.text[0]);
         break;
     }
   }
@@ -98,6 +105,10 @@ namespace Gamma {
     moveEvent.deltaY = event.yrel;
 
     signal("mousemove", moveEvent);
+  }
+
+  void InputSystem::handleTextInput(char character) {
+    signal("input", character);
   }
 
   bool InputSystem::isKeyHeld(Key key) {

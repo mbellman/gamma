@@ -47,7 +47,11 @@ namespace Gamma {
     NUM_9 = 1ULL << 35,
     SPACE = 1ULL << 36,
     SHIFT = 1ULL << 37,
-    ESCAPE = 1ULL << 38
+    ESCAPE = 1ULL << 38,
+    ENTER = 1ULL << 39,
+    CONTROL = 1ULL << 40,
+    BACKSPACE = 1ULL << 41,
+    TAB = 1ULL << 42
   };
 
   struct MouseMoveEvent {
@@ -75,5 +79,6 @@ namespace Gamma {
     void handleKeyUp(const SDL_Keycode& code);
     void handleMouseDown(const SDL_MouseButtonEvent& event);
     void handleMouseMotion(const SDL_MouseMotionEvent& event);
+    void handleTextInput(char character);
   };
 }

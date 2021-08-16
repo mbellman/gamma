@@ -102,6 +102,9 @@
     <ClCompile Include="gamma\system\console.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gamma\system\Commander.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\glew\include\eglew.h">
@@ -492,6 +495,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gamma\system\macros.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\system\Commander.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

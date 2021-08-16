@@ -96,14 +96,14 @@ void DemoScene::init() {
     }
   }
 
-  input.on<MouseMoveEvent>("mousemove", [&](MouseMoveEvent& event) {
+  input.on<MouseMoveEvent>("mousemove", [&](const MouseMoveEvent& event) {
     if (SDL_GetRelativeMouseMode()) {
       camera.orientation.pitch += event.deltaY / 1000.0f;
       camera.orientation.yaw += event.deltaX / 1000.0f;
     }
   });
 
-  input.on<MouseButtonEvent>("mousedown", [&](MouseButtonEvent& event) {
+  input.on<MouseButtonEvent>("mousedown", [&](const MouseButtonEvent& event) {
     if (!SDL_GetRelativeMouseMode()) {
       SDL_SetRelativeMouseMode(SDL_TRUE);
     }
