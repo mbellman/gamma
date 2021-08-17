@@ -18,7 +18,7 @@ namespace Gamma {
     MODEL_MATRIX
   };
 
-  OpenGLMesh::OpenGLMesh(Mesh* mesh) {
+  OpenGLMesh::OpenGLMesh(const Mesh* mesh) {
     sourceMesh = mesh;
 
     glGenVertexArrays(1, &vao);

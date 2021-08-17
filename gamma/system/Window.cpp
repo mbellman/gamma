@@ -45,19 +45,19 @@ namespace Gamma {
 
     controller->on<AbstractScene*>("scene-created", [=](AbstractScene* scene) {
       // @todo clear all existing renderer meshes/lights when scenes change
-      scene->on<Mesh*>("mesh-created", [=](auto* mesh) {
+      scene->on<const Mesh*>("mesh-created", [=](auto* mesh) {
         renderer->createMesh(mesh);
       });
 
-      scene->on<Mesh*>("mesh-destroyed", [=](auto* mesh) {
+      scene->on<const Mesh*>("mesh-destroyed", [=](auto* mesh) {
         renderer->destroyMesh(mesh);
       });
 
-      scene->on<Light*>("shadowcaster-created", [=](auto* light) {
+      scene->on<const Light&>("shadowcaster-created", [=](auto& light) {
         renderer->createShadowcaster(light);
       });
 
-      scene->on<Light*>("shadowcaster-destroyed", [=](auto* light) {
+      scene->on<const Light&>("shadowcaster-destroyed", [=](auto& light) {
         renderer->destroyShadowcaster(light);
       });
     });

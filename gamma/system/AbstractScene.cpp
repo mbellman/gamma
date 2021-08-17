@@ -29,13 +29,23 @@ namespace Gamma {
     return mesh;
   }
 
-  Light& AbstractScene::createLight() {
-    // @todo how can we determine whether the light is a shadowcaster
-    // and dispatch the appropriate signal?
+  Light& AbstractScene::createLight(LightType type) {
     // @todo recycle removed/deactivated Lights
     lights.push_back(Light());
 
-    return lights.back();
+    auto& light = lights.back();
+
+    light.type = type;
+
+    if (
+      type == LightType::POINT_SHADOWCASTER ||
+      type == LightType::DIRECTIONAL_SHADOWCASTER ||
+      type == LightType::SPOT_SHADOWCASTER
+    ) {
+      signal("shadowcaster-created", light);
+    }
+
+    return light;
   }
 
   Object& AbstractScene::createObjectFrom(std::string meshName) {
@@ -49,6 +59,11 @@ namespace Gamma {
     object.scale = Vec3f(1.0f);
 
     return object;
+  }
+
+  void AbstractScene::destroyLight(Light& light) {
+    // @todo reset light ID; signal when shadowcaster
+    // lights are destroyed
   }
 
   Object* AbstractScene::findObject(const ObjectRecord& record) {

@@ -9,7 +9,7 @@
 namespace Gamma {
   class OpenGLMesh {
   public:
-    OpenGLMesh(Mesh* mesh);
+    OpenGLMesh(const Mesh* mesh);
     ~OpenGLMesh();
 
     uint32 getId() const;
@@ -20,7 +20,7 @@ namespace Gamma {
     void render(GLenum primitiveMode);
 
   private:
-    Mesh* sourceMesh = nullptr;
+    const Mesh* sourceMesh = nullptr;
     GLuint vao;
     /**
      * Buffers for instanced object attributes.

@@ -14,7 +14,8 @@ namespace Gamma {
     WIREFRAME_MODE = 1 << 2,
     VSYNC = 1 << 3,
     RENDER_REFLECTIONS = 1 << 4,
-    RENDER_REFRACTIONS = 1 << 5
+    RENDER_REFRACTIONS = 1 << 5,
+    RENDER_SHADOWS = 1 << 6
   };
 
   void Gm_DisableFlags(GammaFlags flags);

@@ -28,10 +28,10 @@ namespace Gamma {
     virtual void init() override;
     virtual void render() override;
     virtual void destroy() override;
-    virtual void createMesh(Mesh* mesh) override;
-    virtual void createShadowcaster(Light* light) override;
-    virtual void destroyMesh(Mesh* mesh) override;
-    virtual void destroyShadowcaster(Light* light) override;
+    virtual void createMesh(const Mesh* mesh) override;
+    virtual void createShadowcaster(const Light& light) override;
+    virtual void destroyMesh(const Mesh* mesh) override;
+    virtual void destroyShadowcaster(const Light& light) override;
     virtual const RenderStats& getRenderStats() override;
     virtual void present() override;
     virtual void renderText(TTF_Font* font, const char* message, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background) override;

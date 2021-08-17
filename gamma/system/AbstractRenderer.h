@@ -21,10 +21,10 @@ namespace Gamma {
     AbstractRenderer(SDL_Window* sdl_window): sdl_window(sdl_window) {};
     virtual ~AbstractRenderer() {};
 
-    virtual void createMesh(Mesh* mesh) {};
-    virtual void createShadowcaster(Light* light) {};
-    virtual void destroyMesh(Mesh* mesh) {};
-    virtual void destroyShadowcaster(Light* light) {};
+    virtual void createMesh(const Mesh* mesh) {};
+    virtual void createShadowcaster(const Light& light) {};
+    virtual void destroyMesh(const Mesh* mesh) {};
+    virtual void destroyShadowcaster(const Light& light) {};
 
     virtual Area<uint32>& getInternalResolution() final {
       return internalResolution;

@@ -8,11 +8,16 @@
 #include "math/vector.h"
 #include "system/type_aliases.h"
 
+#define UNUSED_LIGHT_INDEX -1
+
 namespace Gamma {
   enum LightType {
     POINT,
     DIRECTIONAL,
-    SPOT
+    SPOT,
+    POINT_SHADOWCASTER,
+    DIRECTIONAL_SHADOWCASTER,
+    SPOT_SHADOWCASTER
   };
 
   /**
@@ -112,6 +117,7 @@ namespace Gamma {
     float power = 1.0f;
     Vec3f direction;
     uint32 type = LightType::POINT;
+    int id = UNUSED_LIGHT_INDEX;
   };
 
   /**

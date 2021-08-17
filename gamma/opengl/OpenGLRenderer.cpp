@@ -183,7 +183,7 @@ namespace Gamma {
     SDL_GL_DeleteContext(glContext);
   }
 
-  void OpenGLRenderer::createMesh(Mesh* mesh) {
+  void OpenGLRenderer::createMesh(const Mesh* mesh) {
     glMeshes.push_back(new OpenGLMesh(mesh));
 
     #if GAMMA_DEVELOPER_MODE
@@ -194,17 +194,17 @@ namespace Gamma {
     #endif
   }
 
-  void OpenGLRenderer::createShadowcaster(Light* mesh) {
+  void OpenGLRenderer::createShadowcaster(const Light& mesh) {
     // @todo
     Console::log("[Gamma] Shadowcaster created!");
   }
 
-  void OpenGLRenderer::destroyMesh(Mesh* mesh) {
+  void OpenGLRenderer::destroyMesh(const Mesh* mesh) {
     // @todo
     Console::log("[Gamma] Mesh destroyed!");
   }
 
-  void OpenGLRenderer::destroyShadowcaster(Light* mesh) {
+  void OpenGLRenderer::destroyShadowcaster(const Light& mesh) {
     // @todo
     Console::log("[Gamma] Shadowcaster destroyed!");
   }
@@ -346,23 +346,26 @@ namespace Gamma {
     Matrix4f inverseView = view.inverse();
 
     // @todo don't reallocate on every frame
-    std::vector<Light> pointLightsWithoutShadow;
-    std::vector<Light> directionalLightsWithoutShadow;
+    std::vector<Light> pointLights;
+    std::vector<Light> directionalLights;
+    std::vector<Light> directionalShadowcasters;
 
     for (auto& light : lights) {
-      // @todo ignore shadowcaster lights
       switch (light.type) {
         case LightType::POINT:
-          pointLightsWithoutShadow.push_back(light);
+          pointLights.push_back(light);
           break;
         case LightType::DIRECTIONAL:
-          directionalLightsWithoutShadow.push_back(light);
+          directionalLights.push_back(light);
+          break;
+        case LightType::DIRECTIONAL_SHADOWCASTER:
+          directionalShadowcasters.push_back(light);
           break;
       }
     }
 
     // Render point lights (non-shadowcasters)
-    if (pointLightsWithoutShadow.size() > 0) {
+    if (pointLights.size() > 0) {
       auto& shader = deferred.pointLightWithoutShadow;
 
       shader.use();
@@ -372,11 +375,11 @@ namespace Gamma {
       shader.setMatrix4f("inverseProjection", inverseProjection);
       shader.setMatrix4f("inverseView", inverseView);
 
-      deferred.lightDisc.draw(pointLightsWithoutShadow);
+      deferred.lightDisc.draw(pointLights);
     }
 
     // Render directional lights (non-shadowcasters)
-    if (directionalLightsWithoutShadow.size() > 0) {
+    if (directionalLights.size() > 0) {
       auto& shader = deferred.directionalLightWithoutShadow;
 
       shader.use();
@@ -387,8 +390,8 @@ namespace Gamma {
       shader.setMatrix4f("inverseProjection", inverseProjection);
       shader.setMatrix4f("inverseView", inverseView);
 
-      for (uint32 i = 0; i < directionalLightsWithoutShadow.size(); i++) {
-        auto& light = directionalLightsWithoutShadow[i];
+      for (uint32 i = 0; i < directionalLights.size(); i++) {
+        auto& light = directionalLights[i];
         std::string indexedLight = "lights[" + std::to_string(i) + "]";
 
         shader.setVec3f(indexedLight + ".color", light.color);
@@ -399,7 +402,32 @@ namespace Gamma {
       OpenGLScreenQuad::render();
     }
 
-    // @todo shadowed lighting pass
+    // Render directional shadowcaster lights
+    if (directionalShadowcasters.size() > 0) {
+      // @todo write to CSM buffer/use appropriate shaders
+      auto& shader = deferred.directionalLightWithoutShadow;
+
+      shader.use();
+      shader.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+      shader.setInt("colorAndDepth", 0);
+      shader.setInt("normalAndSpecularity", 1);
+      shader.setVec3f("cameraPosition", camera.position);
+      shader.setMatrix4f("inverseProjection", inverseProjection);
+      shader.setMatrix4f("inverseView", inverseView);
+
+      for (uint32 i = 0; i < directionalShadowcasters.size(); i++) {
+        auto& light = directionalShadowcasters[i];
+        std::string indexedLight = "lights[" + std::to_string(i) + "]";
+
+        shader.setVec3f(indexedLight + ".color", light.color);
+        shader.setFloat(indexedLight + ".power", light.power);
+        shader.setVec3f(indexedLight + ".direction", light.direction);
+      }
+
+      OpenGLScreenQuad::render();
+    }
+
+    // @todo additional shadowcaster light passes
 
     // Render skybox
     glDisable(GL_BLEND);

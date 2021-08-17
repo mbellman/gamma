@@ -33,8 +33,9 @@ namespace Gamma {
 
   protected:
     Mesh* addMesh(std::string name, uint16 maxInstances, Mesh* mesh);
-    Light& createLight();
+    Light& createLight(LightType type);
     Object& createObjectFrom(std::string meshName);
+    void destroyLight(Light& light);
     ObjectPool& getMeshObjects(std::string meshName);
     Object& getObject(std::string name);
     float getRunningTime();
