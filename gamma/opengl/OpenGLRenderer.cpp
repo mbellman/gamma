@@ -25,7 +25,7 @@ namespace Gamma {
    * --------------
    */
   void OpenGLRenderer::init() {
-    flags = OpenGLRenderFlags::RENDER_DEFERRED | OpenGLRenderFlags::RENDER_SHADOWS;
+    flags = OpenGLRenderFlags::RENDER_DEFERRED;
     // internalResolution = { 960, 540 };
 
     // Initialize OpenGL
@@ -106,6 +106,8 @@ namespace Gamma {
     deferred.directionalLightWithoutShadow.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
     deferred.directionalLightWithoutShadow.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/directional-light-without-shadow.frag.glsl"));
     deferred.directionalLightWithoutShadow.link();
+
+    // @todo define shadowcaster shaders
 
     // @todo define different SSR quality levels
     deferred.reflections.init();
@@ -194,8 +196,19 @@ namespace Gamma {
     #endif
   }
 
-  void OpenGLRenderer::createShadowcaster(const Light& mesh) {
-    // @todo
+  void OpenGLRenderer::createShadowMap(const Light* light) {
+    switch (light->type) {
+      case LightType::DIRECTIONAL_SHADOWCASTER:
+        glDirectionalShadowMaps.push_back(new OpenGLDirectionalShadowMap(light));
+        break;
+      case LightType::POINT_SHADOWCASTER:
+        glPointShadowMaps.push_back(new OpenGLPointShadowMap(light));
+        break;
+      case LightType::SPOT_SHADOWCASTER:
+        glSpotShadowMaps.push_back(new OpenGLSpotShadowMap(light));
+        break;
+    }
+
     Console::log("[Gamma] Shadowcaster created!");
   }
 
@@ -204,7 +217,7 @@ namespace Gamma {
     Console::log("[Gamma] Mesh destroyed!");
   }
 
-  void OpenGLRenderer::destroyShadowcaster(const Light& mesh) {
+  void OpenGLRenderer::destroyShadowMap(const Light* light) {
     // @todo
     Console::log("[Gamma] Shadowcaster destroyed!");
   }

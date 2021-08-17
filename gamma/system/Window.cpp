@@ -53,12 +53,12 @@ namespace Gamma {
         renderer->destroyMesh(mesh);
       });
 
-      scene->on<const Light&>("shadowcaster-created", [=](auto& light) {
-        renderer->createShadowcaster(light);
+      scene->on<const Light*>("shadowcaster-created", [=](auto* light) {
+        renderer->createShadowMap(light);
       });
 
-      scene->on<const Light&>("shadowcaster-destroyed", [=](auto& light) {
-        renderer->destroyShadowcaster(light);
+      scene->on<const Light*>("shadowcaster-destroyed", [=](auto* light) {
+        renderer->destroyShadowMap(light);
       });
     });
   }

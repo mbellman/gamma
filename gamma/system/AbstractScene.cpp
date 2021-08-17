@@ -42,7 +42,7 @@ namespace Gamma {
       type == LightType::DIRECTIONAL_SHADOWCASTER ||
       type == LightType::SPOT_SHADOWCASTER
     ) {
-      signal("shadowcaster-created", light);
+      signal("shadowcaster-created", &light);
     }
 
     return light;

@@ -43,6 +43,7 @@ namespace Gamma {
       glDeleteTextures(1, &attachment.textureId);
     }
 
+    glDeleteTextures(1, &depthTextureId);
     glDeleteTextures(1, &depthStencilTextureId);
 
     colorAttachments.clear();
@@ -75,6 +76,13 @@ namespace Gamma {
     glFramebufferTexture2D(GL_FRAMEBUFFER, index, GL_TEXTURE_2D, textureId, 0);
 
     colorAttachments.push_back({ index, textureId, unit });
+  }
+
+  void OpenGLFrameBuffer::addDepthAttachment() {
+    glGenTextures(1, &depthTextureId);
+    glBindTexture(GL_TEXTURE_2D, depthTextureId);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, size.width, size.height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT_24_8, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTextureId, 0);
   }
 
   void OpenGLFrameBuffer::addDepthStencilAttachment() {

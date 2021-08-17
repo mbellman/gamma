@@ -15,7 +15,7 @@ namespace Gamma {
     VSYNC = 1 << 3,
     RENDER_REFLECTIONS = 1 << 4,
     RENDER_REFRACTIONS = 1 << 5,
-    RENDER_SHADOWS = 1 << 6
+    RENDER_SHADOWS = 1 << 6    // @todo
   };
 
   void Gm_DisableFlags(GammaFlags flags);

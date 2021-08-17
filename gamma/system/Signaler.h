@@ -14,6 +14,7 @@ namespace Gamma {
   };
 
   // @todo? use a lock for listener binding/dispatch thread-safety
+  // @todo off(), off(eventName), off(eventName, listener)
   class Signaler {
   public:
     ~Signaler() {

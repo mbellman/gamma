@@ -31,6 +31,7 @@ namespace Gamma {
     void addColorAttachment(ColorFormat format);
     void addColorAttachment(ColorFormat format, uint32 unit);
     void addColorAttachment(ColorFormat format, uint32 unit, GLint clamp);
+    void addDepthAttachment();
     void addDepthStencilAttachment();
     void bindColorAttachments();
     void read();
@@ -40,6 +41,7 @@ namespace Gamma {
 
   private:
     GLuint fbo = 0;
+    GLuint depthTextureId = 0;
     GLuint depthStencilTextureId = 0;
     std::vector<ColorAttachment> colorAttachments;
     Area<uint32> size;

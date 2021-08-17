@@ -22,9 +22,9 @@ namespace Gamma {
     virtual ~AbstractRenderer() {};
 
     virtual void createMesh(const Mesh* mesh) {};
-    virtual void createShadowcaster(const Light& light) {};
+    virtual void createShadowMap(const Light* light) {};
     virtual void destroyMesh(const Mesh* mesh) {};
-    virtual void destroyShadowcaster(const Light& light) {};
+    virtual void destroyShadowMap(const Light* light) {};
 
     virtual Area<uint32>& getInternalResolution() final {
       return internalResolution;
