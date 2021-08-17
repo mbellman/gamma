@@ -10,8 +10,6 @@ namespace Gamma {
     buffer.addColorAttachment(ColorFormat::R, 5);  // Cascade 2 (GL_TEXTURE5)
     buffer.addDepthAttachment();
     buffer.bindColorAttachments();
-
-    printf("Done :)\n");
   }
 
   // @todo
