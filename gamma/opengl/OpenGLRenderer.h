@@ -66,15 +66,19 @@ namespace Gamma {
       OpenGLShader skybox;
       OpenGLShader refractiveGeometry;
       OpenGLShader debanding;
-      OpenGLShader gBufferLayers;
     } deferred;
 
+    struct DevModeShaders {
+      OpenGLShader gBufferLayers;
+      OpenGLShader directionalShadowMap;
+    } dev;
+
     struct ShadowcasterShaders {
-      OpenGLShader directionalLight;
+      OpenGLShader directional;
       OpenGLShader directionalView;
-      OpenGLShader pointLight;
+      OpenGLShader point;
       OpenGLShader pointView;
-      OpenGLShader spotLight;
+      OpenGLShader spot;
       OpenGLShader spotView;
     } shadows;
 

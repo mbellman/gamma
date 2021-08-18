@@ -38,6 +38,7 @@ namespace Gamma {
     void setSize(const Area<uint32>& size);
     void shareDepthStencilAttachment(const OpenGLFrameBuffer& target);
     void write();
+    void writeToAttachment(uint32 attachment);
 
   private:
     GLuint fbo = 0;

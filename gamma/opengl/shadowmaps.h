@@ -1,7 +1,10 @@
 #pragma once
 
+#include "math/matrix.h"
+#include "math/vector.h"
 #include "opengl/framebuffer.h"
 #include "opengl/shader.h"
+#include "system/camera.h"
 #include "system/entities.h"
 
 namespace Gamma {
@@ -10,20 +13,22 @@ namespace Gamma {
   };
 
   struct OpenGLDirectionalShadowMap : public OpenGLBaseShadowMap {
+    OpenGLFrameBuffer buffer;
+
     OpenGLDirectionalShadowMap(const Light* light);
 
-    OpenGLFrameBuffer buffer;
+    Matrix4f createCascadedLightViewMatrix(uint8 cascade, const Vec3f& lightDirection, const Camera& camera);
   };
 
   struct OpenGLPointShadowMap : public OpenGLBaseShadowMap {
-    OpenGLPointShadowMap(const Light* light);
-
     OpenGLCubeMap buffer;
+
+    OpenGLPointShadowMap(const Light* light);
   };
 
   struct OpenGLSpotShadowMap : public OpenGLBaseShadowMap {
-    OpenGLSpotShadowMap(const Light* light);
-
     OpenGLFrameBuffer buffer;
+
+    OpenGLSpotShadowMap(const Light* light);
   };
 }

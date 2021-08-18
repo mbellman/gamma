@@ -19,8 +19,8 @@ namespace Gamma {
   };
 
   const static std::map<ColorFormat, GLenum> glFormatMap = {
-    { ColorFormat::R, GL_R },
-    { ColorFormat::R16, GL_R },
+    { ColorFormat::R, GL_RED },
+    { ColorFormat::R16, GL_RED },
     { ColorFormat::RG, GL_RG },
     { ColorFormat::RG16, GL_RG },
     { ColorFormat::RGB, GL_RGB },
@@ -125,5 +125,9 @@ namespace Gamma {
   void OpenGLFrameBuffer::write() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
     glViewport(0, 0, size.width, size.height);
+  }
+
+  void OpenGLFrameBuffer::writeToAttachment(uint32 attachment) {
+    glDrawBuffer(GL_COLOR_ATTACHMENT0 + attachment);
   }
 }

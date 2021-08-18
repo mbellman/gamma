@@ -62,6 +62,7 @@ namespace Gamma {
 
     // Initialize deferred renderer
     // @todo define separate OpenGLDeferredRenderer/OpenGLForwardRenderer classes
+    // @todo initialize buffers/shaders in a separate file/with a helper function; these are getting unmanageable
     deferred.g_buffer.init();
     deferred.g_buffer.setSize(internalResolution);
     deferred.g_buffer.addColorAttachment(ColorFormat::RGBA);    // (RGB) Color, (A) Depth
@@ -107,7 +108,12 @@ namespace Gamma {
     deferred.directionalLightWithoutShadow.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/directional-light-without-shadow.frag.glsl"));
     deferred.directionalLightWithoutShadow.link();
 
-    // @todo define shadowcaster shaders
+    shadows.directionalView.init();
+    shadows.directionalView.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/directional-light-view.vert.glsl"));
+    shadows.directionalView.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/directional-light-view.frag.glsl"));
+    shadows.directionalView.link();
+
+    // @todo define remaining shadowcaster shaders
 
     // @todo define different SSR quality levels
     deferred.reflections.init();
@@ -131,10 +137,15 @@ namespace Gamma {
     deferred.refractiveGeometry.link();
 
     #if GAMMA_DEVELOPER_MODE
-      deferred.gBufferLayers.init();
-      deferred.gBufferLayers.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
-      deferred.gBufferLayers.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/g-buffer-preview.frag.glsl"));
-      deferred.gBufferLayers.link();
+      dev.gBufferLayers.init();
+      dev.gBufferLayers.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
+      dev.gBufferLayers.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/dev/g-buffer-preview.frag.glsl"));
+      dev.gBufferLayers.link();
+
+      dev.directionalShadowMap.init();
+      dev.directionalShadowMap.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
+      dev.directionalShadowMap.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/dev/directional-shadow-map.frag.glsl"));
+      dev.directionalShadowMap.link();
     #endif
 
     deferred.lightDisc.init();
@@ -176,7 +187,8 @@ namespace Gamma {
     deferred.debanding.destroy();
 
     #if GAMMA_DEVELOPER_MODE
-      deferred.gBufferLayers.destroy();
+      dev.gBufferLayers.destroy();
+      dev.directionalShadowMap.destroy();
     #endif
 
     glDeleteBuffers(1, &forward.lightsUbo);
@@ -416,28 +428,38 @@ namespace Gamma {
     }
 
     // Render directional shadowcaster lights
+    // @todo move to geometry pass to avoid needing to change as much GL state
     if (directionalShadowcasters.size() > 0) {
-      // @todo write to CSM buffer/use appropriate shaders
-      auto& shader = deferred.directionalLightWithoutShadow;
+      glEnable(GL_DEPTH_TEST);
+      glEnable(GL_CULL_FACE);
+      glDisable(GL_STENCIL_TEST);
+      glDisable(GL_BLEND);
 
-      shader.use();
-      shader.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
-      shader.setInt("colorAndDepth", 0);
-      shader.setInt("normalAndSpecularity", 1);
-      shader.setVec3f("cameraPosition", camera.position);
-      shader.setMatrix4f("inverseProjection", inverseProjection);
-      shader.setMatrix4f("inverseView", inverseView);
+      // @todo loop over all directional shadowcasters
+      auto& shadowMap = *glDirectionalShadowMaps[0];
 
-      for (uint32 i = 0; i < directionalShadowcasters.size(); i++) {
-        auto& light = directionalShadowcasters[i];
-        std::string indexedLight = "lights[" + std::to_string(i) + "]";
+      shadowMap.buffer.write();
+      shadows.directionalView.use();
 
-        shader.setVec3f(indexedLight + ".color", light.color);
-        shader.setFloat(indexedLight + ".power", light.power);
-        shader.setVec3f(indexedLight + ".direction", light.direction);
+      for (uint32 i = 0; i < 3; i++) {
+        shadowMap.buffer.writeToAttachment(i);
+        Matrix4f lightView = shadowMap.createCascadedLightViewMatrix(i, directionalShadowcasters[0].direction, camera);
+
+        shadows.directionalView.setMatrix4f("lightView", lightView);
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        for (auto* glMesh : glMeshes) {
+          glMesh->render(primitiveMode);
+        }
       }
 
-      OpenGLScreenQuad::render();
+      glDisable(GL_DEPTH_TEST);
+      glDisable(GL_CULL_FACE);
+      glEnable(GL_STENCIL_TEST);
+      glEnable(GL_BLEND);
+
+      deferred.post_buffer.write();
     }
 
     // @todo additional shadowcaster light passes
@@ -552,12 +574,24 @@ namespace Gamma {
     #if GAMMA_DEVELOPER_MODE
       deferred.g_buffer.read();
 
-      deferred.gBufferLayers.use();
-      deferred.gBufferLayers.setInt("colorAndDepth", 0);
-      deferred.gBufferLayers.setInt("normalAndSpecularity", 1);
-      deferred.gBufferLayers.setVec4f("transform", { 0.53f, 0.82f, 0.43f, 0.11f });
+      dev.gBufferLayers.use();
+      dev.gBufferLayers.setInt("colorAndDepth", 0);
+      dev.gBufferLayers.setInt("normalAndSpecularity", 1);
+      dev.gBufferLayers.setVec4f("transform", { 0.53f, 0.82f, 0.43f, 0.11f });
 
       OpenGLScreenQuad::render();
+
+      for (uint32 i = 0; i < glDirectionalShadowMaps.size(); i++) {
+        glDirectionalShadowMaps[i]->buffer.read();
+
+        dev.directionalShadowMap.use();
+        dev.directionalShadowMap.setInt("cascade0", 3);
+        dev.directionalShadowMap.setInt("cascade1", 4);
+        dev.directionalShadowMap.setInt("cascade2", 5);
+        dev.directionalShadowMap.setVec4f("transform", { 0.53f, 0.65f, 0.43f, 0.11f });
+
+        OpenGLScreenQuad::render();
+      }
     #endif
   }
 

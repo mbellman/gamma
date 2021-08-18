@@ -188,6 +188,8 @@ namespace Gamma {
     for (uint32 i = 0; i < 4; i++) {
       printf("[ %f, %f, %f, %f ]\n", m[i * 4], m[i * 4 + 1], m[i * 4 + 2], m[i * 4 + 3]);
     }
+
+    printf("\n");
   }
 
   Matrix4f Matrix4f::operator*(const Matrix4f& matrix) const {
