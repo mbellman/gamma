@@ -15,7 +15,7 @@ layout (location = 0) out vec4 out_ColorAndDepth;
 struct Reflection {
   vec3 color;
   vec2 uv;
-  float edge_tapering;
+  float screen_edge_visibility;
 };
 
 // @todo pass these in as uniforms
@@ -26,7 +26,7 @@ const float max_ray_step_size = 20.0;
 const float jitter = 1.0;
 const float reflection_factor = 1.0;
 const float thickness_threshold = 5.0;
-const float slowdown_threshold = 30.0;
+const float slowdown_distance_threshold = 30.0;
 const float distant_reflection_test_size = 4.0;
 const float contact_ray_step_size = 1.0;
 
@@ -267,7 +267,7 @@ Reflection getReflection(
       )
     ) {
       return getRefinedReflection(view_reflecting_surface_position, normalized_view_reflection_ray, ray - ray_step, adjusted_march_step_size);
-    } else if (ray_to_geometry_distance < slowdown_threshold) {
+    } else if (ray_to_geometry_distance < slowdown_distance_threshold) {
       // If a reflection did not occur, but the ray is
       // within close proximity to geometry, reduce the
       // step size to mitigate undersampling
@@ -304,8 +304,8 @@ void main() {
 
   Reflection reflection = getReflection(frag_view_position.xyz, normalized_view_reflection_ray, march_offset, march_step_size);
   vec3 baseColor = frag_color_and_depth.rgb * (1.0 - reflection_factor);
-  vec3 reflectionColor = reflection.color * reflection.edge_tapering * reflection_factor;
-  vec3 skyColor = getSkyColor(world_reflection_vector) * reflection_factor * (1.0 - reflection.edge_tapering);
+  vec3 reflectionColor = reflection.color * reflection.screen_edge_visibility * reflection_factor;
+  vec3 skyColor = getSkyColor(world_reflection_vector) * reflection_factor * (1.0 - reflection.screen_edge_visibility);
 
   out_ColorAndDepth = vec4(baseColor + reflectionColor + skyColor, frag_color_and_depth.w);
 }
