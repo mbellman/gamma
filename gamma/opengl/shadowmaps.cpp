@@ -19,7 +19,7 @@ namespace Gamma {
     lightId = light->id;
 
     buffer.init();
-    buffer.setSize({ 1024, 1024 });
+    buffer.setSize({ 2048, 2048 });
     buffer.addColorAttachment(ColorFormat::R, 3);  // Cascade 0 (GL_TEXTURE3)
     buffer.addColorAttachment(ColorFormat::R, 4);  // Cascade 1 (GL_TEXTURE4)
     buffer.addColorAttachment(ColorFormat::R, 5);  // Cascade 2 (GL_TEXTURE5)

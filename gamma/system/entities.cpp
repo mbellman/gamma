@@ -277,11 +277,11 @@ namespace Gamma {
       for (uint32 z = 0; z < size; z++) {
         Vertex vertex;
 
-        float u = (float)x / (float)size;
-        float v = (float)z / (float)size;
+        float u = (float)x / (float)(size - 1);
+        float v = (float)z / (float)(size - 1);
 
         vertex.position = Vec3f(u - 0.5f, 0.0f, -v + 0.5f);
-        vertex.uv = Vec2f(u, v);
+        vertex.uv = Vec2f(u, 1.0f - v);
 
         vertices.push_back(vertex);
       }

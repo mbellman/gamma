@@ -85,7 +85,7 @@ bool isOffScreen(vec2 uv) {
 }
 
 void main() {
-  const float REFRACTION_INTENSITY = 15.0;
+  const float REFRACTION_INTENSITY = 3.0;
   const vec3 GEOMETRY_COLOR = vec3(1, 1, 1);
 
   vec3 position = getWorldPosition(gl_FragCoord.z);

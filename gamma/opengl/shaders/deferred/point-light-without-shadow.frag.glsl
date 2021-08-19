@@ -14,6 +14,9 @@ uniform vec3 cameraPosition;
 uniform mat4 inverseProjection;
 uniform mat4 inverseView;
 
+// @todo pass in as a uniform
+const float indirect_light_factor = 0.01;
+
 noperspective in vec2 fragUv;
 flat in Light light;
 
@@ -54,9 +57,9 @@ vec3 getIlluminatedColor(Light light, vec3 position, vec3 normal, vec3 color) {
   // Taper light intensity more softly to preserve light with distance
   float hack_soft_tapering = (20.0 * (lightDistance / light.radius));
   // Loosely approximates ambient/indirect lighting
-  vec3 hack_ambient_light = light.color * light.power * pow(max(1.0 - dot(n_surfaceToCamera, normal), 0.0), 2) * 0.01;
+  vec3 hack_indirect_light = light.color * light.power * pow(max(1.0 - dot(n_surfaceToCamera, normal), 0.0), 2) * indirect_light_factor;
 
-  vec3 diffuseTerm = adjustedLightColor * incidence * attenuation * hack_radial_influence * hack_soft_tapering + hack_ambient_light;
+  vec3 diffuseTerm = adjustedLightColor * incidence * attenuation * hack_radial_influence * hack_soft_tapering + hack_indirect_light;
   vec3 specularTerm = adjustedLightColor * specularity * attenuation;
 
   return color * (diffuseTerm + specularTerm);

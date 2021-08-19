@@ -127,7 +127,7 @@ namespace Gamma {
     }
 
     if (direction.magnitude() > 0.0f) {
-      float speed = input.isKeyHeld(Key::SHIFT) ? 1000.0f : 5000.0f;
+      float speed = input.isKeyHeld(Key::SHIFT) ? 200.0f : 1000.0f;
 
       freeCameraVelocity += direction.unit() * speed * dt;
     }

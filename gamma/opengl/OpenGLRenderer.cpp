@@ -492,8 +492,11 @@ namespace Gamma {
       deferred.reflections_buffer.write();
 
       // Render reflections (screen-space + skybox)
+      //
       // @bug unlit objects don't get reflected + if no lighting
       // sources are defined, nothing gets reflected
+      //
+      // @todo allow controllable reflection parameters
       glStencilFunc(GL_EQUAL, MeshType::REFLECTIVE, 0xFF);
       // glViewport(0, 0, internalWidth / 2, internalHeight / 2);
 
