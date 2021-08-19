@@ -14,6 +14,19 @@ in vec2 fragUv;
 
 layout (location = 0) out vec4 out_color_and_depth;
 
+// @todo move to gl helpers
+vec3 glVec3(vec3 vector) {
+  return vector * vec3(1, 1, -1);
+}
+
+vec4 glVec4(vec4 vector) {
+  return vector * vec4(1, 1, -1, 1);
+}
+
+vec4 glVec4(vec3 vector) {
+  return vec4(glVec3(vector), 1.0);
+}
+
 vec2 getPixelCoords() {
   return gl_FragCoord.xy / vec2(1920.0, 1080.0);
 }
@@ -30,14 +43,11 @@ vec3 getWorldPosition(float depth) {
 
   vec4 world = inverseView * view;
 
-  return world.xyz * vec3(1.0, 1.0, -1.0);
+  return glVec3(world.xyz);
 }
 
 vec2 viewToScreenCoordinates(vec3 view_position) {
-  // @hack
-  view_position.z *= -1;
-
-  vec4 proj = projection * vec4(view_position, 1.0);
+  vec4 proj = projection * glVec4(view_position);
   vec3 clip = proj.xyz / proj.w;
 
   return clip.xy * 0.5 + 0.5;
@@ -87,9 +97,7 @@ void main() {
   // index of refraction - mix(normalized_fragment_to_camera, normal, ratio)
   vec3 world_refraction_ray = position - normal * REFRACTION_INTENSITY;
 
-  // @todo Fix these z hacks! We can't keep doing this!
-  vec4 view_normal = transpose(inverseView) * vec4(normal * vec3(1, 1, -1), 1.0) * vec4(1, 1, -1, 1);
-  vec3 view_refraction_ray = (view * vec4(world_refraction_ray * vec3(1, 1, -1), 1.0)).xyz * vec3(1, 1, -1);
+  vec3 view_refraction_ray = glVec4(view * glVec4(world_refraction_ray)).xyz;
   vec2 refracted_color_coords = viewToScreenCoordinates(view_refraction_ray);
   float frag_depth = texture(colorAndDepth, getPixelCoords()).w;
 

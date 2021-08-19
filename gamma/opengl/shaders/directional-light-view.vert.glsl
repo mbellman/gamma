@@ -10,17 +10,15 @@ uniform mat4 lightView;
 
 // out vec2 fragUv;
 
+// @todo move to gl helpers
+mat4 glMat4(mat4 matrix) {
+  matrix[3][2] *= -1;
+
+  return matrix;
+}
+
 void main() {
-  mat4 model = mat4(modelMatrix);
-
-  // Invert the model translation z component to accommodate
-  // the game world's left-handed coordinate system
-  //
-  // @todo this is unacceptable. we'll have to fix the engine's
-  // negative-z issues before proceeding.
-  model[3][2] *= -1.0;
-
-  gl_Position = lightView * model * vec4(vertexPosition, 1.0);
+  gl_Position = lightView * glMat4(modelMatrix) * vec4(vertexPosition, 1.0);
 
   // fragUv = vertexUv;
 }

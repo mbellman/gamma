@@ -22,6 +22,19 @@ struct Reflection {
 const float Z_NEAR = 1.0;
 const float Z_FAR = 10000.0;
 
+// @todo move to gl helpers
+vec3 glVec3(vec3 vector) {
+  return vector * vec3(1, 1, -1);
+}
+
+vec4 glVec4(vec4 vector) {
+  return vector * vec4(1, 1, -1, 1);
+}
+
+vec4 glVec4(vec3 vector) {
+  return vec4(glVec3(vector), 1.0);
+}
+
 /**
  * Reconstructs the world position from pixel depth.
  */
@@ -34,7 +47,7 @@ vec3 getWorldPosition(float depth) {
 
   vec4 world = inverseView * view;
 
-  return world.xyz * vec3(1.0, 1.0, -1.0);
+  return glVec3(world.xyz);
 }
 
 // @todo allow shader imports; import this function
@@ -75,10 +88,7 @@ float getLinearizedDepth(float depth) {
 }
 
 vec2 viewToScreenCoordinates(vec3 view_position) {
-  // @hack
-  view_position.z *= -1;
-
-  vec4 proj = projection * vec4(view_position, 1.0);
+  vec4 proj = projection * glVec4(view_position);
   vec3 clip = proj.xyz / proj.w;
 
   return clip.xy * 0.5 + 0.5;
@@ -278,11 +288,8 @@ void main() {
   float base_color_factor = 0.0;
   float reflection_color_factor = 1.0;
 
-  // @todo these -z hacks are ridiculous; determine
-  // a better way to regularize the vectors to the
-  // camera's left-handed coordinate system
-  vec4 frag_view_position = view * vec4(frag_world_position * vec3(1, 1, -1), 1.0) * vec4(1, 1, -1, 1);
-  vec4 frag_view_normal = transpose(inverseView) * vec4(frag_world_normal * vec3(1, 1, -1), 1.0) * vec4(1, 1, -1, 1);
+  vec4 frag_view_position = glVec4(view * glVec4(frag_world_position));
+  vec4 frag_view_normal = glVec4(transpose(inverseView) * glVec4(frag_world_normal));
   vec3 world_reflection_vector = reflect(normalized_camera_to_fragment, frag_world_normal);
   vec3 normalized_view_reflection_ray = reflect(normalize(frag_view_position.xyz), frag_view_normal.xyz);
 
