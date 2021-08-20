@@ -19,8 +19,8 @@ void DemoScene::init() {
   cubeMesh->texture = "./demo/assets/images/cat.png";
   wallMesh->texture = "./demo/assets/images/cat.png";
   planeMesh->normalMap = "./demo/assets/images/metal-normal-map.png";
-  planeMesh->type = MeshType::REFLECTIVE;
-  daVinciMesh->type = MeshType::REFRACTIVE;
+  // planeMesh->type = MeshType::REFLECTIVE;
+  // daVinciMesh->type = MeshType::REFRACTIVE;
 
   auto& daVinci = createObjectFrom("daVinci");
 
@@ -66,9 +66,9 @@ void DemoScene::init() {
   // daVinciLight.radius = 250.0f;
   // daVinciLight.power = 2.0f;
 
-  auto& sunlight = createLight(LightType::DIRECTIONAL);
+  auto& sunlight = createLight(LightType::DIRECTIONAL_SHADOWCASTER);
 
-  sunlight.direction = Vec3f(0.0f, -0.5f, 1.0f);
+  sunlight.direction = Vec3f(-0.3f, -0.5f, 1.0f);
   sunlight.color = Vec3f(1.0f, 0.3f, 0.1f);
 
   for (int i = 0; i < 10; i++) {

@@ -113,6 +113,11 @@ namespace Gamma {
     shadows.directionalView.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/directional-light-view.frag.glsl"));
     shadows.directionalView.link();
 
+    shadows.directional.init();
+    shadows.directional.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
+    shadows.directional.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/directional-light-with-shadow.frag.glsl"));
+    shadows.directional.link();
+
     // @todo define remaining shadowcaster shaders
 
     // @todo define different SSR quality levels
@@ -436,19 +441,21 @@ namespace Gamma {
       glDisable(GL_BLEND);
 
       // @todo loop over all directional shadowcasters
-      auto& shadowMap = *glDirectionalShadowMaps[0];
+      auto& glShadowMap = *glDirectionalShadowMaps[0];
 
-      shadowMap.buffer.write();
+      glShadowMap.buffer.write();
       shadows.directionalView.use();
 
       for (uint32 i = 0; i < 3; i++) {
-        shadowMap.buffer.writeToAttachment(i);
-        Matrix4f lightView = shadowMap.createCascadedLightViewMatrix(i, directionalShadowcasters[0].direction, camera);
+        glShadowMap.buffer.writeToAttachment(i);
+        Matrix4f lightView = glShadowMap.createCascadedLightViewMatrix(i, directionalShadowcasters[0].direction, camera);
 
         shadows.directionalView.setMatrix4f("lightView", lightView);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // @todo glMultiDrawElementsIndirect for static world geometry
+        // (will require a handful of other changes to mesh organization/data buffering)
         for (auto* glMesh : glMeshes) {
           glMesh->render(primitiveMode);
         }
@@ -459,7 +466,31 @@ namespace Gamma {
       glEnable(GL_STENCIL_TEST);
       glEnable(GL_BLEND);
 
+      // @todo loop over all shadowcasters
+      auto& light = directionalShadowcasters[0];
+
+      deferred.g_buffer.read();
+      glShadowMap.buffer.read();
       deferred.post_buffer.write();
+
+      shadows.directional.use();
+      shadows.directional.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+      shadows.directional.setInt("colorAndDepth", 0);
+      shadows.directional.setInt("normalAndSpecularity", 1);
+      shadows.directional.setInt("cascades[0]", 3);
+      shadows.directional.setInt("cascades[1]", 4);
+      shadows.directional.setInt("cascades[2]", 5);
+      shadows.directional.setMatrix4f("lightMatrices[0]", glShadowMap.createCascadedLightViewMatrix(0, directionalShadowcasters[0].direction, camera));
+      shadows.directional.setMatrix4f("lightMatrices[1]", glShadowMap.createCascadedLightViewMatrix(1, directionalShadowcasters[0].direction, camera));
+      shadows.directional.setMatrix4f("lightMatrices[2]", glShadowMap.createCascadedLightViewMatrix(2, directionalShadowcasters[0].direction, camera));
+      shadows.directional.setVec3f("cameraPosition", camera.position);
+      shadows.directional.setMatrix4f("inverseProjection", inverseProjection);
+      shadows.directional.setMatrix4f("inverseView", inverseView);
+      shadows.directional.setVec3f("light.color", light.color);
+      shadows.directional.setFloat("light.power", light.power);
+      shadows.directional.setVec3f("light.direction", light.direction);
+
+      OpenGLScreenQuad::render();
     }
 
     // @todo additional shadowcaster light passes
