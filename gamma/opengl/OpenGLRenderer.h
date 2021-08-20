@@ -38,6 +38,7 @@ namespace Gamma {
 
   private:
     uint32 flags = 0;
+    uint32 frame = 0;
     SDL_GLContext glContext;
     GLuint screenTexture = 0;
     OpenGLShader screen;

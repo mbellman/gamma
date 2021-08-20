@@ -26,8 +26,10 @@ namespace Gamma {
     Vec3f operator*(float scalar) const;
     Vec3f operator*(const Vec3f& vector) const;
     void operator*=(float scalar);
-    Vec3f operator/(float scalar) const;
+    Vec3f operator/(float divisor) const;
+    void operator/=(float divisor);
 
+    void debug() const;
     Vec3f gl() const;
     Vec3f invert() const;
     float magnitude() const;

@@ -27,45 +27,77 @@ namespace Gamma {
     buffer.bindColorAttachments();
   }
 
+  /**
+   * Adapted from https://alextardif.com/shadowmapping.html
+   */
   Matrix4f OpenGLDirectionalShadowMap::createCascadedLightViewMatrix(uint8 cascade, const Vec3f& lightDirection, const Camera& camera) {
     // Determine the near and far ranges of the cascade volume
     float near = cascadeDepthRanges[cascade][0];
     float far = cascadeDepthRanges[cascade][1];
 
-    // Determine cascade volume proportions/orientation
-    float tanFov = tanf(0.5f * 90.0f * DEGREES_TO_RADIANS);
-    float tanNear = tanFov * near;
-    float tanFar = tanFov * far;
-    Vec3f camera_forward = camera.orientation.getDirection();
-    Vec3f camera_left = camera.orientation.getLeftDirection();
-    Vec3f camera_up = camera.orientation.getUpDirection();
-    Vec3f nearCenter = camera.position + camera_forward * near;
-    Vec3f farCenter = camera.position + camera_forward * far;
-    Vec3f volumeCenter = nearCenter + camera_forward * (far - near) * 0.5f;
+    // Define clip space camera frustum
+    Vec3f corners[] = {
+      Vec3f(-1.0f, 1.0f, -1.0f),   // Near plane, top left
+      Vec3f(1.0f, 1.0f, -1.0f),    // Near plane, top right
+      Vec3f(-1.0f, -1.0f, -1.0f),  // Near plane, bottom left
+      Vec3f(1.0f, -1.0f, -1.0f),   // Near plane, bottom right
 
-    // Calculate cascade volume from the light's perspective
-    Matrix4f lightLookAtMatrix = Matrix4f::lookAt(volumeCenter, lightDirection, Vec3f(0.0f, 1.0f, 0.0f));
+      Vec3f(-1.0f, 1.0f, 1.0f),    // Far plane, top left
+      Vec3f(1.0f, 1.0f, 1.0f),     // Far plane, top right
+      Vec3f(-1.0f, -1.0f, 1.0f),   // Far plane, bottom left
+      Vec3f(1.0f, -1.0f, 1.0f)     // Far plane, bottom right
+    };
 
-    Vec3f v_near0 = lightLookAtMatrix * (nearCenter + (camera_left * tanNear) + (camera_up * tanNear));
-    Vec3f v_near1 = lightLookAtMatrix * (nearCenter - (camera_left * tanNear) + (camera_up * tanNear));
-    Vec3f v_near2 = lightLookAtMatrix * (nearCenter + (camera_left * tanNear) - (camera_up * tanNear));
-    Vec3f v_near3 = lightLookAtMatrix * (nearCenter - (camera_left * tanNear) - (camera_up * tanNear));
+    // Transform clip space camera frustum into world space
+    Matrix4f cameraView = (
+      Matrix4f::rotation(camera.orientation.toVec3f()) *
+      Matrix4f::translation(camera.position.invert().gl())
+    );
 
-    Vec3f v_far0 = lightLookAtMatrix * (farCenter + (camera_left * tanFar) + (camera_up * tanFar));
-    Vec3f v_far1 = lightLookAtMatrix * (farCenter - (camera_left * tanFar) + (camera_up * tanFar));
-    Vec3f v_far2 = lightLookAtMatrix * (farCenter + (camera_left * tanFar) - (camera_up * tanFar));
-    Vec3f v_far3 = lightLookAtMatrix * (farCenter - (camera_left * tanFar) - (camera_up * tanFar));
+    Matrix4f cameraProjection = Matrix4f::projection({ 1920, 1080 }, 45.0f, near, far);
+    Matrix4f cameraViewProjection = cameraProjection * cameraView;
+    Matrix4f inverseCameraViewProjection = cameraViewProjection.inverse();
 
-    // Determine cascade volume bounds from the light's perspective
-    float top = std::max({ v_near0.y, v_near1.y, v_near2.y, v_near3.y, v_far0.y, v_far1.y, v_far2.y, v_far3.y });
-    float bottom = std::min({ v_near0.y, v_near1.y, v_near2.y, v_near3.y, v_far0.y, v_far1.y, v_far2.y, v_far3.y });
-    float left = std::min({ v_near0.x, v_near1.x, v_near2.x, v_near3.x, v_far0.x, v_far1.x, v_far2.x, v_far3.x });
-    float right = std::max({ v_near0.x, v_near1.x, v_near2.x, v_near3.x, v_far0.x, v_far1.x, v_far2.x, v_far3.x });
-    float front = std::min({ v_near0.z, v_near1.z, v_near2.z, v_near3.z, v_far0.z, v_far1.z, v_far2.z, v_far3.z });
-    float back = std::max({ v_near0.z, v_near1.z, v_near2.z, v_near3.z, v_far0.z, v_far1.z, v_far2.z, v_far3.z });
+    for (uint32 i = 0; i < 8; i++) {
+      corners[i] = inverseCameraViewProjection.multiply(corners[i]);
+      corners[i].z *= -1.0f;
+    }
 
-    Matrix4f projection = Matrix4f::orthographic(top, bottom, left, right, front - 1000.0f, back);
-    Matrix4f view = Matrix4f::lookAt(volumeCenter.gl(), lightDirection.invert().gl(), Vec3f(0.0f, 1.0f, 0.0f));
+    // Calculate world space frustum center/centroid
+    Vec3f frustumCenter;
+
+    for (uint32 i = 0; i < 8; i++) {
+      frustumCenter += corners[i];
+    }
+
+    frustumCenter /= 8.0f;
+
+    // Calculate the radius of a sphere encapsulating the frustum
+    float radius = 0.0f;
+
+    for (uint32 i = 0; i < 8; i++) {
+      radius = std::max(radius, (frustumCenter - corners[i]).magnitude());
+    }
+
+    // Calculate the ideal frustum center, 'snapped' to the shadow map
+    // grid to avoid warbling and other distortions when moving the camera
+    float texelsPerUnit = 2048.0f / (radius * 2.0f);
+
+    Matrix4f lightLookAt = Matrix4f::lookAt(Vec3f(0.0f), lightDirection.invert(), Vec3f(0.0f, 1.0f, 0.0f));
+    Matrix4f scale = Matrix4f::scale(texelsPerUnit);
+    Matrix4f shadowMapMatrix = scale * lightLookAt;
+    Matrix4f inverseShadowMapMatrix = shadowMapMatrix.inverse();
+
+    // Align the frustum center in shadow map space, and then
+    // restore that to its world space coordinates
+    frustumCenter = shadowMapMatrix.multiply(frustumCenter);
+    frustumCenter.x = floorf(frustumCenter.x);
+    frustumCenter.y = floorf(frustumCenter.y);
+    frustumCenter = inverseShadowMapMatrix.multiply(frustumCenter);
+
+    // Compute final light view matrix for rendering the shadow map
+    Matrix4f projection = Matrix4f::orthographic(radius, -radius, -radius, radius, -radius - 1000.0f, radius);
+    Matrix4f view = Matrix4f::lookAt(frustumCenter.gl(), lightDirection.invert().gl(), Vec3f(0.0f, 1.0f, 0.0f));
 
     return (projection * view).transpose();
   }

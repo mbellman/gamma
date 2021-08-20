@@ -22,6 +22,7 @@ namespace Gamma {
 
     void debug() const;
     Matrix4f inverse() const;
+    Vec3f multiply(const Vec3f& vector) const;
     Matrix4f transpose() const;
   };
 }

@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <math.h>
 
 #include "math/Vector.h"
@@ -57,12 +58,18 @@ namespace Gamma {
     z *= scalar;
   }
 
-  Vec3f Vec3f::operator/(float scalar) const {
+  Vec3f Vec3f::operator/(float divisor) const {
     return {
-      x / scalar,
-      y / scalar,
-      z / scalar
+      x / divisor,
+      y / divisor,
+      z / divisor
     };
+  }
+
+  void Vec3f::operator/=(float divisor) {
+    x /= divisor;
+    y /= divisor;
+    z /= divisor;
   }
 
   Vec3f Vec3f::cross(const Vec3f& v1, const Vec3f& v2) {
@@ -71,6 +78,10 @@ namespace Gamma {
       v1.z * v2.x - v1.x * v2.z,
       v1.x * v2.y - v1.y * v2.x
     };
+  }
+
+  void Vec3f::debug() const {
+    printf("{ %f, %f, %f }\n", x, y, z);
   }
 
   Vec3f Vec3f::gl() const {

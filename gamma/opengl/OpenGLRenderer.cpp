@@ -622,11 +622,13 @@ namespace Gamma {
         dev.directionalShadowMap.setInt("cascade0", 3);
         dev.directionalShadowMap.setInt("cascade1", 4);
         dev.directionalShadowMap.setInt("cascade2", 5);
-        dev.directionalShadowMap.setVec4f("transform", { 0.53f, 0.65f, 0.43f, 0.11f });
+        dev.directionalShadowMap.setVec4f("transform", { 0.6f, 0.5f, 0.355f, 0.2f });
 
         OpenGLScreenQuad::render();
       }
     #endif
+
+    frame++;
   }
 
   void OpenGLRenderer::renderForward() {

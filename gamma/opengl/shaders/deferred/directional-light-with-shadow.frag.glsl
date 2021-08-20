@@ -48,6 +48,31 @@ vec3 getWorldPosition(float depth) {
   return world.xyz * vec3(1.0, 1.0, -1.0);
 }
 
+// @todo move to a helpers file; allow shader imports
+float getLinearizedDepth(float depth) {
+  float clip_depth = 2.0 * depth - 1.0;
+  float z_near = 1.0;
+  float z_far = 10000.0;
+
+  return 2.0 * z_near * z_far / (z_far + z_near - clip_depth * (z_far - z_near));
+}
+
+struct Cascade {
+  int index;
+  mat4 matrix;
+  float bias;
+};
+
+Cascade getCascade(float linearized_depth) {
+  if (linearized_depth < 200.0) {
+    return Cascade(0, lightMatrices[0], 0.001);
+  } else if (linearized_depth < 500.0) {
+    return Cascade(1, lightMatrices[1], 0.001);
+  } else {
+    return Cascade(2, lightMatrices[2], 0.001);
+  }
+}
+
 void main() {
   vec4 frag_colorAndDepth = texture(colorAndDepth, fragUv);
   vec4 frag_normalAndSpecularity = texture(normalAndSpecularity, fragUv);
@@ -55,17 +80,17 @@ void main() {
   vec3 normal = frag_normalAndSpecularity.xyz;
   vec3 color = frag_colorAndDepth.rgb;
 
-  // @todo get appropriate light matrix + cascade
-  vec4 shadow_map_position = lightMatrices[0] * glVec4(position);
-  vec3 shadow_map_transform = shadow_map_position.xyz / shadow_map_position.w;
-
+  Cascade cascade = getCascade(getLinearizedDepth(frag_colorAndDepth.w));
+  vec4 shadow_map_transform = lightMatrices[cascade.index] * glVec4(position);
+  
+  shadow_map_transform.xyz /= shadow_map_transform.w;
   shadow_map_transform.xyz *= 0.5;
   shadow_map_transform.xyz += 0.5;
 
-  float shadow_map_depth = texture(cascades[0], shadow_map_transform.xy).r;
+  float shadow_map_depth = texture(cascades[cascade.index], shadow_map_transform.xy).r;
 
-  // @todo define depth-appropriate bias, use filtering
-  if (shadow_map_transform.z < 0.999 && shadow_map_depth < shadow_map_transform.z - 0.001) {
+  // @todo use filtering
+  if (shadow_map_transform.z < 0.999 && shadow_map_depth < shadow_map_transform.z - cascade.bias) {
     discard;
   }
 

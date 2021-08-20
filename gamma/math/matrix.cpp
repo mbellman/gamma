@@ -220,4 +220,22 @@ namespace Gamma {
       x * m[8] + y * m[9] + z * m[10] + w * m[11]
     );
   }
+
+  // @todo Ideally, this should be the routine for Matrix4f::operator*(const Vec3f& vector) above.
+  // Check to see where we're using that (might just be the light disc screen space calculation),
+  // update the operator* implementation, and fix those spots if necessary.
+  Vec3f Matrix4f::multiply(const Vec3f& vector) const {
+    Vec3f result;
+
+    result.x = vector.x * m[0] + vector.y * m[1] + vector.z * m[2] + 1.0f * m[3];
+    result.y = vector.x * m[4] + vector.y * m[5] + vector.z * m[6] + 1.0f * m[7];
+    result.z = vector.x * m[8] + vector.y * m[9] + vector.z * m[10] + 1.0f * m[11];
+    float w = vector.x * m[12] + vector.y * m[13] + vector.z * m[14] + 1.0f * m[15];
+
+    return Vec3f(
+      result.x / w,
+      result.y / w,
+      result.z / w
+    );
+  }
 }
