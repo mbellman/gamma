@@ -108,6 +108,11 @@ namespace Gamma {
     deferred.directionalLightWithoutShadow.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/directional-light-without-shadow.frag.glsl"));
     deferred.directionalLightWithoutShadow.link();
 
+    deferred.copyDepth.init();
+    deferred.copyDepth.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
+    deferred.copyDepth.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/deferred/copy-depth.frag.glsl"));
+    deferred.copyDepth.link();
+
     shadows.directionalView.init();
     shadows.directionalView.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/directional-light-view.vert.glsl"));
     shadows.directionalView.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/directional-light-view.frag.glsl"));
@@ -184,6 +189,7 @@ namespace Gamma {
 
     deferred.geometry.destroy();
     deferred.emissives.destroy();
+    deferred.copyDepth.destroy();
     deferred.pointLightWithoutShadow.destroy();
     deferred.directionalLightWithoutShadow.destroy();
     deferred.copyFrame.destroy();
@@ -393,6 +399,27 @@ namespace Gamma {
       }
     }
 
+    // If no directional lights/shadowcasters are available,
+    // perform a screen pass to copy depth information for
+    // all on-screen geometry into the post buffer. During
+    // the reflection and refractive geometry passes, we
+    // copy the post buffer back into G-Buffer attachment 2
+    // so that accumulated effects and normals can continue
+    // to be read when writing to the post buffer again. If
+    // we don't do this, reflections and refractions will
+    // miss any surfaces which aren't directly illuminated,
+    // i.e. otherwise written to the post buffer in the
+    // directional lighting passes.
+    if (directionalLights.size() == 0 && directionalShadowcasters.size() == 0) {
+      auto& shader = deferred.copyDepth;
+
+      shader.use();
+      shader.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+      shader.setInt("color_and_depth", 0);
+
+      OpenGLScreenQuad::render();
+    }
+
     // Render point lights (non-shadowcasters)
     if (pointLights.size() > 0) {
       auto& shader = deferred.pointLightWithoutShadow;
@@ -522,9 +549,6 @@ namespace Gamma {
       deferred.reflections_buffer.write();
 
       // Render reflections (screen-space + skybox)
-      //
-      // @bug unlit objects don't get reflected + if no lighting
-      // sources are defined, nothing gets reflected
       //
       // @todo allow controllable reflection parameters
       glStencilFunc(GL_EQUAL, MeshType::REFLECTIVE, 0xFF);

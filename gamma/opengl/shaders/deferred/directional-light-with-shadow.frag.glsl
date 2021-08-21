@@ -91,7 +91,9 @@ void main() {
 
   // @todo use filtering
   if (shadow_map_transform.z < 0.999 && shadow_map_depth < shadow_map_transform.z - cascade.bias) {
-    discard;
+    out_color_and_depth = vec4(vec3(0), frag_colorAndDepth.w);
+
+    return;
   }
 
   // Diffuse lighting
