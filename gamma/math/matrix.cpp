@@ -10,6 +10,18 @@ namespace Gamma {
    * Matrix4f
    * -------
    */
+  Matrix4f Matrix4f::glPerspective(const Area<uint32>& area, float fov, float near, float far) {
+    float f = 1.0f / tanf(fov / 2.0f * DEGREES_TO_RADIANS);
+    float aspectRatio = (float)area.width / (float)area.height;
+
+    return {
+      f / aspectRatio, 0.0f, 0.0f, 0.0f,
+      0.0f, f, 0.0f, 0.0f,
+      0.0f, 0.0f, (far + near) / (near - far), (2 * far * near) / (near - far),
+      0.0f, 0.0f, -1.0f, 0.0f
+    };
+  }
+
   Matrix4f Matrix4f::identity() {
     return {
       1.0f, 0.0f, 0.0f, 0.0f,
@@ -90,18 +102,6 @@ namespace Gamma {
       0.0f, 2.0f / (top - bottom), 0.0f, -(top + bottom) / (top - bottom),
       0.0f, 0.0f, -2.0f / (far - near), -(far + near) / (far - near),
       0.0f, 0.0f, 0.0f, 1.0f
-    };
-  }
-
-  Matrix4f Matrix4f::projection(const Area<uint32>& area, float fov, float near, float far) {
-    float f = 1.0f / tanf(fov / 2.0f * DEGREES_TO_RADIANS);
-    float aspectRatio = (float)area.width / (float)area.height;
-
-    return {
-      f / aspectRatio, 0.0f, 0.0f, 0.0f,
-      0.0f, f, 0.0f, 0.0f,
-      0.0f, 0.0f, (far + near) / (near - far), (2 * far * near) / (near - far),
-      0.0f, 0.0f, -1.0f, 0.0f
     };
   }
 
@@ -208,34 +208,17 @@ namespace Gamma {
     return product;
   }
 
-  Vec3f Matrix4f::operator*(const Vec3f& vector) const {
+  Vec4f Matrix4f::operator*(const Vec3f& vector) const {
     float x = vector.x;
     float y = vector.y;
     float z = vector.z;
     float w = 1.0f;
 
-    return Vec3f(
+    return Vec4f(
       x * m[0] + y * m[1] + z * m[2] + w * m[3],
       x * m[4] + y * m[5] + z * m[6] + w * m[7],
-      x * m[8] + y * m[9] + z * m[10] + w * m[11]
-    );
-  }
-
-  // @todo Ideally, this should be the routine for Matrix4f::operator*(const Vec3f& vector) above.
-  // Check to see where we're using that (might just be the light disc screen space calculation),
-  // update the operator* implementation, and fix those spots if necessary.
-  Vec3f Matrix4f::multiply(const Vec3f& vector) const {
-    Vec3f result;
-
-    result.x = vector.x * m[0] + vector.y * m[1] + vector.z * m[2] + 1.0f * m[3];
-    result.y = vector.x * m[4] + vector.y * m[5] + vector.z * m[6] + 1.0f * m[7];
-    result.z = vector.x * m[8] + vector.y * m[9] + vector.z * m[10] + 1.0f * m[11];
-    float w = vector.x * m[12] + vector.y * m[13] + vector.z * m[14] + 1.0f * m[15];
-
-    return Vec3f(
-      result.x / w,
-      result.y / w,
-      result.z / w
+      x * m[8] + y * m[9] + z * m[10] + w * m[11],
+      x * m[12] + y * m[13] + z * m[14] + w * m[15]
     );
   }
 }

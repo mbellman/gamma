@@ -109,4 +109,16 @@ namespace Gamma {
   Vec3f Vec3f::xz() const {
     return *this * Vec3f(1.0f, 0.0f, 1.0f);
   }
+
+  /**
+   * Vec4f
+   * -----
+   */
+  Vec3f Vec4f::homogenize() const {
+    return Vec3f(x / w, y / w, z / w);
+  }
+
+  Vec3f Vec4f::toVec3f() const {
+    return Vec3f(x, y, z);
+  }
 }

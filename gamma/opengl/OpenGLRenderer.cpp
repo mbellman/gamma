@@ -312,11 +312,10 @@ namespace Gamma {
 
     // Render camera view
     auto& camera = *Camera::active;
-    Matrix4f projection = Matrix4f::projection({ internalWidth, internalHeight }, 45.0f, 1.0f, 10000.0f).transpose();
+    Matrix4f projection = Matrix4f::glPerspective({ internalWidth, internalHeight }, 45.0f, 1.0f, 10000.0f).transpose();
 
     Matrix4f view = (
       Matrix4f::rotation(camera.orientation.toVec3f()) *
-      // @bug (?) Is this why we've had to keep flipping z in shaders?
       Matrix4f::translation(camera.position.invert().gl())
     ).transpose();
 

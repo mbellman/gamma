@@ -108,7 +108,7 @@ namespace Gamma {
     Disc* discs = new Disc[lights.size()];
     auto& camera = *Camera::active;
     float aspectRatio = (float)Window::size.width / (float)Window::size.height;
-    Matrix4f projection = Matrix4f::projection(Window::size, 90.0f * 0.5f, 1.0f, 10000.0f);
+    Matrix4f projection = Matrix4f::glPerspective(Window::size, 90.0f * 0.5f, 1.0f, 10000.0f);
 
     Matrix4f view = (
       Matrix4f::rotation(camera.orientation.toVec3f().invert()) *
@@ -118,13 +118,13 @@ namespace Gamma {
     for (uint32 i = 0; i < lights.size(); i++) {
       auto& light = lights[i];
       auto& disc = discs[i];
-      Vec3f localLightPosition = view * light.position;
+      Vec3f localLightPosition = (view * light.position).toVec3f();
 
       disc.light = light;
 
       if (localLightPosition.z > 0.0f) {
         // Light source in front of the camera
-        Vec3f screenLightPosition = (projection * localLightPosition) / localLightPosition.z;
+        Vec3f screenLightPosition = (projection * localLightPosition).toVec3f() / localLightPosition.z;
 
         disc.offset = Vec2f(screenLightPosition.x, screenLightPosition.y);
         // @todo use 1 + log(light.power) or similar for scaling term

@@ -54,12 +54,12 @@ namespace Gamma {
       Matrix4f::translation(camera.position.invert().gl())
     );
 
-    Matrix4f cameraProjection = Matrix4f::projection({ 1920, 1080 }, 45.0f, near, far);
+    Matrix4f cameraProjection = Matrix4f::glPerspective({ 1920, 1080 }, 45.0f, near, far);
     Matrix4f cameraViewProjection = cameraProjection * cameraView;
     Matrix4f inverseCameraViewProjection = cameraViewProjection.inverse();
 
     for (uint32 i = 0; i < 8; i++) {
-      corners[i] = inverseCameraViewProjection.multiply(corners[i]);
+      corners[i] = (inverseCameraViewProjection * corners[i]).homogenize();
       corners[i].z *= -1.0f;
     }
 
@@ -85,15 +85,15 @@ namespace Gamma {
 
     Matrix4f lightLookAt = Matrix4f::lookAt(Vec3f(0.0f), lightDirection.invert(), Vec3f(0.0f, 1.0f, 0.0f));
     Matrix4f scale = Matrix4f::scale(texelsPerUnit);
-    Matrix4f shadowMapMatrix = scale * lightLookAt;
-    Matrix4f inverseShadowMapMatrix = shadowMapMatrix.inverse();
+    Matrix4f texelMatrix = scale * lightLookAt;
+    Matrix4f inverseTexelMatrix = texelMatrix.inverse();
 
     // Align the frustum center in shadow map space, and then
     // restore that to its world space coordinates
-    frustumCenter = shadowMapMatrix.multiply(frustumCenter);
+    frustumCenter = (texelMatrix * frustumCenter).homogenize();
     frustumCenter.x = floorf(frustumCenter.x);
     frustumCenter.y = floorf(frustumCenter.y);
-    frustumCenter = inverseShadowMapMatrix.multiply(frustumCenter);
+    frustumCenter = (inverseTexelMatrix * frustumCenter).homogenize();
 
     // Compute final light view matrix for rendering the shadow map
     Matrix4f projection = Matrix4f::orthographic(radius, -radius, -radius, radius, -radius - 1000.0f, radius);

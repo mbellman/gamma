@@ -46,5 +46,8 @@ namespace Gamma {
     Vec4f() {};
     Vec4f(float f) : x(f), y(f), z(f), w(f) {};
     Vec4f(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {};
+
+    Vec3f homogenize() const;
+    Vec3f toVec3f() const;
   };
 }
