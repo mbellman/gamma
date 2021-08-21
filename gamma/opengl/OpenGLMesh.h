@@ -14,6 +14,7 @@ namespace Gamma {
 
     uint32 getId() const;
     uint16 getObjectCount() const;
+    const Mesh* getSourceMesh() const;
     bool hasNormalMap() const;
     bool hasTexture() const;
     bool isMeshType(MeshType type) const;

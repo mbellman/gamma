@@ -85,6 +85,10 @@ namespace Gamma {
     return sourceMesh->objects.total();
   }
 
+  const Mesh* OpenGLMesh::getSourceMesh() const {
+    return sourceMesh;
+  }
+
   bool OpenGLMesh::hasNormalMap() const {
     return glNormalMap != nullptr;
   }

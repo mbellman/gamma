@@ -477,9 +477,9 @@ namespace Gamma {
       glShadowMap.buffer.write();
       shadows.directionalView.use();
 
-      for (uint32 i = 0; i < 3; i++) {
-        glShadowMap.buffer.writeToAttachment(i);
-        Matrix4f lightView = glShadowMap.createCascadedLightViewMatrix(i, directionalShadowcasters[0].direction, camera);
+      for (uint32 cascade = 0; cascade < 3; cascade++) {
+        glShadowMap.buffer.writeToAttachment(cascade);
+        Matrix4f lightView = glShadowMap.createCascadedLightViewMatrix(cascade, directionalShadowcasters[0].direction, camera);
 
         shadows.directionalView.setMatrix4f("lightView", lightView);
 
@@ -488,7 +488,11 @@ namespace Gamma {
         // @todo glMultiDrawElementsIndirect for static world geometry
         // (will require a handful of other changes to mesh organization/data buffering)
         for (auto* glMesh : glMeshes) {
-          glMesh->render(primitiveMode);
+          auto* sourceMesh = glMesh->getSourceMesh();
+
+          if (sourceMesh->canCastShadows && sourceMesh->maxCascade >= cascade) {
+            glMesh->render(primitiveMode);
+          }
         }
       }
 
@@ -506,11 +510,12 @@ namespace Gamma {
 
       shadows.directional.use();
       shadows.directional.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+      // @todo define an enum for reserved color attachment indexes
       shadows.directional.setInt("colorAndDepth", 0);
       shadows.directional.setInt("normalAndSpecularity", 1);
-      shadows.directional.setInt("cascades[0]", 3);
-      shadows.directional.setInt("cascades[1]", 4);
-      shadows.directional.setInt("cascades[2]", 5);
+      shadows.directional.setInt("shadowMaps[0]", 3);
+      shadows.directional.setInt("shadowMaps[1]", 4);
+      shadows.directional.setInt("shadowMaps[2]", 5);
       shadows.directional.setMatrix4f("lightMatrices[0]", glShadowMap.createCascadedLightViewMatrix(0, directionalShadowcasters[0].direction, camera));
       shadows.directional.setMatrix4f("lightMatrices[1]", glShadowMap.createCascadedLightViewMatrix(1, directionalShadowcasters[0].direction, camera));
       shadows.directional.setMatrix4f("lightMatrices[2]", glShadowMap.createCascadedLightViewMatrix(2, directionalShadowcasters[0].direction, camera));

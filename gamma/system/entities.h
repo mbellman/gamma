@@ -170,9 +170,20 @@ namespace Gamma {
      */
     std::string specularityMap = "";
     /**
-     * Determines whether mesh objects should be reflective.
+     * Defines the mesh type.
+     *
+     * @see MeshType
      */
     uint8 type = MeshType::NON_EMISSIVE;
+    /**
+     * @todo description
+     */
+    uint8 maxCascade = 3;
+    /**
+     * Controls whether the mesh's instances are rendered
+     * to shadow maps, enabling them to cast shadows.
+     */
+    bool canCastShadows = true;
   };
 
   /**

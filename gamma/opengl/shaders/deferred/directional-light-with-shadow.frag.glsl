@@ -6,7 +6,13 @@ struct DirectionalLight {
   vec3 direction;
 };
 
-uniform sampler2D cascades[3];
+struct Cascade {
+  int index;
+  mat4 matrix;
+  float bias;
+};
+
+uniform sampler2D shadowMaps[3];
 uniform mat4 lightMatrices[3];
 
 uniform sampler2D colorAndDepth;
@@ -19,6 +25,9 @@ uniform DirectionalLight light;
 noperspective in vec2 fragUv;
 
 layout (location = 0) out vec4 out_color_and_depth;
+
+const float cascade_depth_1 = 200.0;
+const float cascade_depth_2 = 600.0;
 
 // @todo move to gl helpers
 vec3 glVec3(vec3 vector) {
@@ -57,16 +66,10 @@ float getLinearizedDepth(float depth) {
   return 2.0 * z_near * z_far / (z_far + z_near - clip_depth * (z_far - z_near));
 }
 
-struct Cascade {
-  int index;
-  mat4 matrix;
-  float bias;
-};
-
-Cascade getCascade(float linearized_depth) {
-  if (linearized_depth < 200.0) {
+Cascade getCascadeByDepth(float linearized_depth) {
+  if (linearized_depth < cascade_depth_1) {
     return Cascade(0, lightMatrices[0], 0.001);
-  } else if (linearized_depth < 500.0) {
+  } else if (linearized_depth < cascade_depth_2) {
     return Cascade(1, lightMatrices[1], 0.001);
   } else {
     return Cascade(2, lightMatrices[2], 0.001);
@@ -80,14 +83,14 @@ void main() {
   vec3 normal = frag_normalAndSpecularity.xyz;
   vec3 color = frag_colorAndDepth.rgb;
 
-  Cascade cascade = getCascade(getLinearizedDepth(frag_colorAndDepth.w));
+  Cascade cascade = getCascadeByDepth(getLinearizedDepth(frag_colorAndDepth.w));
   vec4 shadow_map_transform = lightMatrices[cascade.index] * glVec4(position);
   
   shadow_map_transform.xyz /= shadow_map_transform.w;
   shadow_map_transform.xyz *= 0.5;
   shadow_map_transform.xyz += 0.5;
 
-  float shadow_map_depth = texture(cascades[cascade.index], shadow_map_transform.xy).r;
+  float shadow_map_depth = texture(shadowMaps[cascade.index], shadow_map_transform.xy).r;
 
   // @todo use filtering
   if (shadow_map_transform.z < 0.999 && shadow_map_depth < shadow_map_transform.z - cascade.bias) {
