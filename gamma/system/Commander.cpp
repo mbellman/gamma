@@ -3,6 +3,19 @@
 #include "system/flags.h"
 
 namespace Gamma {
+  struct Command {
+    const char* keyword;
+    const char* displayName;
+    GammaFlags flag;
+  };
+
+  static Command commands[] = {
+    { "reflect", "Reflections", GammaFlags::RENDER_REFLECTIONS },
+    { "refract", "Refractions", GammaFlags::RENDER_REFRACTIONS },
+    { "shadow", "Shadows", GammaFlags::RENDER_SHADOWS },
+    { "debug buffers", "Debug buffers", GammaFlags::SHOW_DEBUG_BUFFERS }
+  };
+
   Commander::Commander() {
     input.on<Key>("keydown", [&](Key key) {
       if (key == Key::C && input.isKeyHeld(Key::CONTROL) && isEnteringCommand) {
@@ -47,28 +60,24 @@ namespace Gamma {
 
   void Commander::processCurrentCommand() {
     if (currentCommandIncludes("enable")) {
-      if (currentCommandIncludes("reflect")) {
-        Gm_EnableFlags(GammaFlags::RENDER_REFLECTIONS);
+      for (uint32 i = 0; i < 4; i++) {
+        auto& command = commands[i];
 
-        Console::log("[Gamma] Reflections enabled");
-      }
+        if (currentCommandIncludes(command.keyword)) {
+          Gm_EnableFlags(command.flag);
 
-      if (currentCommandIncludes("refract")) {
-        Gm_EnableFlags(GammaFlags::RENDER_REFRACTIONS);
-
-        Console::log("[Gamma] Refractions enabled");
+          Console::log("[Gamma]", command.displayName, "enabled");
+        }
       }
     } else if (currentCommandIncludes("disable")) {
-      if (currentCommandIncludes("reflect")) {
-        Gm_DisableFlags(GammaFlags::RENDER_REFLECTIONS);
+      for (uint32 i = 0; i < 4; i++) {
+        auto& command = commands[i];
 
-        Console::log("[Gamma] Reflections disabled");
-      }
+        if (currentCommandIncludes(command.keyword)) {
+          Gm_DisableFlags(command.flag);
 
-      if (currentCommandIncludes("refract")) {
-        Gm_DisableFlags(GammaFlags::RENDER_REFRACTIONS);
-
-        Console::log("[Gamma] Refractions disabled");
+          Console::log("[Gamma]", command.displayName, "disabled");
+        }
       }
     }
 

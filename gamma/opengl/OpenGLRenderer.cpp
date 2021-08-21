@@ -147,15 +147,15 @@ namespace Gamma {
     deferred.refractiveGeometry.link();
 
     #if GAMMA_DEVELOPER_MODE
-      dev.gBufferLayers.init();
-      dev.gBufferLayers.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
-      dev.gBufferLayers.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/dev/g-buffer-preview.frag.glsl"));
-      dev.gBufferLayers.link();
+      debug.g_buffer.init();
+      debug.g_buffer.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
+      debug.g_buffer.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/debug/g-buffer.frag.glsl"));
+      debug.g_buffer.link();
 
-      dev.directionalShadowMap.init();
-      dev.directionalShadowMap.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
-      dev.directionalShadowMap.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/dev/directional-shadow-map.frag.glsl"));
-      dev.directionalShadowMap.link();
+      debug.directionalShadowMap.init();
+      debug.directionalShadowMap.attachShader(Gm_CompileVertexShader("./gamma/opengl/shaders/quad.vert.glsl"));
+      debug.directionalShadowMap.attachShader(Gm_CompileFragmentShader("./gamma/opengl/shaders/debug/directional-shadow-map.frag.glsl"));
+      debug.directionalShadowMap.link();
     #endif
 
     deferred.lightDisc.init();
@@ -198,8 +198,8 @@ namespace Gamma {
     deferred.debanding.destroy();
 
     #if GAMMA_DEVELOPER_MODE
-      dev.gBufferLayers.destroy();
-      dev.directionalShadowMap.destroy();
+      debug.g_buffer.destroy();
+      debug.directionalShadowMap.destroy();
     #endif
 
     glDeleteBuffers(1, &forward.lightsUbo);
@@ -394,7 +394,12 @@ namespace Gamma {
           directionalLights.push_back(light);
           break;
         case LightType::DIRECTIONAL_SHADOWCASTER:
-          directionalShadowcasters.push_back(light);
+          if (Gm_GetFlags() & GammaFlags::RENDER_SHADOWS) {
+            directionalShadowcasters.push_back(light);
+          } else {
+            directionalLights.push_back(light);
+          }
+
           break;
       }
     }
@@ -629,25 +634,27 @@ namespace Gamma {
     OpenGLScreenQuad::render();
 
     #if GAMMA_DEVELOPER_MODE
-      deferred.g_buffer.read();
+      if (Gm_GetFlags() & GammaFlags::SHOW_DEBUG_BUFFERS) {
+        deferred.g_buffer.read();
 
-      dev.gBufferLayers.use();
-      dev.gBufferLayers.setInt("colorAndDepth", 0);
-      dev.gBufferLayers.setInt("normalAndSpecularity", 1);
-      dev.gBufferLayers.setVec4f("transform", { 0.53f, 0.82f, 0.43f, 0.11f });
-
-      OpenGLScreenQuad::render();
-
-      for (uint32 i = 0; i < glDirectionalShadowMaps.size(); i++) {
-        glDirectionalShadowMaps[i]->buffer.read();
-
-        dev.directionalShadowMap.use();
-        dev.directionalShadowMap.setInt("cascade0", 3);
-        dev.directionalShadowMap.setInt("cascade1", 4);
-        dev.directionalShadowMap.setInt("cascade2", 5);
-        dev.directionalShadowMap.setVec4f("transform", { 0.6f, 0.5f, 0.355f, 0.2f });
+        debug.g_buffer.use();
+        debug.g_buffer.setInt("colorAndDepth", 0);
+        debug.g_buffer.setInt("normalAndSpecularity", 1);
+        debug.g_buffer.setVec4f("transform", { 0.53f, 0.82f, 0.43f, 0.11f });
 
         OpenGLScreenQuad::render();
+
+        for (uint32 i = 0; i < glDirectionalShadowMaps.size(); i++) {
+          glDirectionalShadowMaps[i]->buffer.read();
+
+          debug.directionalShadowMap.use();
+          debug.directionalShadowMap.setInt("cascade0", 3);
+          debug.directionalShadowMap.setInt("cascade1", 4);
+          debug.directionalShadowMap.setInt("cascade2", 5);
+          debug.directionalShadowMap.setVec4f("transform", { 0.695f, 0.52f, 0.266f, 0.15f });
+
+          OpenGLScreenQuad::render();
+        }
       }
     #endif
 

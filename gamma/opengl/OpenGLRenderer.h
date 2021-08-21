@@ -70,10 +70,10 @@ namespace Gamma {
       OpenGLShader debanding;
     } deferred;
 
-    struct DevModeShaders {
-      OpenGLShader gBufferLayers;
+    struct DebugShaders {
+      OpenGLShader g_buffer;
       OpenGLShader directionalShadowMap;
-    } dev;
+    } debug;
 
     struct ShadowcasterShaders {
       OpenGLShader directional;
