@@ -84,10 +84,10 @@ void DemoScene::init() {
       cube.position = cubePosition;
       cube.scale = 8.0f;
 
-      // auto& cubeLight = createLight();
+      // auto& cubeLight = createLight(LightType::POINT);
 
       // cubeLight.color = Vec3f(0.1f, 0.3f, 1.0f);
-      // cubeLight.radius = 250.0f;
+      // cubeLight.radius = 75.0f;
       // cubeLight.position = cubePosition + Vec3f(0.0f, 50.0f, 0.0f);
       // cubeLight.power = 2.0f;
 

@@ -276,6 +276,34 @@ namespace Gamma {
     bool hasReflectiveObjects = false;
     bool hasRefractiveObjects = false;
 
+    // Build categorized light arrays
+    //
+    // @todo don't reallocate on every frame
+    auto& lights = AbstractScene::active->getLights();
+    std::vector<Light> pointLights;
+    std::vector<Light> directionalLights;
+    std::vector<Light> directionalShadowcasters;
+
+    for (auto& light : lights) {
+      switch (light.type) {
+        case LightType::POINT:
+          pointLights.push_back(light);
+          break;
+        case LightType::DIRECTIONAL:
+          directionalLights.push_back(light);
+          break;
+        case LightType::DIRECTIONAL_SHADOWCASTER:
+          if (Gm_GetFlags() & GammaFlags::RENDER_SHADOWS) {
+            directionalShadowcasters.push_back(light);
+          } else {
+            directionalLights.push_back(light);
+          }
+
+          break;
+      }
+    }
+
+    // Check to see if reflective/refractive geometry passes are necessary
     for (auto* glMesh : glMeshes) {
       if (glMesh->getObjectCount() > 0) {
         if (glMesh->isMeshType(MeshType::REFLECTIVE)) {
@@ -286,6 +314,7 @@ namespace Gamma {
       }
     }
 
+    // Handle vsync setting changes
     if (Gm_GetFlags() & GammaFlags::VSYNC && SDL_GL_GetSwapInterval() == 0) {
       SDL_GL_SetSwapInterval(1);
 
@@ -362,6 +391,39 @@ namespace Gamma {
       }
     }
 
+    // Render directional shadow maps
+    if (glDirectionalShadowMaps.size() > 0 && Gm_GetFlags() & GammaFlags::RENDER_SHADOWS) {
+      glDisable(GL_STENCIL_TEST);
+
+      for (uint32 i = 0; i < glDirectionalShadowMaps.size(); i++) {
+        auto& glShadowMap = *glDirectionalShadowMaps[i];
+
+        glShadowMap.buffer.write();
+        shadows.directionalView.use();
+
+        for (uint32 cascade = 0; cascade < 3; cascade++) {
+          glShadowMap.buffer.writeToAttachment(cascade);
+          Matrix4f lightView = glShadowMap.createCascadedLightViewMatrix(cascade, directionalShadowcasters[i].direction, camera);
+
+          shadows.directionalView.setMatrix4f("lightView", lightView);
+
+          glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+          // @todo glMultiDrawElementsIndirect for static world geometry
+          // (will require a handful of other changes to mesh organization/data buffering)
+          for (auto* glMesh : glMeshes) {
+            auto* sourceMesh = glMesh->getSourceMesh();
+
+            if (sourceMesh->canCastShadows && sourceMesh->maxCascade >= cascade) {
+              glMesh->render(primitiveMode);
+            }
+          }
+        }
+      }
+
+      glEnable(GL_STENCIL_TEST);
+    }
+
     // Lighting pass; read from G-Buffer and preemptively write to post buffer
     deferred.g_buffer.read();
     deferred.post_buffer.write();
@@ -375,34 +437,8 @@ namespace Gamma {
     glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
     glStencilMask(0x00);
 
-    // Non-shadowcaster lighting pass
-    auto& lights = AbstractScene::active->getLights();
     Matrix4f inverseProjection = projection.inverse();
     Matrix4f inverseView = view.inverse();
-
-    // @todo don't reallocate on every frame
-    std::vector<Light> pointLights;
-    std::vector<Light> directionalLights;
-    std::vector<Light> directionalShadowcasters;
-
-    for (auto& light : lights) {
-      switch (light.type) {
-        case LightType::POINT:
-          pointLights.push_back(light);
-          break;
-        case LightType::DIRECTIONAL:
-          directionalLights.push_back(light);
-          break;
-        case LightType::DIRECTIONAL_SHADOWCASTER:
-          if (Gm_GetFlags() & GammaFlags::RENDER_SHADOWS) {
-            directionalShadowcasters.push_back(light);
-          } else {
-            directionalLights.push_back(light);
-          }
-
-          break;
-      }
-    }
 
     // If no directional lights/shadowcasters are available,
     // perform a screen pass to copy depth information for
@@ -464,69 +500,37 @@ namespace Gamma {
     }
 
     // Render directional shadowcaster lights
-    // @todo move to geometry pass to avoid needing to change as much GL state
     if (directionalShadowcasters.size() > 0) {
-      glEnable(GL_DEPTH_TEST);
-      glEnable(GL_CULL_FACE);
-      glDisable(GL_STENCIL_TEST);
-      glDisable(GL_BLEND);
-
-      // @todo loop over all directional shadowcasters
-      auto& glShadowMap = *glDirectionalShadowMaps[0];
-
-      glShadowMap.buffer.write();
-      shadows.directionalView.use();
-
-      for (uint32 cascade = 0; cascade < 3; cascade++) {
-        glShadowMap.buffer.writeToAttachment(cascade);
-        Matrix4f lightView = glShadowMap.createCascadedLightViewMatrix(cascade, directionalShadowcasters[0].direction, camera);
-
-        shadows.directionalView.setMatrix4f("lightView", lightView);
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // @todo glMultiDrawElementsIndirect for static world geometry
-        // (will require a handful of other changes to mesh organization/data buffering)
-        for (auto* glMesh : glMeshes) {
-          auto* sourceMesh = glMesh->getSourceMesh();
-
-          if (sourceMesh->canCastShadows && sourceMesh->maxCascade >= cascade) {
-            glMesh->render(primitiveMode);
-          }
-        }
-      }
-
-      glDisable(GL_DEPTH_TEST);
-      glDisable(GL_CULL_FACE);
-      glEnable(GL_STENCIL_TEST);
-      glEnable(GL_BLEND);
-
-      // @todo loop over all shadowcasters
-      auto& light = directionalShadowcasters[0];
-
       deferred.g_buffer.read();
-      glShadowMap.buffer.read();
       deferred.post_buffer.write();
 
       shadows.directional.use();
-      shadows.directional.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
-      // @todo define an enum for reserved color attachment indexes
-      shadows.directional.setInt("colorAndDepth", 0);
-      shadows.directional.setInt("normalAndSpecularity", 1);
-      shadows.directional.setInt("shadowMaps[0]", 3);
-      shadows.directional.setInt("shadowMaps[1]", 4);
-      shadows.directional.setInt("shadowMaps[2]", 5);
-      shadows.directional.setMatrix4f("lightMatrices[0]", glShadowMap.createCascadedLightViewMatrix(0, directionalShadowcasters[0].direction, camera));
-      shadows.directional.setMatrix4f("lightMatrices[1]", glShadowMap.createCascadedLightViewMatrix(1, directionalShadowcasters[0].direction, camera));
-      shadows.directional.setMatrix4f("lightMatrices[2]", glShadowMap.createCascadedLightViewMatrix(2, directionalShadowcasters[0].direction, camera));
-      shadows.directional.setVec3f("cameraPosition", camera.position);
-      shadows.directional.setMatrix4f("inverseProjection", inverseProjection);
-      shadows.directional.setMatrix4f("inverseView", inverseView);
-      shadows.directional.setVec3f("light.color", light.color);
-      shadows.directional.setFloat("light.power", light.power);
-      shadows.directional.setVec3f("light.direction", light.direction);
 
-      OpenGLScreenQuad::render();
+      for (uint32 i = 0; i < directionalShadowcasters.size(); i++) {
+        auto& light = directionalShadowcasters[i];
+        auto& glShadowMap = *glDirectionalShadowMaps[i];
+
+        glShadowMap.buffer.read();
+
+        shadows.directional.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+        // @todo define an enum for reserved color attachment indexes
+        shadows.directional.setInt("colorAndDepth", 0);
+        shadows.directional.setInt("normalAndSpecularity", 1);
+        shadows.directional.setInt("shadowMaps[0]", 3);
+        shadows.directional.setInt("shadowMaps[1]", 4);
+        shadows.directional.setInt("shadowMaps[2]", 5);
+        shadows.directional.setMatrix4f("lightMatrices[0]", glShadowMap.createCascadedLightViewMatrix(0, light.direction, camera));
+        shadows.directional.setMatrix4f("lightMatrices[1]", glShadowMap.createCascadedLightViewMatrix(1, light.direction, camera));
+        shadows.directional.setMatrix4f("lightMatrices[2]", glShadowMap.createCascadedLightViewMatrix(2, light.direction, camera));
+        shadows.directional.setVec3f("cameraPosition", camera.position);
+        shadows.directional.setMatrix4f("inverseProjection", inverseProjection);
+        shadows.directional.setMatrix4f("inverseView", inverseView);
+        shadows.directional.setVec3f("light.color", light.color);
+        shadows.directional.setFloat("light.power", light.power);
+        shadows.directional.setVec3f("light.direction", light.direction);
+
+        OpenGLScreenQuad::render();
+      }
     }
 
     // @todo additional shadowcaster light passes
@@ -650,13 +654,15 @@ namespace Gamma {
         OpenGLScreenQuad::render();
 
         for (uint32 i = 0; i < glDirectionalShadowMaps.size(); i++) {
+          float yOffset = 0.52f - float(i) * 0.32f;
+
           glDirectionalShadowMaps[i]->buffer.read();
 
           debug.directionalShadowMap.use();
           debug.directionalShadowMap.setInt("cascade0", 3);
           debug.directionalShadowMap.setInt("cascade1", 4);
           debug.directionalShadowMap.setInt("cascade2", 5);
-          debug.directionalShadowMap.setVec4f("transform", { 0.695f, 0.52f, 0.266f, 0.15f });
+          debug.directionalShadowMap.setVec4f("transform", { 0.695f, yOffset, 0.266f, 0.15f });
 
           OpenGLScreenQuad::render();
         }
