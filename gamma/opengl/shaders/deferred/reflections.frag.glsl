@@ -64,7 +64,7 @@ vec3 getWorldPosition(float depth) {
 // from skybox helpers or similar. track shader dependencies
 // as part of hot reloading
 vec3 getSkyColor(vec3 direction) {
-  vec3 sunDirection = normalize(vec3(0.5, 1.0, -1.0));
+  vec3 sunDirection = normalize(vec3(0.3, 0.5, -1.0));
   vec3 sunColor = vec3(1.0, 0.1, 0.2);
   float sunBrightness = 10;
   float altitude = 0.2;

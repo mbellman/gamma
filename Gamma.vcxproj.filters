@@ -111,6 +111,9 @@
     <ClCompile Include="gamma\opengl\shadowmaps.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gamma\opengl\renderer_helpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\glew\include\eglew.h">
@@ -507,6 +510,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gamma\opengl\shadowmaps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\opengl\renderer_helpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

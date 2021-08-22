@@ -4,6 +4,7 @@
 #include "opengl/errors.h"
 #include "opengl/OpenGLRenderer.h"
 #include "opengl/OpenGLScreenQuad.h"
+#include "opengl/renderer_helpers.h"
 #include "system/AbstractController.h"
 #include "system/AbstractScene.h"
 #include "system/camera.h"
@@ -19,6 +20,7 @@
 
 namespace Gamma {
   const static uint32 MAX_LIGHTS = 1000;
+  const static Vec4f FULL_SCREEN_TRANSFORM = { 0.0f, 0.0f, 1.0f, 1.0f };
 
   /**
    * OpenGLRenderer
@@ -54,117 +56,23 @@ namespace Gamma {
 
     // Initialize dynamic lights UBO
     // @todo buffer lights to forward renderer geometry shader
-    glGenBuffers(1, &forward.lightsUbo);
-    glBindBuffer(GL_UNIFORM_BUFFER, forward.lightsUbo);
-    glBufferData(GL_UNIFORM_BUFFER, MAX_LIGHTS * sizeof(Light), 0, GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_UNIFORM_BUFFER, 0, forward.lightsUbo);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    // glGenBuffers(1, &forward.lightsUbo);
+    // glBindBuffer(GL_UNIFORM_BUFFER, forward.lightsUbo);
+    // glBufferData(GL_UNIFORM_BUFFER, MAX_LIGHTS * sizeof(Light), 0, GL_DYNAMIC_DRAW);
+    // glBindBufferBase(GL_UNIFORM_BUFFER, 0, forward.lightsUbo);
+    // glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     // Initialize deferred renderer
     // @todo define separate OpenGLDeferredRenderer/OpenGLForwardRenderer classes
-    // @todo initialize buffers/shaders in a separate file/with a helper function; these are getting unmanageable
-    deferred.g_buffer.init();
-    deferred.g_buffer.setSize(internalResolution);
-    deferred.g_buffer.addColorAttachment(ColorFormat::RGBA);    // (RGB) Color, (A) Depth
-    deferred.g_buffer.addColorAttachment(ColorFormat::RGBA16);  // (RGB) Normal, (A) Specularity
-    deferred.g_buffer.addColorAttachment(ColorFormat::RGBA);    // (RGB) Color, (A) Depth - Previous frame
-    deferred.g_buffer.addDepthStencilAttachment();
-    deferred.g_buffer.bindColorAttachments();
-
-    deferred.post_buffer.init();
-    deferred.post_buffer.setSize(internalResolution);
-    deferred.post_buffer.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
-    deferred.g_buffer.shareDepthStencilAttachment(deferred.post_buffer);
-    deferred.post_buffer.bindColorAttachments();
-
-    deferred.reflections_buffer.init();
-    deferred.reflections_buffer.setSize({ internalResolution.width, internalResolution.height });
-    deferred.reflections_buffer.addColorAttachment(ColorFormat::RGBA);
-    deferred.g_buffer.shareDepthStencilAttachment(deferred.reflections_buffer);
-    deferred.reflections_buffer.bindColorAttachments();
-
-    // deferred.reflections_buffer.init();
-    // deferred.reflections_buffer.setSize({ internalResolution.width / 2, internalResolution.height /2 });
-    // deferred.reflections_buffer.addColorAttachment(ColorFormat::RGBA);
-    // deferred.reflections_buffer.bindColorAttachments();
-
-    deferred.copyFrame.init();
-    deferred.copyFrame.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    deferred.copyFrame.fragment("./gamma/opengl/shaders/deferred/copy-frame.frag.glsl");
-    deferred.copyFrame.link();
-
-    deferred.geometry.init();
-    deferred.geometry.vertex("./gamma/opengl/shaders/deferred/geometry.vert.glsl");
-    deferred.geometry.fragment("./gamma/opengl/shaders/deferred/geometry.frag.glsl");
-    deferred.geometry.link();
-
-    deferred.pointLightWithoutShadow.init();
-    deferred.pointLightWithoutShadow.vertex("./gamma/opengl/shaders/deferred/instanced-light.vert.glsl");
-    deferred.pointLightWithoutShadow.fragment("./gamma/opengl/shaders/deferred/point-light-without-shadow.frag.glsl");
-    deferred.pointLightWithoutShadow.link();
-
-    deferred.directionalLightWithoutShadow.init();
-    deferred.directionalLightWithoutShadow.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    deferred.directionalLightWithoutShadow.fragment("./gamma/opengl/shaders/deferred/directional-light-without-shadow.frag.glsl");
-    deferred.directionalLightWithoutShadow.link();
-
-    deferred.copyDepth.init();
-    deferred.copyDepth.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    deferred.copyDepth.fragment("./gamma/opengl/shaders/deferred/copy-depth.frag.glsl");
-    deferred.copyDepth.link();
-
-    shadows.directionalView.init();
-    shadows.directionalView.vertex("./gamma/opengl/shaders/directional-light-view.vert.glsl");
-    shadows.directionalView.fragment("./gamma/opengl/shaders/directional-light-view.frag.glsl");
-    shadows.directionalView.link();
-
-    shadows.directional.init();
-    shadows.directional.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    shadows.directional.fragment("./gamma/opengl/shaders/deferred/directional-light-with-shadow.frag.glsl");
-    shadows.directional.link();
-
-    // @todo define remaining shadowcaster shaders
-
-    // @todo define different SSR quality levels
-    deferred.reflections.init();
-    deferred.reflections.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    deferred.reflections.fragment("./gamma/opengl/shaders/deferred/reflections.frag.glsl");
-    deferred.reflections.link();
-
-    deferred.reflectionsDenoise.init();
-    deferred.reflectionsDenoise.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    deferred.reflectionsDenoise.fragment("./gamma/opengl/shaders/deferred/reflections-denoise.frag.glsl");
-    deferred.reflectionsDenoise.link();
-
-    deferred.skybox.init();
-    deferred.skybox.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    deferred.skybox.fragment("./gamma/opengl/shaders/deferred/skybox.frag.glsl");
-    deferred.skybox.link();
-
-    deferred.refractiveGeometry.init();
-    deferred.refractiveGeometry.vertex("./gamma/opengl/shaders/deferred/geometry.vert.glsl");
-    deferred.refractiveGeometry.fragment("./gamma/opengl/shaders/deferred/refractive-geometry.frag.glsl");
-    deferred.refractiveGeometry.link();
-
-    #if GAMMA_DEVELOPER_MODE
-      debug.g_buffer.init();
-      debug.g_buffer.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-      debug.g_buffer.fragment("./gamma/opengl/shaders/debug/g-buffer.frag.glsl");
-      debug.g_buffer.link();
-
-      debug.directionalShadowMap.init();
-      debug.directionalShadowMap.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-      debug.directionalShadowMap.fragment("./gamma/opengl/shaders/debug/directional-shadow-map.frag.glsl");
-      debug.directionalShadowMap.link();
-    #endif
+    Gm_InitDeferredRenderPath(deferred, internalResolution);
 
     deferred.lightDisc.init();
 
     // Initialize post shaders
-    deferred.debanding.init();
-    deferred.debanding.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    deferred.debanding.fragment("./gamma/opengl/shaders/deband.frag.glsl");
-    deferred.debanding.link();
+    post.debanding.init();
+    post.debanding.vertex("./gamma/opengl/shaders/quad.vert.glsl");
+    post.debanding.fragment("./gamma/opengl/shaders/deband.frag.glsl");
+    post.debanding.link();
 
     // Initialize remaining shaders
     screen.init();
@@ -183,26 +91,9 @@ namespace Gamma {
   }
 
   void OpenGLRenderer::destroy() {
-    deferred.g_buffer.destroy();
-    deferred.post_buffer.destroy();
-    deferred.lightDisc.destroy();
+    Gm_DestroyDeferredRenderPath(deferred);
 
-    deferred.geometry.destroy();
-    deferred.emissives.destroy();
-    deferred.copyDepth.destroy();
-    deferred.pointLightWithoutShadow.destroy();
-    deferred.directionalLightWithoutShadow.destroy();
-    deferred.copyFrame.destroy();
-    deferred.reflections.destroy();
-    deferred.skybox.destroy();
-    deferred.debanding.destroy();
-
-    #if GAMMA_DEVELOPER_MODE
-      debug.g_buffer.destroy();
-      debug.directionalShadowMap.destroy();
-    #endif
-
-    glDeleteBuffers(1, &forward.lightsUbo);
+    // glDeleteBuffers(1, &forward.lightsUbo);
     glDeleteTextures(1, &screenTexture);
 
     SDL_GL_DeleteContext(glContext);
@@ -330,7 +221,7 @@ namespace Gamma {
     }
 
     // Set G-Buffer as render target
-    deferred.g_buffer.write();
+    deferred.buffers.gBuffer.write();
 
     // Clear buffers, reset state
     glViewport(0, 0, internalWidth, internalHeight);
@@ -354,11 +245,11 @@ namespace Gamma {
       Matrix4f::translation(camera.position.invert().gl())
     ).transpose();
 
-    deferred.geometry.use();
-    deferred.geometry.setMatrix4f("projection", projection);
-    deferred.geometry.setMatrix4f("view", view);
-    deferred.geometry.setInt("meshTexture", 0);
-    deferred.geometry.setInt("meshNormalMap", 1);
+    deferred.shaders.geometry.use();
+    deferred.shaders.geometry.setMatrix4f("projection", projection);
+    deferred.shaders.geometry.setMatrix4f("view", view);
+    deferred.shaders.geometry.setInt("meshTexture", 0);
+    deferred.shaders.geometry.setInt("meshNormalMap", 1);
 
     GLenum primitiveMode = Gm_GetFlags() & GammaFlags::WIREFRAME_MODE
       ? GL_LINE_STRIP
@@ -372,8 +263,8 @@ namespace Gamma {
 
     for (auto* glMesh : glMeshes) {
       if (glMesh->isMeshType(MeshType::REFLECTIVE)) {
-        deferred.geometry.setBool("hasTexture", glMesh->hasTexture());
-        deferred.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
+        deferred.shaders.geometry.setBool("hasTexture", glMesh->hasTexture());
+        deferred.shaders.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
 
         glMesh->render(primitiveMode);
       }
@@ -384,8 +275,8 @@ namespace Gamma {
 
     for (auto* glMesh : glMeshes) {
       if (glMesh->isMeshType(MeshType::NON_EMISSIVE)) {
-        deferred.geometry.setBool("hasTexture", glMesh->hasTexture());
-        deferred.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
+        deferred.shaders.geometry.setBool("hasTexture", glMesh->hasTexture());
+        deferred.shaders.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
 
         glMesh->render(primitiveMode);
       }
@@ -395,17 +286,20 @@ namespace Gamma {
     if (glDirectionalShadowMaps.size() > 0 && Gm_GetFlags() & GammaFlags::RENDER_SHADOWS) {
       glDisable(GL_STENCIL_TEST);
 
-      for (uint32 i = 0; i < glDirectionalShadowMaps.size(); i++) {
-        auto& glShadowMap = *glDirectionalShadowMaps[i];
+      auto& shader = deferred.shaders.directionalShadowcasterView;
+
+      shader.use();
+
+      for (uint32 mapIndex = 0; mapIndex < glDirectionalShadowMaps.size(); mapIndex++) {
+        auto& glShadowMap = *glDirectionalShadowMaps[mapIndex];
 
         glShadowMap.buffer.write();
-        shadows.directionalView.use();
 
         for (uint32 cascade = 0; cascade < 3; cascade++) {
           glShadowMap.buffer.writeToAttachment(cascade);
-          Matrix4f lightView = glShadowMap.createCascadedLightViewMatrix(cascade, directionalShadowcasters[i].direction, camera);
+          Matrix4f lightView = Gm_CreateCascadedLightViewMatrixGL(cascade, directionalShadowcasters[mapIndex].direction, camera);
 
-          shadows.directionalView.setMatrix4f("lightView", lightView);
+          shader.setMatrix4f("lightView", lightView);
 
           glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -425,8 +319,8 @@ namespace Gamma {
     }
 
     // Lighting pass; read from G-Buffer and preemptively write to post buffer
-    deferred.g_buffer.read();
-    deferred.post_buffer.write();
+    deferred.buffers.gBuffer.read();
+    deferred.buffers.post.write();
 
     glViewport(0, 0, internalWidth, internalHeight);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -452,10 +346,10 @@ namespace Gamma {
     // i.e. otherwise written to the post buffer in the
     // directional lighting passes.
     if (directionalLights.size() == 0 && directionalShadowcasters.size() == 0) {
-      auto& shader = deferred.copyDepth;
+      auto& shader = deferred.shaders.copyDepth;
 
       shader.use();
-      shader.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+      shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
       shader.setInt("color_and_depth", 0);
 
       OpenGLScreenQuad::render();
@@ -463,7 +357,7 @@ namespace Gamma {
 
     // Render point lights (non-shadowcasters)
     if (pointLights.size() > 0) {
-      auto& shader = deferred.pointLightWithoutShadow;
+      auto& shader = deferred.shaders.pointLight;
 
       shader.use();
       shader.setInt("colorAndDepth", 0);
@@ -477,10 +371,10 @@ namespace Gamma {
 
     // Render directional lights (non-shadowcasters)
     if (directionalLights.size() > 0) {
-      auto& shader = deferred.directionalLightWithoutShadow;
+      auto& shader = deferred.shaders.directionalLight;
 
       shader.use();
-      shader.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+      shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
       shader.setInt("colorAndDepth", 0);
       shader.setInt("normalAndSpecularity", 1);
       shader.setVec3f("cameraPosition", camera.position);
@@ -501,10 +395,12 @@ namespace Gamma {
 
     // Render directional shadowcaster lights
     if (directionalShadowcasters.size() > 0) {
-      deferred.g_buffer.read();
-      deferred.post_buffer.write();
+      deferred.buffers.gBuffer.read();
+      deferred.buffers.post.write();
 
-      shadows.directional.use();
+      auto& shader = deferred.shaders.directionalShadowcaster;
+
+      shader.use();
 
       for (uint32 i = 0; i < directionalShadowcasters.size(); i++) {
         auto& light = directionalShadowcasters[i];
@@ -512,22 +408,22 @@ namespace Gamma {
 
         glShadowMap.buffer.read();
 
-        shadows.directional.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+        shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
         // @todo define an enum for reserved color attachment indexes
-        shadows.directional.setInt("colorAndDepth", 0);
-        shadows.directional.setInt("normalAndSpecularity", 1);
-        shadows.directional.setInt("shadowMaps[0]", 3);
-        shadows.directional.setInt("shadowMaps[1]", 4);
-        shadows.directional.setInt("shadowMaps[2]", 5);
-        shadows.directional.setMatrix4f("lightMatrices[0]", glShadowMap.createCascadedLightViewMatrix(0, light.direction, camera));
-        shadows.directional.setMatrix4f("lightMatrices[1]", glShadowMap.createCascadedLightViewMatrix(1, light.direction, camera));
-        shadows.directional.setMatrix4f("lightMatrices[2]", glShadowMap.createCascadedLightViewMatrix(2, light.direction, camera));
-        shadows.directional.setVec3f("cameraPosition", camera.position);
-        shadows.directional.setMatrix4f("inverseProjection", inverseProjection);
-        shadows.directional.setMatrix4f("inverseView", inverseView);
-        shadows.directional.setVec3f("light.color", light.color);
-        shadows.directional.setFloat("light.power", light.power);
-        shadows.directional.setVec3f("light.direction", light.direction);
+        shader.setInt("colorAndDepth", 0);
+        shader.setInt("normalAndSpecularity", 1);
+        shader.setInt("shadowMaps[0]", 3);
+        shader.setInt("shadowMaps[1]", 4);
+        shader.setInt("shadowMaps[2]", 5);
+        shader.setMatrix4f("lightMatrices[0]", Gm_CreateCascadedLightViewMatrixGL(0, light.direction, camera));
+        shader.setMatrix4f("lightMatrices[1]", Gm_CreateCascadedLightViewMatrixGL(1, light.direction, camera));
+        shader.setMatrix4f("lightMatrices[2]", Gm_CreateCascadedLightViewMatrixGL(2, light.direction, camera));
+        shader.setVec3f("cameraPosition", camera.position);
+        shader.setMatrix4f("inverseProjection", inverseProjection);
+        shader.setMatrix4f("inverseView", inverseView);
+        shader.setVec3f("light.color", light.color);
+        shader.setFloat("light.power", light.power);
+        shader.setVec3f("light.direction", light.direction);
 
         OpenGLScreenQuad::render();
       }
@@ -539,11 +435,11 @@ namespace Gamma {
     glDisable(GL_BLEND);
     glStencilFunc(GL_EQUAL, MeshType::EMISSIVE, 0xFF);
 
-    deferred.skybox.use();
-    deferred.skybox.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
-    deferred.skybox.setVec3f("cameraPosition", camera.position);
-    deferred.skybox.setMatrix4f("inverseProjection", inverseProjection);
-    deferred.skybox.setMatrix4f("inverseView", inverseView);
+    deferred.shaders.skybox.use();
+    deferred.shaders.skybox.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+    deferred.shaders.skybox.setVec3f("cameraPosition", camera.position);
+    deferred.shaders.skybox.setMatrix4f("inverseProjection", inverseProjection);
+    deferred.shaders.skybox.setMatrix4f("inverseView", inverseView);
 
     OpenGLScreenQuad::render();
 
@@ -559,8 +455,8 @@ namespace Gamma {
 
       writeAccumulatedEffectsBackIntoGBuffer();
 
-      deferred.g_buffer.read();
-      deferred.reflections_buffer.write();
+      deferred.buffers.gBuffer.read();
+      deferred.buffers.reflections.write();
 
       // Render reflections (screen-space + skybox)
       //
@@ -568,25 +464,25 @@ namespace Gamma {
       glStencilFunc(GL_EQUAL, MeshType::REFLECTIVE, 0xFF);
       // glViewport(0, 0, internalWidth / 2, internalHeight / 2);
 
-      deferred.reflections.use();
-      deferred.reflections.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
-      deferred.reflections.setInt("normalAndSpecularity", 1);
-      deferred.reflections.setInt("colorAndDepth", 2);
-      deferred.reflections.setVec3f("cameraPosition", camera.position);
-      deferred.reflections.setMatrix4f("view", view);
-      deferred.reflections.setMatrix4f("inverseView", inverseView);
-      deferred.reflections.setMatrix4f("projection", projection);
-      deferred.reflections.setMatrix4f("inverseProjection", inverseProjection);
+      deferred.shaders.reflections.use();
+      deferred.shaders.reflections.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+      deferred.shaders.reflections.setInt("normalAndSpecularity", 1);
+      deferred.shaders.reflections.setInt("colorAndDepth", 2);
+      deferred.shaders.reflections.setVec3f("cameraPosition", camera.position);
+      deferred.shaders.reflections.setMatrix4f("view", view);
+      deferred.shaders.reflections.setMatrix4f("inverseView", inverseView);
+      deferred.shaders.reflections.setMatrix4f("projection", projection);
+      deferred.shaders.reflections.setMatrix4f("inverseProjection", inverseProjection);
 
       OpenGLScreenQuad::render();
       // glViewport(0, 0, internalWidth, internalHeight);
 
-      deferred.reflections_buffer.read();
-      deferred.post_buffer.write();
+      deferred.buffers.reflections.read();
+      deferred.buffers.post.write();
 
-      deferred.reflectionsDenoise.use();
-      deferred.reflectionsDenoise.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
-      deferred.reflectionsDenoise.setInt("colorAndDepth", 0);
+      deferred.shaders.reflectionsDenoise.use();
+      deferred.shaders.reflectionsDenoise.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+      deferred.shaders.reflectionsDenoise.setInt("colorAndDepth", 0);
 
       OpenGLScreenQuad::render();
     }
@@ -603,20 +499,20 @@ namespace Gamma {
 
       writeAccumulatedEffectsBackIntoGBuffer();
 
-      deferred.g_buffer.read();
-      deferred.post_buffer.write();
+      deferred.buffers.gBuffer.read();
+      deferred.buffers.post.write();
 
       glEnable(GL_CULL_FACE);
       glEnable(GL_DEPTH_TEST);
       glDisable(GL_STENCIL_TEST);
 
-      deferred.refractiveGeometry.use();
-      deferred.refractiveGeometry.setInt("colorAndDepth", 2);
-      deferred.refractiveGeometry.setMatrix4f("projection", projection);
-      deferred.refractiveGeometry.setMatrix4f("inverseProjection", inverseProjection);
-      deferred.refractiveGeometry.setMatrix4f("view", view);
-      deferred.refractiveGeometry.setMatrix4f("inverseView", inverseView);
-      deferred.refractiveGeometry.setVec3f("cameraPosition", camera.position);
+      deferred.shaders.refractiveGeometry.use();
+      deferred.shaders.refractiveGeometry.setInt("colorAndDepth", 2);
+      deferred.shaders.refractiveGeometry.setMatrix4f("projection", projection);
+      deferred.shaders.refractiveGeometry.setMatrix4f("inverseProjection", inverseProjection);
+      deferred.shaders.refractiveGeometry.setMatrix4f("view", view);
+      deferred.shaders.refractiveGeometry.setMatrix4f("inverseView", inverseView);
+      deferred.shaders.refractiveGeometry.setVec3f("cameraPosition", camera.position);
 
       for (auto* glMesh : glMeshes) {
         if (glMesh->isMeshType(MeshType::REFRACTIVE)) {
@@ -629,7 +525,7 @@ namespace Gamma {
     }
 
     // Post-processing pass
-    deferred.post_buffer.read();
+    deferred.buffers.post.read();
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
     glViewport(0, 0, Window::size.width, Window::size.height);
@@ -637,19 +533,19 @@ namespace Gamma {
     glDisable(GL_STENCIL_TEST);
     glStencilMask(0xFF);
 
-    deferred.debanding.use();
-    deferred.debanding.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
+    post.debanding.use();
+    post.debanding.setVec4f("transform", FULL_SCREEN_TRANSFORM);
 
     OpenGLScreenQuad::render();
 
     #if GAMMA_DEVELOPER_MODE
       if (Gm_GetFlags() & GammaFlags::SHOW_DEBUG_BUFFERS) {
-        deferred.g_buffer.read();
+        deferred.buffers.gBuffer.read();
 
-        debug.g_buffer.use();
-        debug.g_buffer.setInt("colorAndDepth", 0);
-        debug.g_buffer.setInt("normalAndSpecularity", 1);
-        debug.g_buffer.setVec4f("transform", { 0.53f, 0.82f, 0.43f, 0.11f });
+        deferred.shaders.gBufferDebug.use();
+        deferred.shaders.gBufferDebug.setInt("colorAndDepth", 0);
+        deferred.shaders.gBufferDebug.setInt("normalAndSpecularity", 1);
+        deferred.shaders.gBufferDebug.setVec4f("transform", { 0.53f, 0.82f, 0.43f, 0.11f });
 
         OpenGLScreenQuad::render();
 
@@ -658,11 +554,11 @@ namespace Gamma {
 
           glDirectionalShadowMaps[i]->buffer.read();
 
-          debug.directionalShadowMap.use();
-          debug.directionalShadowMap.setInt("cascade0", 3);
-          debug.directionalShadowMap.setInt("cascade1", 4);
-          debug.directionalShadowMap.setInt("cascade2", 5);
-          debug.directionalShadowMap.setVec4f("transform", { 0.695f, yOffset, 0.266f, 0.15f });
+          deferred.shaders.directionalShadowMapDebug.use();
+          deferred.shaders.directionalShadowMapDebug.setInt("cascade0", 3);
+          deferred.shaders.directionalShadowMapDebug.setInt("cascade1", 4);
+          deferred.shaders.directionalShadowMapDebug.setInt("cascade2", 5);
+          deferred.shaders.directionalShadowMapDebug.setVec4f("transform", { 0.695f, yOffset, 0.266f, 0.15f });
 
           OpenGLScreenQuad::render();
         }
@@ -720,12 +616,12 @@ namespace Gamma {
    * on-screen image.
    */
   void OpenGLRenderer::writeAccumulatedEffectsBackIntoGBuffer() {
-    deferred.post_buffer.read();
-    deferred.g_buffer.write();
+    deferred.buffers.post.read();
+    deferred.buffers.gBuffer.write();
 
-    deferred.copyFrame.use();
-    deferred.copyFrame.setVec4f("transform", { 0.0f, 0.0f, 1.0f, 1.0f });
-    deferred.copyFrame.setInt("colorAndDepth", 0);
+    deferred.shaders.copyFrame.use();
+    deferred.shaders.copyFrame.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+    deferred.shaders.copyFrame.setInt("colorAndDepth", 0);
 
     OpenGLScreenQuad::render();
   }

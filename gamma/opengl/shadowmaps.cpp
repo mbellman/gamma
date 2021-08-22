@@ -28,9 +28,32 @@ namespace Gamma {
   }
 
   /**
+   * OpenGLPointShadowMap
+   * --------------------
+   */
+  OpenGLPointShadowMap::OpenGLPointShadowMap(const Light* light) {
+    lightId = light->id;
+
+    // @todo
+  }
+
+  /**
+   * OpenGLSpotShadowMap
+   * -------------------
+   */
+  OpenGLSpotShadowMap::OpenGLSpotShadowMap(const Light* light) {
+    lightId = light->id;
+
+    // @todo
+  }
+
+  /**
+   * Gm_CreateCascadedLightViewMatrixGL
+   * ----------------------------------
+   *
    * Adapted from https://alextardif.com/shadowmapping.html
    */
-  Matrix4f OpenGLDirectionalShadowMap::createCascadedLightViewMatrix(uint8 cascade, const Vec3f& lightDirection, const Camera& camera) {
+  Matrix4f Gm_CreateCascadedLightViewMatrixGL(uint8 cascade, const Vec3f& lightDirection, const Camera& camera) {
     // Determine the near and far ranges of the cascade volume
     float near = cascadeDepthRanges[cascade][0];
     float far = cascadeDepthRanges[cascade][1];
@@ -100,23 +123,5 @@ namespace Gamma {
     Matrix4f view = Matrix4f::lookAt(frustumCenter.gl(), lightDirection.invert().gl(), Vec3f(0.0f, 1.0f, 0.0f));
 
     return (projection * view).transpose();
-  }
-
-  /**
-   * OpenGLPointShadowMap
-   * --------------------
-   */
-  // @todo
-  OpenGLPointShadowMap::OpenGLPointShadowMap(const Light* light) {
-    lightId = light->id;
-  }
-
-  /**
-   * OpenGLSpotShadowMap
-   * -------------------
-   */
-  // @todo
-  OpenGLSpotShadowMap::OpenGLSpotShadowMap(const Light* light) {
-    lightId = light->id;
   }
 }

@@ -16,8 +16,6 @@ namespace Gamma {
     OpenGLFrameBuffer buffer;
 
     OpenGLDirectionalShadowMap(const Light* light);
-
-    Matrix4f createCascadedLightViewMatrix(uint8 cascade, const Vec3f& lightDirection, const Camera& camera);
   };
 
   struct OpenGLPointShadowMap : public OpenGLBaseShadowMap {
@@ -31,4 +29,6 @@ namespace Gamma {
 
     OpenGLSpotShadowMap(const Light* light);
   };
+
+  Matrix4f Gm_CreateCascadedLightViewMatrixGL(uint8 cascade, const Vec3f& lightDirection, const Camera& camera);
 }

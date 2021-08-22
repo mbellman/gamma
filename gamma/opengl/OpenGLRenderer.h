@@ -20,6 +20,41 @@ namespace Gamma {
     RENDER_DEFERRED = 1 << 0
   };
 
+  struct DeferredPath {
+    OpenGLLightDisc lightDisc;
+
+    struct {
+      OpenGLFrameBuffer gBuffer;
+      OpenGLFrameBuffer reflections;
+      OpenGLFrameBuffer post;
+    } buffers;
+
+    struct {
+      OpenGLShader copyFrame;
+      OpenGLShader geometry;
+      OpenGLShader emissives;
+      OpenGLShader copyDepth;
+      OpenGLShader pointLight;
+      OpenGLShader directionalLight;
+      OpenGLShader reflections;
+      OpenGLShader reflectionsDenoise;
+      OpenGLShader skybox;
+      OpenGLShader refractiveGeometry;
+
+      // Shadowcaster shaders
+      OpenGLShader directionalShadowcaster;
+      OpenGLShader directionalShadowcasterView;
+      OpenGLShader pointShadowcaster;
+      OpenGLShader pointShadowcasterView;
+      OpenGLShader spotShadowcaster;
+      OpenGLShader spotShadowcasterView;
+
+      // Debug shaders
+      OpenGLShader gBufferDebug;
+      OpenGLShader directionalShadowMapDebug;
+    } shaders;
+  };
+
   class OpenGLRenderer final : public AbstractRenderer {
   public:
     OpenGLRenderer(SDL_Window* sdl_window): AbstractRenderer(sdl_window) {};
@@ -52,37 +87,11 @@ namespace Gamma {
       GLuint lightsUbo = 0;
     } forward;
 
-    struct DeferredPath {
-      OpenGLFrameBuffer g_buffer;
-      OpenGLFrameBuffer reflections_buffer;
-      OpenGLFrameBuffer post_buffer;
-      OpenGLLightDisc lightDisc;
-      OpenGLShader copyFrame;
-      OpenGLShader geometry;
-      OpenGLShader emissives;
-      OpenGLShader copyDepth;
-      OpenGLShader pointLightWithoutShadow;
-      OpenGLShader directionalLightWithoutShadow;
-      OpenGLShader reflections;
-      OpenGLShader reflectionsDenoise;
-      OpenGLShader skybox;
-      OpenGLShader refractiveGeometry;
+    DeferredPath deferred;
+
+    struct PostShaders {
       OpenGLShader debanding;
-    } deferred;
-
-    struct DebugShaders {
-      OpenGLShader g_buffer;
-      OpenGLShader directionalShadowMap;
-    } debug;
-
-    struct ShadowcasterShaders {
-      OpenGLShader directional;
-      OpenGLShader directionalView;
-      OpenGLShader point;
-      OpenGLShader pointView;
-      OpenGLShader spot;
-      OpenGLShader spotView;
-    } shadows;
+    } post;
 
     void renderDeferred();
     void renderForward();
