@@ -27,6 +27,8 @@ namespace Gamma {
     virtual void init() override;
     virtual void destroy() override;
     void attachShader(const GLShaderRecord& record);
+    void fragment(const char* path);
+    void geometry(const char* path);
     void link();
     void setBool(std::string name, bool value) const;
     void setFloat(std::string name, float value) const;
@@ -36,6 +38,7 @@ namespace Gamma {
     void setVec3f(std::string name, const Vec3f& value) const;
     void setVec4f(std::string name, const Vec4f& value) const;
     void use();
+    void vertex(const char* path);
 
   private:
     GLuint program = -1;

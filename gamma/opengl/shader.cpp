@@ -115,6 +115,14 @@ namespace Gamma {
     }
   }
 
+  void OpenGLShader::fragment(const char* path) {
+    attachShader(Gm_CompileFragmentShader(path));
+  }
+
+  void OpenGLShader::geometry(const char* path) {
+    attachShader(Gm_CompileGeometryShader(path));
+  }
+
   GLint OpenGLShader::getUniformLocation(const char* name) const {
     return glGetUniformLocation(program, name);
   }
@@ -161,5 +169,9 @@ namespace Gamma {
     #endif
 
     glUseProgram(program);
+  }
+
+  void OpenGLShader::vertex(const char* path) {
+    attachShader(Gm_CompileVertexShader(path));
   }
 }
