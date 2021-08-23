@@ -4,9 +4,9 @@
 namespace Gamma {
   static uint32 internalFlags =
     GammaFlags::RENDER_REFLECTIONS |
-    GammaFlags::RENDER_REFRACTIONS |
+    GammaFlags::RENDER_REFRACTIVE_OBJECTS |
     GammaFlags::RENDER_SHADOWS |
-    GammaFlags::SHOW_DEBUG_BUFFERS;
+    GammaFlags::SHOW_DEV_BUFFERS;
 
   void Gm_DisableFlags(GammaFlags flags) {
     internalFlags &= ~flags;
@@ -18,5 +18,9 @@ namespace Gamma {
 
   uint32 Gm_GetFlags() {
     return internalFlags;
+  }
+
+  bool Gm_IsFlagEnabled(GammaFlags flag) {
+    return internalFlags & flag;
   }
 }

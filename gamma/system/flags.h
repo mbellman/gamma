@@ -14,12 +14,14 @@ namespace Gamma {
     WIREFRAME_MODE = 1 << 2,
     VSYNC = 1 << 3,
     RENDER_REFLECTIONS = 1 << 4,
-    RENDER_REFRACTIONS = 1 << 5,
-    RENDER_SHADOWS = 1 << 6,
-    SHOW_DEBUG_BUFFERS = 1 << 7
+    RENDER_REFRACTIVE_OBJECTS = 1 << 5,
+    RENDER_REFRACTIVE_OBJECTS_WITHIN_REFLECTIONS = 1 << 6,
+    RENDER_SHADOWS = 1 << 7,
+    SHOW_DEV_BUFFERS = 1 << 8
   };
 
   void Gm_DisableFlags(GammaFlags flags);
   void Gm_EnableFlags(GammaFlags flags);
   uint32 Gm_GetFlags();
+  bool Gm_IsFlagEnabled(GammaFlags flag);
 }

@@ -94,15 +94,15 @@ namespace Gamma {
     deferred.shaders.refractivePrepass.link();
 
     #if GAMMA_DEVELOPER_MODE
-      deferred.shaders.gBufferDebug.init();
-      deferred.shaders.gBufferDebug.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-      deferred.shaders.gBufferDebug.fragment("./gamma/opengl/shaders/debug/g-buffer.frag.glsl");
-      deferred.shaders.gBufferDebug.link();
+      deferred.shaders.gBufferDev.init();
+      deferred.shaders.gBufferDev.vertex("./gamma/opengl/shaders/quad.vert.glsl");
+      deferred.shaders.gBufferDev.fragment("./gamma/opengl/shaders/dev/g-buffer.frag.glsl");
+      deferred.shaders.gBufferDev.link();
 
-      deferred.shaders.directionalShadowMapDebug.init();
-      deferred.shaders.directionalShadowMapDebug.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-      deferred.shaders.directionalShadowMapDebug.fragment("./gamma/opengl/shaders/debug/directional-shadow-map.frag.glsl");
-      deferred.shaders.directionalShadowMapDebug.link();
+      deferred.shaders.directionalShadowMapDev.init();
+      deferred.shaders.directionalShadowMapDev.vertex("./gamma/opengl/shaders/quad.vert.glsl");
+      deferred.shaders.directionalShadowMapDev.fragment("./gamma/opengl/shaders/dev/directional-shadow-map.frag.glsl");
+      deferred.shaders.directionalShadowMapDev.link();
     #endif
 
     // Initialize remaining components
@@ -131,8 +131,8 @@ namespace Gamma {
     deferred.shaders.refractivePrepass.destroy();
 
     #if GAMMA_DEVELOPER_MODE
-      deferred.shaders.gBufferDebug.destroy();
-      deferred.shaders.directionalShadowMapDebug.destroy();
+      deferred.shaders.gBufferDev.destroy();
+      deferred.shaders.directionalShadowMapDev.destroy();
     #endif
 
     deferred.lightDisc.destroy();

@@ -118,7 +118,7 @@ void DemoScene::init() {
     }
 
     if (key == Key::V) {
-      if (Gm_GetFlags() & GammaFlags::VSYNC) {
+      if (Gm_IsFlagEnabled(GammaFlags::VSYNC)) {
         Gm_DisableFlags(GammaFlags::VSYNC);
       } else {
         Gm_EnableFlags(GammaFlags::VSYNC);

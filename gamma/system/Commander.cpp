@@ -11,9 +11,10 @@ namespace Gamma {
 
   static Command commands[] = {
     { "reflect", "Reflections", GammaFlags::RENDER_REFLECTIONS },
-    { "refract", "Refractions", GammaFlags::RENDER_REFRACTIONS },
+    { "refract", "Refractive objects", GammaFlags::RENDER_REFRACTIVE_OBJECTS },
     { "shadow", "Shadows", GammaFlags::RENDER_SHADOWS },
-    { "debug buffers", "Debug buffers", GammaFlags::SHOW_DEBUG_BUFFERS }
+    { "rro", "Reflections of refractive objects", GammaFlags::RENDER_REFRACTIVE_OBJECTS_WITHIN_REFLECTIONS },
+    { "dev buffers", "Dev buffers", GammaFlags::SHOW_DEV_BUFFERS }
   };
 
   Commander::Commander() {
@@ -59,8 +60,10 @@ namespace Gamma {
   }
 
   void Commander::processCurrentCommand() {
+    constexpr static uint32 totalCommands = sizeof(commands) / sizeof(Command);
+
     if (currentCommandIncludes("enable")) {
-      for (uint32 i = 0; i < 4; i++) {
+      for (uint32 i = 0; i < totalCommands; i++) {
         auto& command = commands[i];
 
         if (currentCommandIncludes(command.keyword)) {
@@ -70,7 +73,7 @@ namespace Gamma {
         }
       }
     } else if (currentCommandIncludes("disable")) {
-      for (uint32 i = 0; i < 4; i++) {
+      for (uint32 i = 0; i < totalCommands; i++) {
         auto& command = commands[i];
 
         if (currentCommandIncludes(command.keyword)) {

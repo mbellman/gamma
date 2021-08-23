@@ -184,7 +184,7 @@ namespace Gamma {
           directionalLights.push_back(light);
           break;
         case LightType::DIRECTIONAL_SHADOWCASTER:
-          if (Gm_GetFlags() & GammaFlags::RENDER_SHADOWS) {
+          if (Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
             directionalShadowcasters.push_back(light);
           } else {
             directionalLights.push_back(light);
@@ -206,13 +206,13 @@ namespace Gamma {
     }
 
     // Handle vsync setting changes
-    if (Gm_GetFlags() & GammaFlags::VSYNC && SDL_GL_GetSwapInterval() == 0) {
+    if (Gm_IsFlagEnabled(GammaFlags::VSYNC) && SDL_GL_GetSwapInterval() == 0) {
       SDL_GL_SetSwapInterval(1);
 
       #if GAMMA_DEVELOPER_MODE
         Console::log("[Gamma] V-Sync enabled");
       #endif
-    } else if (!(Gm_GetFlags() & GammaFlags::VSYNC) && SDL_GL_GetSwapInterval() == 1) {
+    } else if (!Gm_IsFlagEnabled(GammaFlags::VSYNC) && SDL_GL_GetSwapInterval() == 1) {
       SDL_GL_SetSwapInterval(0);
 
       #if GAMMA_DEVELOPER_MODE
@@ -251,7 +251,7 @@ namespace Gamma {
     deferred.shaders.geometry.setInt("meshTexture", 0);
     deferred.shaders.geometry.setInt("meshNormalMap", 1);
 
-    GLenum primitiveMode = Gm_GetFlags() & GammaFlags::WIREFRAME_MODE
+    GLenum primitiveMode = Gm_IsFlagEnabled(GammaFlags::WIREFRAME_MODE)
       ? GL_LINE_STRIP
       : GL_TRIANGLES;
 
@@ -283,7 +283,7 @@ namespace Gamma {
     }
 
     // Render directional shadow maps
-    if (glDirectionalShadowMaps.size() > 0 && Gm_GetFlags() & GammaFlags::RENDER_SHADOWS) {
+    if (glDirectionalShadowMaps.size() > 0 && Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
       glDisable(GL_STENCIL_TEST);
 
       auto& shader = deferred.shaders.directionalShadowcasterView;
@@ -327,7 +327,6 @@ namespace Gamma {
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-    glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
     glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
     glStencilMask(0x00);
 
@@ -443,7 +442,7 @@ namespace Gamma {
 
     OpenGLScreenQuad::render();
 
-    if (hasReflectiveObjects && (Gm_GetFlags() & GammaFlags::RENDER_REFLECTIONS)) {
+    if (hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
       // Write all non-skybox pixels back into the accumulated
       // color buffer. If the sky is reflected on a surface, its
       // color is computed in the reflections shader rather than
@@ -455,12 +454,14 @@ namespace Gamma {
 
       writeAccumulatedEffectsBackIntoGBuffer();
 
-      if (hasRefractiveObjects && (Gm_GetFlags() & GammaFlags::RENDER_REFRACTIONS)) {
+      if (
+        hasRefractiveObjects &&
+        Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS) &&
+        Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS_WITHIN_REFLECTIONS)
+      ) {
         // @todo explain this
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
-        glEnable(GL_BLEND);
-        glDepthMask(GL_FALSE);
 
         glStencilFunc(GL_NOTEQUAL, MeshType::REFLECTIVE, 0xFF);
         glStencilMask(MeshType::REFRACTIVE);
@@ -478,8 +479,6 @@ namespace Gamma {
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
-        glDisable(GL_BLEND);
-        glDepthMask(GL_TRUE);
       }
 
       deferred.buffers.gBuffer.read();
@@ -514,7 +513,7 @@ namespace Gamma {
       OpenGLScreenQuad::render();
     }
 
-    if (hasRefractiveObjects && (Gm_GetFlags() & GammaFlags::RENDER_REFRACTIONS)) {
+    if (hasRefractiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS)) {
       // Write all non-skybox pixels back into the accumulated
       // color buffer. If refraction rays point toward the sky,
       // we compute the sky color in the shader, rather than
@@ -566,13 +565,13 @@ namespace Gamma {
     OpenGLScreenQuad::render();
 
     #if GAMMA_DEVELOPER_MODE
-      if (Gm_GetFlags() & GammaFlags::SHOW_DEBUG_BUFFERS) {
+      if (Gm_IsFlagEnabled(GammaFlags::SHOW_DEV_BUFFERS)) {
         deferred.buffers.gBuffer.read();
 
-        deferred.shaders.gBufferDebug.use();
-        deferred.shaders.gBufferDebug.setInt("colorAndDepth", 0);
-        deferred.shaders.gBufferDebug.setInt("normalAndSpecularity", 1);
-        deferred.shaders.gBufferDebug.setVec4f("transform", { 0.53f, 0.82f, 0.43f, 0.11f });
+        deferred.shaders.gBufferDev.use();
+        deferred.shaders.gBufferDev.setInt("colorAndDepth", 0);
+        deferred.shaders.gBufferDev.setInt("normalAndSpecularity", 1);
+        deferred.shaders.gBufferDev.setVec4f("transform", { 0.53f, 0.82f, 0.43f, 0.11f });
 
         OpenGLScreenQuad::render();
 
@@ -581,11 +580,11 @@ namespace Gamma {
 
           glDirectionalShadowMaps[i]->buffer.read();
 
-          deferred.shaders.directionalShadowMapDebug.use();
-          deferred.shaders.directionalShadowMapDebug.setInt("cascade0", 3);
-          deferred.shaders.directionalShadowMapDebug.setInt("cascade1", 4);
-          deferred.shaders.directionalShadowMapDebug.setInt("cascade2", 5);
-          deferred.shaders.directionalShadowMapDebug.setVec4f("transform", { 0.695f, yOffset, 0.266f, 0.15f });
+          deferred.shaders.directionalShadowMapDev.use();
+          deferred.shaders.directionalShadowMapDev.setInt("cascade0", 3);
+          deferred.shaders.directionalShadowMapDev.setInt("cascade1", 4);
+          deferred.shaders.directionalShadowMapDev.setInt("cascade2", 5);
+          deferred.shaders.directionalShadowMapDev.setVec4f("transform", { 0.695f, yOffset, 0.266f, 0.15f });
 
           OpenGLScreenQuad::render();
         }

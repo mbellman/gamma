@@ -50,9 +50,9 @@ namespace Gamma {
       OpenGLShader spotShadowcaster;
       OpenGLShader spotShadowcasterView;
 
-      // Debug shaders
-      OpenGLShader gBufferDebug;
-      OpenGLShader directionalShadowMapDebug;
+      // Dev shaders
+      OpenGLShader gBufferDev;
+      OpenGLShader directionalShadowMapDev;
     } shaders;
   };
 
