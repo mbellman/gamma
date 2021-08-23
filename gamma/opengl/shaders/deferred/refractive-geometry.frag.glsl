@@ -57,7 +57,7 @@ vec2 viewToScreenCoordinates(vec3 view_position) {
 // from skybox helpers or similar. track shader dependencies
 // as part of hot reloading
 vec3 getSkyColor(vec3 direction) {
-  vec3 sunDirection = normalize(vec3(0.5, 1.0, -1.0));
+  vec3 sunDirection = normalize(vec3(0.3, 0.5, -1.0));
   vec3 sunColor = vec3(1.0, 0.1, 0.2);
   float sunBrightness = 10;
   float altitude = 0.6;
@@ -86,7 +86,7 @@ bool isOffScreen(vec2 uv) {
 
 void main() {
   const float REFRACTION_INTENSITY = 3.0;
-  const vec3 GEOMETRY_COLOR = vec3(1, 1, 1);
+  const vec3 GEOMETRY_COLOR = vec3(1, 0, 1);
 
   vec3 position = getWorldPosition(gl_FragCoord.z);
   vec3 color = vec3(1.0);
@@ -118,5 +118,5 @@ void main() {
 
   refracted_color_and_depth.rgb *= GEOMETRY_COLOR;
 
-  out_color_and_depth = refracted_color_and_depth;
+  out_color_and_depth = vec4(refracted_color_and_depth.rgb, gl_FragCoord.z);
 }

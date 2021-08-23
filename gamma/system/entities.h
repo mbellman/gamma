@@ -31,11 +31,11 @@ namespace Gamma {
     /**
      * @todo description
      */
-    REFLECTIVE = 0xF0,
+    REFRACTIVE = 0xF0,
     /**
      * @todo description
      */
-    REFRACTIVE = 0xFA,
+    REFLECTIVE = 0xFA,
     /**
      * @todo description
      */

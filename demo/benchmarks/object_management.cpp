@@ -6,7 +6,7 @@
 using namespace Gamma;
 
 constexpr static uint32 TOTAL_MESHES = 100;
-constexpr static uint32 TOTAL_OBJECTS = 1000000;
+constexpr static uint32 TOTAL_OBJECTS = 100000;
 
 static uint64 benchmark_pointer_object_properties(uint32 iterations) {
   Console::log("benchmark_pointer_object_properties");
@@ -115,6 +115,14 @@ static uint64 benchmark_pool_object_properties(uint32 iterations) {
   return Gm_RepeatBenchmarkTest([&]() {
     for (uint32 i = 0; i < TOTAL_MESHES; i++) {
       auto& pool = *pools[i];
+
+      // for (uint32 j = 0; j < pool.total(); j++) {
+      //   auto& object = *pool.getById(j);
+
+      //   object.position = Vec3f(1.0f, 0.5f, 0.25f);
+      //   object.scale = 20.0f;
+      //   object.rotation = Vec3f(0.9f, 2.3f, 1.4f);
+      // }
 
       for (auto& object : pool) {
         object.position = Vec3f(1.0f, 0.5f, 0.25f);
@@ -304,13 +312,13 @@ static uint64 benchmark_soa_object_matrices(uint32 iterations) {
 }
 
 void benchmark_object_management() {
-  // auto b_pointers = benchmark_pointer_object_properties(1);
-  // auto b_pool = benchmark_pool_object_properties(1);
-  // auto b_soa = benchmark_soa_object_properties(1);
+  auto b_pointers = benchmark_pointer_object_properties(1);
+  auto b_pool = benchmark_pool_object_properties(1);
+  auto b_soa = benchmark_soa_object_properties(1);
 
-  auto b_pointers = benchmark_pointer_object_matrices(1);
-  auto b_pool = benchmark_pool_object_matrices(1);
-  auto b_soa = benchmark_soa_object_matrices(1);
+  // auto b_pointers = benchmark_pointer_object_matrices(1);
+  // auto b_pool = benchmark_pool_object_matrices(1);
+  // auto b_soa = benchmark_soa_object_matrices(1);
 
   Gm_CompareBenchmarks(
     b_pointers,

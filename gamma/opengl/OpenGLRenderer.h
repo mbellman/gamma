@@ -39,6 +39,7 @@ namespace Gamma {
       OpenGLShader reflections;
       OpenGLShader reflectionsDenoise;
       OpenGLShader skybox;
+      OpenGLShader refractivePrepass;
       OpenGLShader refractiveGeometry;
 
       // Shadowcaster shaders

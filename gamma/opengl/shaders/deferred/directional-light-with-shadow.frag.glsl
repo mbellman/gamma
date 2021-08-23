@@ -92,22 +92,22 @@ void main() {
 
   float shadow_map_depth = texture(shadowMaps[cascade.index], shadow_map_transform.xy).r;
 
+  vec3 n_surfaceToCamera = normalize(cameraPosition - position);
+  // Loosely approximates ambient/indirect lighting
+  vec3 hack_ambient_light = light.color * light.power * pow(max(1.0 - dot(n_surfaceToCamera, normal), 0.0), 2) * 0.2;
+
   // @todo use filtering
   if (shadow_map_transform.z < 0.999 && shadow_map_depth < shadow_map_transform.z - cascade.bias) {
-    out_color_and_depth = vec4(vec3(0), frag_colorAndDepth.w);
+    out_color_and_depth = vec4(color * hack_ambient_light, frag_colorAndDepth.w);
 
     return;
   }
 
   // Diffuse lighting
   vec3 n_surfaceToLight = normalize(light.direction) * -1.0;
-  vec3 n_surfaceToCamera = normalize(cameraPosition - position);
   vec3 halfVector = normalize(n_surfaceToLight + n_surfaceToCamera);
   float incidence = max(dot(n_surfaceToLight, normal), 0.0);
   float specularity = pow(max(dot(halfVector, normal), 0.0), 50);
-
-  // Loosely approximates ambient/indirect lighting
-  vec3 hack_ambient_light = light.color * light.power * pow(max(1.0 - dot(n_surfaceToCamera, normal), 0.0), 2) * 0.2;
 
   vec3 diffuseTerm = light.color * light.power * incidence + hack_ambient_light;
   vec3 specularTerm = light.color * light.power * specularity;

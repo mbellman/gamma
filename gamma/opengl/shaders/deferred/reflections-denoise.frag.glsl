@@ -38,17 +38,9 @@ void main() {
   float average_local_luminance = (top_luminance + bottom_luminance + left_luminance + right_luminance) / 4.0;
 
   if (length(frag_luminance - average_local_luminance) > 0.05) {
-    vec2 o = vec2(noise(1.0), noise(2.0)) * 3.0;
-    vec2 o2 = vec2(noise(3.0), noise(4.0)) * 3.0;
-    vec2 o3 = vec2(noise(5.0), noise(6.0)) * 3.0;
+    vec3 average = (top.rgb + bottom.rgb + left.rgb + right.rgb) / 4.0;
 
-    vec3 rc = texture(colorAndDepth, fragUv + texel * o).rgb;
-    vec3 rc2 = texture(colorAndDepth, fragUv + texel * o2).rgb;
-    vec3 rc3 = texture(colorAndDepth, fragUv + texel * o3).rgb;
-
-    vec3 av = (rc + rc2 + rc3 + top.rgb + bottom.rgb + left.rgb + right.rgb) / 7.0;
-
-    out_ColorAndDepth = vec4(av, frag.w);
+    out_ColorAndDepth = vec4(average, frag.w);
   } else {
     out_ColorAndDepth = vec4(frag.rgb, frag.w);
   }

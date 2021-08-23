@@ -455,6 +455,33 @@ namespace Gamma {
 
       writeAccumulatedEffectsBackIntoGBuffer();
 
+      if (hasRefractiveObjects && (Gm_GetFlags() & GammaFlags::RENDER_REFRACTIONS)) {
+        // @todo explain this
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        glEnable(GL_BLEND);
+        glDepthMask(GL_FALSE);
+
+        glStencilFunc(GL_NOTEQUAL, MeshType::REFLECTIVE, 0xFF);
+        glStencilMask(MeshType::REFRACTIVE);
+
+        deferred.shaders.refractivePrepass.use();
+        deferred.shaders.refractivePrepass.setInt("color_and_depth", 0);
+        deferred.shaders.refractivePrepass.setMatrix4f("projection", projection);
+        deferred.shaders.refractivePrepass.setMatrix4f("view", view);
+
+        for (auto* glMesh : glMeshes) {
+          if (glMesh->isMeshType(MeshType::REFRACTIVE)) {
+            glMesh->render(primitiveMode);
+          }
+        }
+
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
+        glDisable(GL_BLEND);
+        glDepthMask(GL_TRUE);
+      }
+
       deferred.buffers.gBuffer.read();
       deferred.buffers.reflections.write();
 

@@ -30,6 +30,9 @@ const float slowdown_distance_threshold = 30.0;
 const float distant_reflection_test_size = 4.0;
 const float contact_ray_step_size = 1.0;
 
+const int TOTAL_MARCH_STEPS = 16;
+const int TOTAL_REFINEMENT_STEPS = 6;
+
 // @todo move to gl helpers
 vec3 glVec3(vec3 vector) {
   return vector * vec3(1, 1, -1);
@@ -185,14 +188,12 @@ Reflection getRefinedReflection(
   vec3 view_starting_ray,
   float march_step_size
 ) {
-  const int REFINEMENT_STEPS = 6;
-
   vec3 ray = view_starting_ray;
   vec3 ray_step = normalized_view_reflection_ray * march_step_size;
   vec3 refined_color = vec3(0);
   vec2 refined_uv = vec2(0);
 
-  for (int i = 0; i < REFINEMENT_STEPS; i++) {
+  for (int i = 0; i < TOTAL_REFINEMENT_STEPS; i++) {
     ray_step *= 0.5;
     ray += ray_step;
 
@@ -220,8 +221,6 @@ Reflection getReflection(
   vec3 march_offset,
   float march_step_size
 ) {
-  const int TOTAL_MARCH_STEPS = 16;
-
   vec3 ray = view_reflecting_surface_position + march_offset;
   vec3 previous_ray = ray;
   float adjusted_march_step_size = march_step_size;

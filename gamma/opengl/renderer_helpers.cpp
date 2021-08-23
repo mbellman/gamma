@@ -88,6 +88,11 @@ namespace Gamma {
     deferred.shaders.refractiveGeometry.fragment("./gamma/opengl/shaders/deferred/refractive-geometry.frag.glsl");
     deferred.shaders.refractiveGeometry.link();
 
+    deferred.shaders.refractivePrepass.init();
+    deferred.shaders.refractivePrepass.vertex("./gamma/opengl/shaders/deferred/geometry.vert.glsl");
+    deferred.shaders.refractivePrepass.fragment("./gamma/opengl/shaders/deferred/refractive-prepass.frag.glsl");
+    deferred.shaders.refractivePrepass.link();
+
     #if GAMMA_DEVELOPER_MODE
       deferred.shaders.gBufferDebug.init();
       deferred.shaders.gBufferDebug.vertex("./gamma/opengl/shaders/quad.vert.glsl");
@@ -123,6 +128,7 @@ namespace Gamma {
     deferred.shaders.reflections.destroy();
     deferred.shaders.reflectionsDenoise.destroy();
     deferred.shaders.refractiveGeometry.destroy();
+    deferred.shaders.refractivePrepass.destroy();
 
     #if GAMMA_DEVELOPER_MODE
       deferred.shaders.gBufferDebug.destroy();
