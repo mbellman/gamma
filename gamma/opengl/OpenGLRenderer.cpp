@@ -443,10 +443,11 @@ namespace Gamma {
     OpenGLScreenQuad::render();
 
     if (hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
-      // Write all non-skybox pixels back into the accumulated
-      // color buffer. If the sky is reflected on a surface, its
-      // color is computed in the reflections shader rather than
-      // being read from the color buffer.
+      // Copy the rendered frame back into the color accumulation
+      // channel of the G-Buffer, since reflections rely on both
+      // accumulated color/depth and surface normals. We exclude
+      // skybox pixels since we recompute skybox color in the
+      // reflection shader for any skybound reflection rays.
       //
       // @todo distinguish between skybox and emissive pixels so
       // emissive geometry can still be reflected
@@ -514,14 +515,24 @@ namespace Gamma {
     }
 
     if (hasRefractiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS)) {
-      // Write all non-skybox pixels back into the accumulated
-      // color buffer. If refraction rays point toward the sky,
-      // we compute the sky color in the shader, rather than
-      // reading from the color buffer.
-      //
-      // @todo distinguish between skybox and emissive pixels so
-      // emissive geometry can still be refracted
-      glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
+      // Copy the rendered frame back into the color accumulation channel
+      // of the G-Buffer so we can accurately render refractive geometry,
+      // which relies on both accumulated color/depth and surface normals.
+      if (hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
+        // Only reflective surfaces need to be copied now, since we copied
+        // all non-skybox pixels into the color accumulation buffer before
+        // rendering reflections.
+        glStencilFunc(GL_EQUAL, MeshType::REFLECTIVE, 0xFF);
+      } else {
+        // If no reflections were rendered, we need to copy all non-skybox
+        // pixels back into the color accumulation channel here. The skybox
+        // color will be recomputed in the refractive geometry shader for
+        // any skybound refraction rays.
+        //
+        // @todo distinguish between skybox and emissive pixels so
+        // emissive geometry can still be refracted
+        glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
+      }
 
       writeAccumulatedEffectsBackIntoGBuffer();
 
