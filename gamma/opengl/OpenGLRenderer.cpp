@@ -162,12 +162,14 @@ namespace Gamma {
       return;
     }
   
+    // Setup variables
     uint32 internalWidth = internalResolution.width;
     uint32 internalHeight = internalResolution.height;
     bool hasReflectiveObjects = false;
     bool hasRefractiveObjects = false;
+    GLenum primitiveMode = Gm_IsFlagEnabled(GammaFlags::WIREFRAME_MODE) ? GL_LINES : GL_TRIANGLES;
 
-    // Build categorized light arrays
+    // Build light arrays by type
     //
     // @todo don't reallocate on every frame
     auto& lights = AbstractScene::active->getLights();
@@ -250,10 +252,6 @@ namespace Gamma {
     deferred.shaders.geometry.setMatrix4f("view", view);
     deferred.shaders.geometry.setInt("meshTexture", 0);
     deferred.shaders.geometry.setInt("meshNormalMap", 1);
-
-    GLenum primitiveMode = Gm_IsFlagEnabled(GammaFlags::WIREFRAME_MODE)
-      ? GL_LINE_STRIP
-      : GL_TRIANGLES;
 
     // @todo render emissive objects
     // glStencilMask(MeshType::EMISSIVE);
