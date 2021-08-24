@@ -66,6 +66,16 @@ float getLinearizedDepth(float depth) {
   return 2.0 * z_near * z_far / (z_far + z_near - clip_depth * (z_far - z_near));
 }
 
+/**
+ * Returns a value within the range -1.0 - 1.0, constant
+ * in screen space, acting as a noise filter.
+ *
+ * @todo move to helpers/allow shader imports
+ */
+float noise(float seed) {
+  return 2.0 * (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * seed * 43758.545312) - 0.5);
+}
+
 Cascade getCascadeByDepth(float linearized_depth) {
   if (linearized_depth < cascade_depth_1) {
     return Cascade(0, lightMatrices[0], 0.001);
@@ -90,27 +100,51 @@ void main() {
   shadow_map_transform.xyz *= 0.5;
   shadow_map_transform.xyz += 0.5;
 
-  float shadow_map_depth = texture(shadowMaps[cascade.index], shadow_map_transform.xy).r;
+  // @todo do a close-proximity sweep to determine
+  // whether we can do an early bail-out
+  const vec2 sweep[9] = {
+    vec2(0.0, 0.0),
+    vec2(-1.0, 0.0),
+    vec2(-1.0, 1.0),
+    vec2(0.0, 1.0),
+    vec2(1.0, 1.0),
+    vec2(1.0, 0.0),
+    vec2(1.0, -1.0),
+    vec2(0.0, -1.0),
+    vec2(-1.0, -1.0)
+  };
 
-  vec3 n_surfaceToCamera = normalize(cameraPosition - position);
-  // Loosely approximates ambient/indirect lighting
-  vec3 hack_ambient_light = light.color * light.power * pow(max(1.0 - dot(n_surfaceToCamera, normal), 0.0), 2) * 0.2;
+  // @todo cleanup/factor into its own function
+  vec2 shadow_map_size = 1.0 / textureSize(shadowMaps[cascade.index], 0);
+  float light_intensity = 1.0;
 
-  // @todo use filtering
-  if (shadow_map_transform.z < 0.999 && shadow_map_depth < shadow_map_transform.z - cascade.bias) {
-    out_color_and_depth = vec4(color * hack_ambient_light, frag_colorAndDepth.w);
+  if (shadow_map_transform.z < 0.999) {
+    for (int i = 0; i < 9; i++) {
+      vec2 texel_offset = 1.0 * sweep[i] * shadow_map_size;
+      vec2 random_offset = 0.3 * normalize(vec2(noise(1.0), noise(2.0))) * shadow_map_size;
+      vec2 texel_coords = shadow_map_transform.xy + random_offset + texel_offset;
+      float shadow_map_depth = texture(shadowMaps[cascade.index], texel_coords).r;
 
-    return;
+      if (shadow_map_depth > shadow_map_transform.z - cascade.bias) {
+        light_intensity += 1.0;
+      }
+    }
+
+    light_intensity /= 9.0;
   }
 
   // Diffuse lighting
   vec3 n_surfaceToLight = normalize(light.direction) * -1.0;
+  vec3 n_surfaceToCamera = normalize(cameraPosition - position);
   vec3 halfVector = normalize(n_surfaceToLight + n_surfaceToCamera);
   float incidence = max(dot(n_surfaceToLight, normal), 0.0);
   float specularity = pow(max(dot(halfVector, normal), 0.0), 50);
 
-  vec3 diffuseTerm = light.color * light.power * incidence + hack_ambient_light;
+  vec3 diffuseTerm = light.color * light.power * incidence;
   vec3 specularTerm = light.color * light.power * specularity;
 
-  out_color_and_depth = vec4(color * (diffuseTerm + specularTerm), frag_colorAndDepth.w);
+  // Loosely approximates ambient/indirect lighting
+  vec3 hack_ambient_light = color * light.color * light.power * pow(max(1.0 - dot(n_surfaceToCamera, normal), 0.0), 2) * 0.2;
+
+  out_color_and_depth = vec4(color * (diffuseTerm + specularTerm) * light_intensity + hack_ambient_light, frag_colorAndDepth.w);
 }
