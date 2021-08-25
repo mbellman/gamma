@@ -1,8 +1,9 @@
 #include <map>
 
-#include "glew.h"
 #include "opengl/framebuffer.h"
 #include "system/console.h"
+
+#include "glew.h"
 
 namespace Gamma {
   const static float defaultBorderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -81,7 +82,7 @@ namespace Gamma {
   void OpenGLFrameBuffer::addDepthAttachment() {
     glGenTextures(1, &depthTextureId);
     glBindTexture(GL_TEXTURE_2D, depthTextureId);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, size.width, size.height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT_24_8, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, size.width, size.height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTextureId, 0);
   }
 

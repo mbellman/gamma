@@ -19,7 +19,7 @@ uniform sampler2D normalAndSpecularity;
 uniform vec3 cameraPosition;
 uniform mat4 inverseProjection;
 uniform mat4 inverseView;
-uniform sampler2D shadowMaps[3];
+uniform sampler2DShadow shadowMaps[3];
 uniform mat4 lightMatrices[3];
 uniform DirectionalLight light;
 
@@ -79,7 +79,7 @@ float noise(float seed) {
 
 Cascade getCascadeByDepth(float linearized_depth) {
   if (linearized_depth < cascade_depth_1) {
-    return Cascade(0, lightMatrices[0], 0.001, 1.0, 0.5);
+    return Cascade(0, lightMatrices[0], 0.0015, 1.0, 0.5);
   } else if (linearized_depth < cascade_depth_2) {
     return Cascade(1, lightMatrices[1], 0.001, 0.5, 0.15);
   } else {
@@ -89,7 +89,7 @@ Cascade getCascadeByDepth(float linearized_depth) {
 
 float getLightIntensity(Cascade cascade, vec4 transform) {
   if (transform.z > 0.999) {
-    // If the position to light space transform depth
+    // If the position-to-light space transform depth
     // is out of range, we've sampled outside the
     // shadow map and can just render the fragment
     // with full illumination.
@@ -97,41 +97,21 @@ float getLightIntensity(Cascade cascade, vec4 transform) {
   }
 
   vec2 shadow_map_texel_size = 1.0 / textureSize(shadowMaps[cascade.index], 0);
-
-  // Sample fragments in the neighorhood of the shaded fragment
-  // and take the average of whether samples are in/out of shadow
-  const vec2 sample_fragments[9] = {
-    vec2(0.0, 0.0),
-
-    // Cardinal direction neighbor fragments
-    vec2(-1.0, 0.0),
-    vec2(0.0, 1.0),
-    vec2(1.0, 0.0),
-    vec2(0.0, -1.0),
-
-    // Diagonal neighbor fragments
-    vec2(-1.0, 1.0),
-    vec2(1.0, 1.0),
-    vec2(1.0, -1.0),
-    vec2(-1.0, -1.0)
-  };
-
   float light_intensity = 0.0;
+  float spread = 1.0;
 
-  for (int x = 0; x < 2; x++) {
-    for (int i = 0; i < 9; i++) {
-      vec2 texel_offset = float(x + 1) * cascade.sample_radius * sample_fragments[i] * shadow_map_texel_size;
-      vec2 random_offset = cascade.randomness_factor * normalize(vec2(noise(1.0), noise(2.0))) * shadow_map_texel_size;
-      vec2 texel_coords = transform.xy + random_offset + texel_offset;
-      float shadow_map_depth = texture(shadowMaps[cascade.index], texel_coords).r;
+  for (float x = -1.5; x <= 1.5; x++) {
+    for (float y = -1.5; y <= 1.5; y++) {
+      vec2 texel_offset = spread * cascade.sample_radius * vec2(x, y) * shadow_map_texel_size;
+      vec2 random_offset = vec2(0);// spread * cascade.randomness_factor * vec2(noise(1.0), noise(2.0)) * shadow_map_texel_size;
+      vec2 texel_coords = transform.xy + texel_offset + random_offset;
+      float shadow_map_depth = texture(shadowMaps[cascade.index], vec3(texel_coords, transform.z - cascade.bias)).r;
 
-      if (shadow_map_depth > transform.z - cascade.bias) {
-        light_intensity += 1.0;
-      }
+      light_intensity += shadow_map_depth;
     }
   }
 
-  light_intensity /= 18.0;
+  light_intensity /= 16.0;
 
   return light_intensity;
 }

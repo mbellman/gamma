@@ -4,6 +4,8 @@
 #include "opengl/shadowmaps.h"
 #include "math/constants.h"
 
+#include "glew.h"
+
 namespace Gamma {
   const static float cascadeDepthRanges[3][2] = {
     { 1.0f, 200.0f },
@@ -20,10 +22,17 @@ namespace Gamma {
 
     buffer.init();
     buffer.setSize({ 2048, 2048 });
+
     buffer.addColorAttachment(ColorFormat::R, 3);  // Cascade 0 (GL_TEXTURE3)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+
     buffer.addColorAttachment(ColorFormat::R, 4);  // Cascade 1 (GL_TEXTURE4)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+
     buffer.addColorAttachment(ColorFormat::R, 5);  // Cascade 2 (GL_TEXTURE5)
-    buffer.addDepthStencilAttachment();
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+
+    buffer.addDepthAttachment();
     buffer.bindColorAttachments();
   }
 

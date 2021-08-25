@@ -584,6 +584,7 @@ namespace Gamma {
 
         OpenGLScreenQuad::render();
 
+        // @bug currently not working due to shadow map GL_TEXTURE_COMPARE_MODE
         for (uint32 i = 0; i < glDirectionalShadowMaps.size(); i++) {
           float yOffset = 0.52f - float(i) * 0.32f;
 
