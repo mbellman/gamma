@@ -10,16 +10,17 @@ struct Cascade {
   int index;
   mat4 matrix;
   float bias;
+  float sample_radius;
+  float randomness_factor;
 };
-
-uniform sampler2D shadowMaps[3];
-uniform mat4 lightMatrices[3];
 
 uniform sampler2D colorAndDepth;
 uniform sampler2D normalAndSpecularity;
 uniform vec3 cameraPosition;
 uniform mat4 inverseProjection;
 uniform mat4 inverseView;
+uniform sampler2D shadowMaps[3];
+uniform mat4 lightMatrices[3];
 uniform DirectionalLight light;
 
 noperspective in vec2 fragUv;
@@ -78,73 +79,91 @@ float noise(float seed) {
 
 Cascade getCascadeByDepth(float linearized_depth) {
   if (linearized_depth < cascade_depth_1) {
-    return Cascade(0, lightMatrices[0], 0.001);
+    return Cascade(0, lightMatrices[0], 0.001, 1.0, 0.5);
   } else if (linearized_depth < cascade_depth_2) {
-    return Cascade(1, lightMatrices[1], 0.001);
+    return Cascade(1, lightMatrices[1], 0.001, 0.5, 0.15);
   } else {
-    return Cascade(2, lightMatrices[2], 0.001);
+    return Cascade(2, lightMatrices[2], 0.001, 0.3, 0.0);
   }
 }
 
-void main() {
-  vec4 frag_colorAndDepth = texture(colorAndDepth, fragUv);
-  vec4 frag_normalAndSpecularity = texture(normalAndSpecularity, fragUv);
-  vec3 position = getWorldPosition(frag_colorAndDepth.w);
-  vec3 normal = frag_normalAndSpecularity.xyz;
-  vec3 color = frag_colorAndDepth.rgb;
+float getLightIntensity(Cascade cascade, vec4 transform) {
+  if (transform.z > 0.999) {
+    // If the position to light space transform depth
+    // is out of range, we've sampled outside the
+    // shadow map and can just render the fragment
+    // with full illumination.
+    return 1.0;
+  }
 
-  Cascade cascade = getCascadeByDepth(getLinearizedDepth(frag_colorAndDepth.w));
-  vec4 shadow_map_transform = lightMatrices[cascade.index] * glVec4(position);
-  
-  shadow_map_transform.xyz /= shadow_map_transform.w;
-  shadow_map_transform.xyz *= 0.5;
-  shadow_map_transform.xyz += 0.5;
+  vec2 shadow_map_texel_size = 1.0 / textureSize(shadowMaps[cascade.index], 0);
 
-  // @todo do a close-proximity sweep to determine
-  // whether we can do an early bail-out
-  const vec2 sweep[9] = {
+  // Sample fragments in the neighorhood of the shaded fragment
+  // and take the average of whether samples are in/out of shadow
+  const vec2 sample_fragments[9] = {
     vec2(0.0, 0.0),
+
+    // Cardinal direction neighbor fragments
     vec2(-1.0, 0.0),
-    vec2(-1.0, 1.0),
     vec2(0.0, 1.0),
-    vec2(1.0, 1.0),
     vec2(1.0, 0.0),
-    vec2(1.0, -1.0),
     vec2(0.0, -1.0),
+
+    // Diagonal neighbor fragments
+    vec2(-1.0, 1.0),
+    vec2(1.0, 1.0),
+    vec2(1.0, -1.0),
     vec2(-1.0, -1.0)
   };
 
-  // @todo cleanup/factor into its own function
-  vec2 shadow_map_size = 1.0 / textureSize(shadowMaps[cascade.index], 0);
-  float light_intensity = 1.0;
+  float light_intensity = 0.0;
 
-  if (shadow_map_transform.z < 0.999) {
+  for (int x = 0; x < 2; x++) {
     for (int i = 0; i < 9; i++) {
-      vec2 texel_offset = 1.0 * sweep[i] * shadow_map_size;
-      vec2 random_offset = 0.3 * normalize(vec2(noise(1.0), noise(2.0))) * shadow_map_size;
-      vec2 texel_coords = shadow_map_transform.xy + random_offset + texel_offset;
+      vec2 texel_offset = float(x + 1) * cascade.sample_radius * sample_fragments[i] * shadow_map_texel_size;
+      vec2 random_offset = cascade.randomness_factor * normalize(vec2(noise(1.0), noise(2.0))) * shadow_map_texel_size;
+      vec2 texel_coords = transform.xy + random_offset + texel_offset;
       float shadow_map_depth = texture(shadowMaps[cascade.index], texel_coords).r;
 
-      if (shadow_map_depth > shadow_map_transform.z - cascade.bias) {
+      if (shadow_map_depth > transform.z - cascade.bias) {
         light_intensity += 1.0;
       }
     }
-
-    light_intensity /= 9.0;
   }
 
-  // Diffuse lighting
-  vec3 n_surfaceToLight = normalize(light.direction) * -1.0;
-  vec3 n_surfaceToCamera = normalize(cameraPosition - position);
-  vec3 halfVector = normalize(n_surfaceToLight + n_surfaceToCamera);
-  float incidence = max(dot(n_surfaceToLight, normal), 0.0);
-  float specularity = pow(max(dot(halfVector, normal), 0.0), 50);
+  light_intensity /= 18.0;
 
-  vec3 diffuseTerm = light.color * light.power * incidence;
-  vec3 specularTerm = light.color * light.power * specularity;
+  return light_intensity;
+}
 
-  // Loosely approximates ambient/indirect lighting
-  vec3 hack_ambient_light = color * light.color * light.power * pow(max(1.0 - dot(n_surfaceToCamera, normal), 0.0), 2) * 0.2;
+void main() {
+  vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
+  vec4 frag_normal_and_specularity = texture(normalAndSpecularity, fragUv);
+  vec3 position = getWorldPosition(frag_color_and_depth.w);
+  vec3 normal = frag_normal_and_specularity.xyz;
+  vec3 color = frag_color_and_depth.rgb;
 
-  out_color_and_depth = vec4(color * (diffuseTerm + specularTerm) * light_intensity + hack_ambient_light, frag_colorAndDepth.w);
+  Cascade cascade = getCascadeByDepth(getLinearizedDepth(frag_color_and_depth.w));
+  vec4 position_to_light_space_transform = lightMatrices[cascade.index] * glVec4(position);
+  
+  position_to_light_space_transform.xyz /= position_to_light_space_transform.w;
+  position_to_light_space_transform.xyz *= 0.5;
+  position_to_light_space_transform.xyz += 0.5;
+
+  // Regular directional light calculations
+  vec3 normalized_surface_to_light = normalize(light.direction) * -1.0;
+  vec3 normalized_surface_to_camera = normalize(cameraPosition - position);
+  vec3 half_vector = normalize(normalized_surface_to_light + normalized_surface_to_camera);
+  float incidence = max(dot(normalized_surface_to_light, normal), 0.0);
+  float specularity = pow(max(dot(half_vector, normal), 0.0), 50);
+
+  vec3 diffuse_term = light.color * light.power * incidence;
+  vec3 specular_term = light.color * light.power * specularity;
+
+  // Loosely approximates indirect lighting
+  vec3 hack_ambient_light = color * light.color * light.power * pow(max(1.0 - dot(normalized_surface_to_camera, normal), 0.0), 2) * 0.2;
+
+  float light_intensity = getLightIntensity(cascade, position_to_light_space_transform);
+
+  out_color_and_depth = vec4(color * (diffuse_term + specular_term) * light_intensity + hack_ambient_light, frag_color_and_depth.w);
 }
