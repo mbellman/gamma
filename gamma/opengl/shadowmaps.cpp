@@ -24,13 +24,8 @@ namespace Gamma {
     buffer.setSize({ 2048, 2048 });
 
     buffer.addColorAttachment(ColorFormat::R, 3);  // Cascade 0 (GL_TEXTURE3)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-
     buffer.addColorAttachment(ColorFormat::R, 4);  // Cascade 1 (GL_TEXTURE4)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-
     buffer.addColorAttachment(ColorFormat::R, 5);  // Cascade 2 (GL_TEXTURE5)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
 
     buffer.addDepthAttachment();
     buffer.bindColorAttachments();
@@ -111,21 +106,20 @@ namespace Gamma {
       radius = std::max(radius, (frustumCenter - corners[i]).magnitude());
     }
 
-    // Calculate the ideal frustum center, 'snapped' to the shadow map
+    // Calculate the ideal frustum center, 'snapped' to the shadow map texel
     // grid to avoid warbling and other distortions when moving the camera
     float texelsPerUnit = 2048.0f / (radius * 2.0f);
 
-    Matrix4f lightLookAt = Matrix4f::lookAt(Vec3f(0.0f), lightDirection.invert(), Vec3f(0.0f, 1.0f, 0.0f));
-    Matrix4f scale = Matrix4f::scale(texelsPerUnit);
-    Matrix4f texelMatrix = scale * lightLookAt;
-    Matrix4f inverseTexelMatrix = texelMatrix.inverse();
+    Matrix4f texelLookAt = Matrix4f::lookAt(Vec3f(0.0f), lightDirection.invert(), Vec3f(0.0f, 1.0f, 0.0f));
+    Matrix4f texelScale = Matrix4f::scale(texelsPerUnit);
+    Matrix4f texelMatrix = texelScale * texelLookAt;
 
-    // Align the frustum center in shadow map space, and then
+    // Align the frustum center in texel space, and then
     // restore that to its world space coordinates
     frustumCenter = (texelMatrix * frustumCenter).homogenize();
     frustumCenter.x = floorf(frustumCenter.x);
     frustumCenter.y = floorf(frustumCenter.y);
-    frustumCenter = (inverseTexelMatrix * frustumCenter).homogenize();
+    frustumCenter = (texelMatrix.inverse() * frustumCenter).homogenize();
 
     // Compute final light view matrix for rendering the shadow map
     Matrix4f projection = Matrix4f::orthographic(radius, -radius, -radius, radius, -radius - 1000.0f, radius);

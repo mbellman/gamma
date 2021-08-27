@@ -227,7 +227,7 @@ namespace Gamma {
 
     // Clear buffers, reset state
     glViewport(0, 0, internalWidth, internalHeight);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
@@ -321,6 +321,7 @@ namespace Gamma {
     deferred.buffers.post.write();
 
     glViewport(0, 0, internalWidth, internalHeight);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
@@ -584,7 +585,6 @@ namespace Gamma {
 
         OpenGLScreenQuad::render();
 
-        // @bug currently not working due to shadow map GL_TEXTURE_COMPARE_MODE
         for (uint32 i = 0; i < glDirectionalShadowMaps.size(); i++) {
           float yOffset = 0.52f - float(i) * 0.32f;
 

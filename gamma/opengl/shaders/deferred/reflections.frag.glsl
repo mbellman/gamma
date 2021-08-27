@@ -68,7 +68,7 @@ vec3 getWorldPosition(float depth) {
 // as part of hot reloading
 vec3 getSkyColor(vec3 direction) {
   vec3 sunDirection = normalize(vec3(0.3, 0.5, -1.0));
-  vec3 sunColor = vec3(1.0, 0.1, 0.2);
+  vec3 sunColor = vec3(1.0, 0.3, 0.1);
   float sunBrightness = 10;
   float altitude = 0.2;
 
@@ -192,24 +192,32 @@ Reflection getRefinedReflection(
   vec3 ray_step = normalized_view_reflection_ray * march_step_size;
   vec3 refined_color = vec3(0);
   vec2 refined_uv = vec2(0);
+  float test_depth;
 
   for (int i = 0; i < TOTAL_REFINEMENT_STEPS; i++) {
+    // Decrease step size by half and advance the ray
     ray_step *= 0.5;
     ray += ray_step;
-
     refined_uv = viewToScreenCoordinates(ray);
 
     vec4 test = texture(colorAndDepth, refined_uv);
-    float test_depth = getLinearizedDepth(test.w);
 
+    test_depth = getLinearizedDepth(test.w);
     refined_color = test.rgb;
 
+    // If the ray is still intersecting the geometry,
+    // advance a full step back. On the next cycle
+    // we'll halve the step size and advance forward
+    // again, converging on our likely reflection point.
     if (test_depth < ray.z && test_depth > view_reflecting_surface_position.z) {
       ray -= ray_step;
     }
   }
 
-  return Reflection(refined_color, refined_uv, getReflectionIntensity(refined_uv));
+  // Disable reflections of points at the far plane
+  float intensity = test_depth >= z_far ? 0.0 : getReflectionIntensity(refined_uv);
+
+  return Reflection(refined_color, refined_uv, intensity);
 }
 
 /**

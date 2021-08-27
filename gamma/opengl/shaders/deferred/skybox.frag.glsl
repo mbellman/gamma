@@ -26,7 +26,7 @@ vec3 getWorldPosition(float depth) {
 vec3 getSkyColor(vec3 direction) {
   // @todo receive parameters as uniforms
   vec3 sunDirection = normalize(vec3(0.3, 0.5, -1.0));
-  vec3 sunColor = vec3(1.0, 0.1, 0.2);
+  vec3 sunColor = vec3(1.0, 0.3, 0.1);
   float sunBrightness = 10;
   float altitude = 0.6;
 

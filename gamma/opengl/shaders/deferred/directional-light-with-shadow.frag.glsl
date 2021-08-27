@@ -1,5 +1,7 @@
 #version 460 core
 
+#define VARIABLE_PENUMBRA_SIZE 1
+
 struct DirectionalLight {
   vec3 color;
   float power;
@@ -10,8 +12,8 @@ struct Cascade {
   int index;
   mat4 matrix;
   float bias;
-  float sample_radius;
-  float randomness_factor;
+  float spread_factor;
+  float occluder_sweep_radius;
 };
 
 uniform sampler2D colorAndDepth;
@@ -19,7 +21,7 @@ uniform sampler2D normalAndSpecularity;
 uniform vec3 cameraPosition;
 uniform mat4 inverseProjection;
 uniform mat4 inverseView;
-uniform sampler2DShadow shadowMaps[3];
+uniform sampler2D shadowMaps[3];
 uniform mat4 lightMatrices[3];
 uniform DirectionalLight light;
 
@@ -79,12 +81,47 @@ float noise(float seed) {
 
 Cascade getCascadeByDepth(float linearized_depth) {
   if (linearized_depth < cascade_depth_1) {
-    return Cascade(0, lightMatrices[0], 0.0015, 1.0, 0.5);
+    return Cascade(0, lightMatrices[0], 0.0005, 1000.0, 30.0);
   } else if (linearized_depth < cascade_depth_2) {
-    return Cascade(1, lightMatrices[1], 0.001, 0.5, 0.15);
+    return Cascade(1, lightMatrices[1], 0.002, 750.0, 20.0);
   } else {
-    return Cascade(2, lightMatrices[2], 0.001, 0.3, 0.0);
+    return Cascade(2, lightMatrices[2], 0.002, 800.0, 15.0);
   }
+}
+
+vec2 rotatedVogelDisk(int samples, int index) {
+  float rotation = noise(1.0) * 3.141592;
+  float theta = 2.4 * index + rotation;
+  float radius = sqrt(float(index) + 0.5) / sqrt(float(samples));
+
+  return radius * vec2(cos(theta), sin(theta));
+}
+
+float getClosestOccluder(sampler2D shadow_map, vec2 shadow_map_texel_size, vec4 transform, float occluder_sweep_radius) {
+  const vec2 offsets[9] = {
+    vec2(0.0),
+    vec2(-1.0, 0.0),
+    vec2(-1.0, 1.0),
+    vec2(0.0, 1.0),
+    vec2(1.0, 1.0),
+    vec2(1.0, 0.0),
+    vec2(1.0, -1.0),
+    vec2(0.0, -1.0),
+    vec2(-1.0, 1.0)
+  };
+
+  float closest_occluder = transform.z;
+
+  for (int i = 0; i < 9; i++) {
+    vec2 texel_coords = transform.xy + occluder_sweep_radius * shadow_map_texel_size * offsets[i];
+    float shadow_map_depth = texture(shadow_map, texel_coords).r;
+
+    if (shadow_map_depth < closest_occluder) {
+      closest_occluder = shadow_map_depth;
+    }
+  }
+
+  return closest_occluder;
 }
 
 float getLightIntensity(Cascade cascade, vec4 transform) {
@@ -97,23 +134,27 @@ float getLightIntensity(Cascade cascade, vec4 transform) {
   }
 
   vec2 shadow_map_texel_size = 1.0 / textureSize(shadowMaps[cascade.index], 0);
+
+  #if VARIABLE_PENUMBRA_SIZE == 1
+    float closest_occluder = getClosestOccluder(shadowMaps[cascade.index], shadow_map_texel_size, transform, cascade.occluder_sweep_radius);
+    float spread = 1.0 + cascade.spread_factor * pow(distance(transform.z, closest_occluder), 2);
+  #else
+    float spread = cascade.spread_factor / 500.0;
+  #endif
+
   float light_intensity = 0.0;
-  float spread = 1.0;
 
-  for (float x = -1.5; x <= 1.5; x++) {
-    for (float y = -1.5; y <= 1.5; y++) {
-      vec2 texel_offset = spread * cascade.sample_radius * vec2(x, y) * shadow_map_texel_size;
-      vec2 random_offset = vec2(0);// spread * cascade.randomness_factor * vec2(noise(1.0), noise(2.0)) * shadow_map_texel_size;
-      vec2 texel_coords = transform.xy + texel_offset + random_offset;
-      float shadow_map_depth = texture(shadowMaps[cascade.index], vec3(texel_coords, transform.z - cascade.bias)).r;
+  for (int i = 0; i < 16; i++) {
+    vec2 texel_offset = spread * rotatedVogelDisk(16, i) * shadow_map_texel_size;
+    vec2 texel_coords = transform.xy + texel_offset;
+    float shadow_map_depth = texture(shadowMaps[cascade.index], texel_coords).r;
 
-      light_intensity += shadow_map_depth;
+    if (shadow_map_depth > transform.z - (cascade.bias + spread * 0.00025)) {
+      light_intensity += 1.0;
     }
   }
 
-  light_intensity /= 16.0;
-
-  return light_intensity;
+  return light_intensity / 16.0;
 }
 
 void main() {
@@ -123,27 +164,29 @@ void main() {
   vec3 normal = frag_normal_and_specularity.xyz;
   vec3 color = frag_color_and_depth.rgb;
 
-  Cascade cascade = getCascadeByDepth(getLinearizedDepth(frag_color_and_depth.w));
-  vec4 position_to_light_space_transform = lightMatrices[cascade.index] * glVec4(position);
-  
-  position_to_light_space_transform.xyz /= position_to_light_space_transform.w;
-  position_to_light_space_transform.xyz *= 0.5;
-  position_to_light_space_transform.xyz += 0.5;
-
   // Regular directional light calculations
+  vec3 adjusted_light_color = light.color * light.power;
   vec3 normalized_surface_to_light = normalize(light.direction) * -1.0;
   vec3 normalized_surface_to_camera = normalize(cameraPosition - position);
   vec3 half_vector = normalize(normalized_surface_to_light + normalized_surface_to_camera);
   float incidence = max(dot(normalized_surface_to_light, normal), 0.0);
   float specularity = pow(max(dot(half_vector, normal), 0.0), 50);
 
-  vec3 diffuse_term = light.color * light.power * incidence;
-  vec3 specular_term = light.color * light.power * specularity;
+  vec3 diffuse_term = adjusted_light_color * incidence;
+  vec3 specular_term = adjusted_light_color * specularity;
 
   // Loosely approximates indirect lighting
-  vec3 hack_ambient_light = color * light.color * light.power * pow(max(1.0 - dot(normalized_surface_to_camera, normal), 0.0), 2) * 0.2;
+  vec3 hack_ambient_light = color * adjusted_light_color * pow(max(1.0 - dot(normalized_surface_to_camera, normal), 0.0), 2) * 0.2;
 
-  float light_intensity = getLightIntensity(cascade, position_to_light_space_transform);
+  // Shadow/light intensity calculations
+  Cascade cascade = getCascadeByDepth(getLinearizedDepth(frag_color_and_depth.w));
+  vec4 shadow_map_transform = lightMatrices[cascade.index] * glVec4(position);
+  
+  shadow_map_transform.xyz /= shadow_map_transform.w;
+  shadow_map_transform.xyz *= 0.5;
+  shadow_map_transform.xyz += 0.5;
+
+  float light_intensity = getLightIntensity(cascade, shadow_map_transform);
 
   out_color_and_depth = vec4(color * (diffuse_term + specular_term) * light_intensity + hack_ambient_light, frag_color_and_depth.w);
 }
