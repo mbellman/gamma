@@ -308,30 +308,35 @@ namespace Gamma {
   }
 
   /**
-   * Gm_LoadMesh
-   * -----------
+   * Gm_BufferObjData
+   * ----------------
+   *
+   * @todo description
+   *
+   * @todo we may not want to add the base vertex offset here;
+   * once this is used to pack multiple (distinct, not merely LOD)
+   * meshes into a common vertex/element buffer, it may be preferable
+   * to associate a baseVertex/firstIndex with each mesh. firstIndex
+   * alone is technically feasible though. reconsider when revisiting
+   * this for glMultiDrawElementsIndirect().
    */
-  Mesh* Gm_LoadMesh(const char* path) {
-    ObjLoader obj(path);
-
-    auto* mesh = new Mesh();
-    auto& vertices = mesh->vertices;
-    auto& faceElements = mesh->faceElements;
+  void Gm_BufferObjData(const ObjLoader& obj, std::vector<Vertex>& vertices, std::vector<uint32>& faceElements) {
+    uint32 baseVertex = vertices.size();
 
     if (obj.textureCoordinates.size() == 0) {
       // No texture coordinates defined in the model file,
       // so we can load the vertices/face elements directly
-      vertices.resize(obj.vertices.size());
-      faceElements.resize(obj.faces.size() * 3);
+      for (uint32 i = 0; i < obj.vertices.size(); i++) {
+        Vertex vertex;
+        vertex.position = obj.vertices[i];
 
-      for (uint32 i = 0; i < vertices.size(); i++) {
-        vertices[i].position = obj.vertices[i];
+        vertices.push_back(vertex);
       }
 
       for (uint32 i = 0; i < obj.faces.size(); i++) {
-        faceElements[i * 3] = obj.faces[i].v1.vertexIndex;
-        faceElements[i * 3 + 1] = obj.faces[i].v2.vertexIndex;
-        faceElements[i * 3 + 2] = obj.faces[i].v3.vertexIndex;
+        faceElements.push_back(baseVertex + obj.faces[i].v1.vertexIndex);
+        faceElements.push_back(baseVertex + obj.faces[i].v2.vertexIndex);
+        faceElements.push_back(baseVertex + obj.faces[i].v3.vertexIndex);
       }
     } else {
       // Texture coordinates defined, so we need to create
@@ -367,10 +372,55 @@ namespace Gamma {
             
             vertices.push_back(vertex);
             faceElements.push_back(index);
+
             pairToVertexIndexMap.emplace(pair, index);
           }
         }
       }
+    }
+  }
+
+  /**
+   * Gm_LoadMesh
+   * -----------
+   *
+   * @todo description
+   */
+  Mesh* Gm_LoadMesh(const char* path) {
+    ObjLoader obj(path);
+
+    auto* mesh = new Mesh();
+
+    mesh->firstIndexOffsets.push_back(0);
+
+    Gm_BufferObjData(obj, mesh->vertices, mesh->faceElements);
+    Gm_ComputeNormals(mesh);
+    Gm_ComputeTangents(mesh);
+
+    mesh->firstIndexOffsets.push_back(mesh->faceElements.size());
+
+    return mesh;
+  }
+
+  /**
+   * Gm_LoadMesh
+   * -----------
+   *
+   * @todo description
+   */
+  Mesh* Gm_LoadMesh(std::initializer_list<const char*> paths) {
+    auto* mesh = new Mesh();
+
+    mesh->firstIndexOffsets.push_back(0);
+
+    for (uint32 i = 0; i < paths.size(); i++) {
+      const char* path = *(paths.begin() + i);
+
+      ObjLoader obj(path);
+
+      Gm_BufferObjData(obj, mesh->vertices, mesh->faceElements);
+
+      mesh->firstIndexOffsets.push_back(mesh->faceElements.size());
     }
 
     Gm_ComputeNormals(mesh);

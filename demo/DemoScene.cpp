@@ -12,9 +12,13 @@ void DemoScene::init() {
 
   auto* cubeMesh = addMesh("cube", 100, Gm_CreateCube());
   auto* daVinciMesh = addMesh("daVinci", 1, Gm_LoadMesh("./demo/assets/models/da-vinci.obj"));
-  auto* rabbitMesh = addMesh("rabbit", 10, Gm_LoadMesh("./demo/assets/models/rabbit.obj"));
   auto* planeMesh = addMesh("plane", 1, Gm_CreatePlane(10));
   auto* wallMesh = addMesh("wall", 1, Gm_CreatePlane(10));
+
+  auto* rabbitMesh = addMesh("rabbit", 10, Gm_LoadMesh({
+    "./demo/assets/models/rabbit-lod1.obj",
+    "./demo/assets/models/rabbit-lod2.obj"
+  }));
 
   cubeMesh->texture = "./demo/assets/images/cat.png";
   wallMesh->texture = "./demo/assets/images/cat.png";

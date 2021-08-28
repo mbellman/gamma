@@ -121,8 +121,36 @@ namespace Gamma {
     glBufferData(GL_ARRAY_BUFFER, mesh.objects.total() * sizeof(Matrix4f), mesh.objects.getMatrices(), GL_DYNAMIC_DRAW);
 
     // Bind VAO/EBO and draw instances
+
+    // This is incomplete test code for verifying selective LOD mesh rendering.
+    //
+    // @todo proper LOD determination based on object pool LOD groups
+    // @todo glMultiDrawElementsIndirect for grouped LOD rendering
+    uint32 firstIndex = 0;
+    uint32 baseVertex = 0;
+    uint32 baseInstance = 0;
+    uint32 count = mesh.faceElements.size();
+
+    if (mesh.firstIndexOffsets.size() > 0) {
+      // uint32 lod = mesh.firstIndexOffsets.size() > 2 ? 1 : 0;
+      uint32 lod = 0;
+
+      firstIndex = mesh.firstIndexOffsets[lod];
+      baseInstance = 0;
+      count = mesh.firstIndexOffsets[lod + 1] - mesh.firstIndexOffsets[lod];
+    }
+
     glBindVertexArray(vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glDrawElementsInstanced(primitiveMode, mesh.faceElements.size(), GL_UNSIGNED_INT, (void*)0, mesh.objects.total());
+
+    glDrawElementsInstancedBaseVertexBaseInstance(
+      primitiveMode,
+      count,
+      GL_UNSIGNED_INT,
+      (void*)(firstIndex * sizeof(uint32)),
+      mesh.objects.total(),
+      baseVertex,
+      baseInstance
+    );
   }
 }

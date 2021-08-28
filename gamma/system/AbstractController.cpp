@@ -40,6 +40,7 @@ namespace Gamma {
   void AbstractController::switchScene(AbstractScene* scene) {
     if (scenes.size() > 0) {
       destroyScene(scenes.back());
+
       scenes.pop_back();
     }
 

@@ -6,6 +6,7 @@
 #include "math/geometry.h"
 #include "math/matrix.h"
 #include "math/vector.h"
+#include "system/ObjLoader.h"
 #include "system/type_aliases.h"
 
 #define UNUSED_LIGHT_INDEX -1
@@ -153,6 +154,10 @@ namespace Gamma {
      */
     std::vector<uint32> faceElements;
     /**
+     * @todo description
+     */
+    std::vector<uint32> firstIndexOffsets;
+    /**
      * A collection of objects representing unique instances
      * of the mesh.
      */
@@ -211,10 +216,17 @@ namespace Gamma {
   Mesh* Gm_CreatePlane(uint32 size);
 
   /**
+   * Gm_BufferObjData
+   * ----------------
+   */
+  void Gm_BufferObjData(const ObjLoader& obj, std::vector<Vertex>& vertices, std::vector<uint32>& faceElements);
+
+  /**
    * Gm_LoadMesh
    * -----------
    */
   Mesh* Gm_LoadMesh(const char* path);
+  Mesh* Gm_LoadMesh(std::initializer_list<const char*> paths);
 
   /**
    * Gm_FreeMesh

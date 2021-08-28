@@ -137,6 +137,7 @@ namespace Gamma {
             std::string fpsLabel = "FPS: " + std::to_string(fpsAverager.average()) + " (V-Sync " + (renderStats.isVSynced ? "ON" : "OFF") + ")";
             std::string frameTimeLabel = "Frame time: " + std::to_string(averageFrameTime) + "us (" + std::to_string(frameTimeBudget) + "%)";
             std::string resolutionLabel = "Resolution: " + std::to_string(resolution.width) + " x " + std::to_string(resolution.height);
+            // @todo count verts/tris properly, considering actually rendered LODs
             std::string vertsLabel = "Verts: " + std::to_string(sceneStats.verts);
             std::string trisLabel = "Tris: " + std::to_string(sceneStats.tris);
             std::string memoryLabel = "GPU Memory: " + std::to_string(renderStats.gpuMemoryUsed) + "MB / " + std::to_string(renderStats.gpuMemoryTotal) + "MB";
