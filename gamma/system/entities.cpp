@@ -391,13 +391,19 @@ namespace Gamma {
 
     auto* mesh = new Mesh();
 
-    mesh->firstIndexOffsets.push_back(0);
+    mesh->lods.push_back({
+      0,  // baseElement
+      0   // baseVertex
+    });
 
     Gm_BufferObjData(obj, mesh->vertices, mesh->faceElements);
     Gm_ComputeNormals(mesh);
     Gm_ComputeTangents(mesh);
 
-    mesh->firstIndexOffsets.push_back(mesh->faceElements.size());
+    mesh->lods.push_back({
+      mesh->faceElements.size(),  // baseElement
+      0                           // baseVertex
+    });
 
     return mesh;
   }
@@ -411,7 +417,10 @@ namespace Gamma {
   Mesh* Gm_LoadMesh(std::initializer_list<const char*> paths) {
     auto* mesh = new Mesh();
 
-    mesh->firstIndexOffsets.push_back(0);
+    mesh->lods.push_back({
+      0,  // baseElement
+      0   // baseVertex
+    });
 
     for (uint32 i = 0; i < paths.size(); i++) {
       const char* path = *(paths.begin() + i);
@@ -420,7 +429,10 @@ namespace Gamma {
 
       Gm_BufferObjData(obj, mesh->vertices, mesh->faceElements);
 
-      mesh->firstIndexOffsets.push_back(mesh->faceElements.size());
+      mesh->lods.push_back({
+        mesh->faceElements.size(),  // baseElement
+        0                           // baseVertex
+      });
     }
 
     Gm_ComputeNormals(mesh);

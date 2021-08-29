@@ -60,6 +60,15 @@ namespace Gamma {
   };
 
   /**
+   * MeshLod
+   * -------
+   */
+  struct MeshLod {
+    uint32 baseElement;
+    uint32 baseVertex;
+  };
+
+  /**
    * Object
    * ------
    *
@@ -156,7 +165,7 @@ namespace Gamma {
     /**
      * @todo description
      */
-    std::vector<uint32> firstIndexOffsets;
+    std::vector<MeshLod> lods;
     /**
      * A collection of objects representing unique instances
      * of the mesh.

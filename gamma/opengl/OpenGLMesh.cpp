@@ -1,7 +1,9 @@
-#include "glew.h"
 #include "opengl/errors.h"
+#include "opengl/indirect_buffer.h"
 #include "opengl/OpenGLMesh.h"
 #include "system/console.h"
+
+#include "glew.h"
 
 namespace Gamma {
   const enum GLBuffer {
@@ -121,36 +123,35 @@ namespace Gamma {
     glBufferData(GL_ARRAY_BUFFER, mesh.objects.total() * sizeof(Matrix4f), mesh.objects.getMatrices(), GL_DYNAMIC_DRAW);
 
     // Bind VAO/EBO and draw instances
-
-    // This is incomplete test code for verifying selective LOD mesh rendering.
-    //
-    // @todo proper LOD determination based on object pool LOD groups
-    // @todo glMultiDrawElementsIndirect for grouped LOD rendering
-    uint32 firstIndex = 0;
-    uint32 baseVertex = 0;
-    uint32 baseInstance = 0;
-    uint32 count = mesh.faceElements.size();
-
-    if (mesh.firstIndexOffsets.size() > 0) {
-      // uint32 lod = mesh.firstIndexOffsets.size() > 2 ? 1 : 0;
-      uint32 lod = 0;
-
-      firstIndex = mesh.firstIndexOffsets[lod];
-      baseInstance = 0;
-      count = mesh.firstIndexOffsets[lod + 1] - mesh.firstIndexOffsets[lod];
-    }
-
     glBindVertexArray(vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 
-    glDrawElementsInstancedBaseVertexBaseInstance(
-      primitiveMode,
-      count,
-      GL_UNSIGNED_INT,
-      (void*)(firstIndex * sizeof(uint32)),
-      mesh.objects.total(),
-      baseVertex,
-      baseInstance
-    );
+    if (mesh.lods.size() > 2) {
+      // This is test code for verifying selective LOD mesh rendering.
+      //
+      // @todo proper LOD determination based on object pool LOD groups
+      auto& start = mesh.lods[0];
+      auto& end = mesh.lods[1];
+
+      GlDrawElementsIndirectCommand commands[2];
+
+      commands[0].firstIndex = mesh.lods[0].baseElement;
+      commands[0].count = mesh.lods[1].baseElement - mesh.lods[0].baseElement;
+      commands[0].instanceCount = 3;
+      commands[0].baseInstance = 0;
+      commands[0].baseVertex = 0;
+
+      commands[1].firstIndex = mesh.lods[1].baseElement;
+      commands[1].count = mesh.lods[2].baseElement - mesh.lods[1].baseElement;
+      commands[1].instanceCount = 7;
+      commands[1].baseInstance = 3;
+      commands[1].baseVertex = 0;
+
+      Gm_BufferDrawElementsIndirectCommands(commands, 2);
+
+      glMultiDrawElementsIndirect(primitiveMode, GL_UNSIGNED_INT, 0, 2, 0);
+    } else {
+      glDrawElementsInstanced(primitiveMode, mesh.faceElements.size(), GL_UNSIGNED_INT, (void*)0, mesh.objects.total());
+    }
   }
 }

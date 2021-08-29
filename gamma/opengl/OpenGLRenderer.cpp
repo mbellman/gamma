@@ -2,6 +2,7 @@
 #include <map>
 
 #include "opengl/errors.h"
+#include "opengl/indirect_buffer.h"
 #include "opengl/OpenGLRenderer.h"
 #include "opengl/OpenGLScreenQuad.h"
 #include "opengl/renderer_helpers.h"
@@ -45,7 +46,10 @@ namespace Gamma {
 
     SDL_GL_SetSwapInterval(0);
 
-    // Initialize font texture
+    // Initialize global buffers
+    Gm_InitDrawIndirectBuffer();
+
+    // Initialize screen texture
     glGenTextures(1, &screenTexture);
     glBindTexture(GL_TEXTURE_2D, screenTexture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -92,6 +96,7 @@ namespace Gamma {
 
   void OpenGLRenderer::destroy() {
     Gm_DestroyDeferredRenderPath(deferred);
+    Gm_DestroyDrawIndirectBuffer();
 
     // glDeleteBuffers(1, &forward.lightsUbo);
     glDeleteTextures(1, &screenTexture);
