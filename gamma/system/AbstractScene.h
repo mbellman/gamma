@@ -32,17 +32,18 @@ namespace Gamma {
     virtual void updateScene(float dt) final;
 
   protected:
-    Mesh* addMesh(std::string name, uint16 maxInstances, Mesh* mesh);
+    void addMesh(std::string meshName, uint16 maxInstances, Mesh* mesh);
     Light& createLight(LightType type);
     Object& createObjectFrom(std::string meshName);
     void destroyLight(Light& light);
-    ObjectPool& getMeshObjects(std::string meshName);
     Object& getObject(std::string name);
     float getRunningTime();
-    void removeMesh(std::string name);
+    Mesh& mesh(std::string meshName);
+    void removeMesh(std::string meshName);
     void transform(const Object& object);
     void storeObject(std::string, Object& object);
     virtual void update(float dt) {};
+    void useLodByDistance(Mesh& mesh, float distance);
 
   private:
     std::vector<Mesh*> meshes;

@@ -126,31 +126,31 @@ namespace Gamma {
     glBindVertexArray(vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 
-    if (mesh.lods.size() > 2) {
-      // This is test code for verifying selective LOD mesh rendering.
-      //
-      // @todo proper LOD determination based on object pool LOD groups
-      auto& start = mesh.lods[0];
-      auto& end = mesh.lods[1];
+    if (mesh.lods.size() > 0) {
+      // For meshes with levels of detail, generate draw
+      // commands for mesh instances at each level of detail,
+      // and dispatch them all together
+      auto* commands = new GlDrawElementsIndirectCommand[mesh.lods.size()];
 
-      GlDrawElementsIndirectCommand commands[2];
+      for (uint32 i = 0; i < mesh.lods.size(); i++) {
+        auto& command = commands[i];
+        auto& lod = mesh.lods[i];
 
-      commands[0].firstIndex = mesh.lods[0].baseElement;
-      commands[0].count = mesh.lods[1].baseElement - mesh.lods[0].baseElement;
-      commands[0].instanceCount = 3;
-      commands[0].baseInstance = 0;
-      commands[0].baseVertex = 0;
-
-      commands[1].firstIndex = mesh.lods[1].baseElement;
-      commands[1].count = mesh.lods[2].baseElement - mesh.lods[1].baseElement;
-      commands[1].instanceCount = 7;
-      commands[1].baseInstance = 3;
-      commands[1].baseVertex = 0;
+        command.count = lod.elementCount;
+        command.firstIndex = lod.elementOffset;
+        command.instanceCount = lod.instanceCount;
+        command.baseInstance = lod.instanceOffset;
+        command.baseVertex = lod.vertexOffset;
+      }
 
       Gm_BufferDrawElementsIndirectCommands(commands, 2);
 
       glMultiDrawElementsIndirect(primitiveMode, GL_UNSIGNED_INT, 0, 2, 0);
+
+      delete[] commands;
     } else {
+      // No distinct level of detail meshes defined;
+      // draw all mesh instances together
       glDrawElementsInstanced(primitiveMode, mesh.faceElements.size(), GL_UNSIGNED_INT, (void*)0, mesh.objects.total());
     }
   }

@@ -14,19 +14,22 @@ namespace Gamma {
     // @todo clear vectors + maps, free all resources
   }
 
-  Mesh* AbstractScene::addMesh(std::string name, uint16 maxInstances, Mesh* mesh) {
-    assert(meshMap.find(name) == meshMap.end(), "Mesh '" + name + "' already exists!");
+  void AbstractScene::addMesh(std::string meshName, uint16 maxInstances, Mesh* mesh) {
+    assert(meshMap.find(meshName) == meshMap.end(), "Mesh '" + meshName + "' already exists!");
 
     mesh->index = (uint16)meshes.size();
     mesh->id = runningMeshId++;
     mesh->objects.reserve(maxInstances);
 
-    meshMap.emplace(name, mesh);
+    if (mesh->lods.size() > 0) {
+      mesh->lods[0].instanceOffset = 0;
+      mesh->lods[0].instanceCount = maxInstances;
+    }
+
+    meshMap.emplace(meshName, mesh);
     meshes.push_back(mesh);
 
     signal("mesh-created", mesh);
-
-    return mesh;
   }
 
   Light& AbstractScene::createLight(LightType type) {
@@ -80,12 +83,6 @@ namespace Gamma {
     return lights;
   }
 
-  ObjectPool& AbstractScene::getMeshObjects(std::string meshName) {
-    assert(meshMap.find(meshName) != meshMap.end(), "Mesh '" + meshName + "' does not exist!");
-
-    return meshMap[meshName]->objects;
-  }
-
   Object& AbstractScene::getObject(std::string name) {
     auto& record = objectStore.at(name);
     auto* object = findObject(record);
@@ -136,18 +133,24 @@ namespace Gamma {
     freeCameraVelocity *= (0.995f - dt * 5.0f);
   }
 
-  void AbstractScene::removeMesh(std::string name) {
-    if (meshMap.find(name) == meshMap.end()) {
+  Mesh& AbstractScene::mesh(std::string meshName) {
+    assert(meshMap.find(meshName) != meshMap.end(), "Mesh '" + meshName + "' does not exist!");
+
+    return *meshMap[meshName];
+  }
+
+  void AbstractScene::removeMesh(std::string meshName) {
+    if (meshMap.find(meshName) == meshMap.end()) {
       return;
     }
 
-    auto* mesh = meshMap.at(name);
+    auto* mesh = meshMap.at(meshName);
 
     signal("mesh-destroyed", mesh);
 
     Gm_FreeMesh(mesh);
 
-    meshMap.erase(name);
+    meshMap.erase(meshName);
     // @todo remove/reset mesh by ID, recycle when next mesh is created
   }
 
@@ -175,5 +178,27 @@ namespace Gamma {
     update(dt);
 
     runningTime += dt;
+  }
+
+  void AbstractScene::useLodByDistance(Mesh& mesh, float distance) {
+    uint32 instanceOffset = 0;
+
+    for (uint32 lodIndex = 0; lodIndex < mesh.lods.size(); lodIndex++) {
+      mesh.lods[lodIndex].instanceOffset = instanceOffset;
+
+      if (lodIndex < mesh.lods.size() - 1) {
+        // Group all objects within the distance threshold
+        // in front of those outside it, and use the pivot
+        // defining that boundary to determine our instance
+        // count for this LoD set
+        instanceOffset = (uint32)mesh.objects.partitionByDistance((uint16)instanceOffset, distance * float(lodIndex + 1), camera.position);
+
+        mesh.lods[lodIndex].instanceCount = instanceOffset - mesh.lods[lodIndex].instanceOffset;
+      } else {
+        // The final LoD can just use the remaining set
+        // of objects beyond the last LoD distance threshold
+        mesh.lods[lodIndex].instanceCount = (uint32)mesh.objects.total() - instanceOffset;
+      }
+    }
   }
 }

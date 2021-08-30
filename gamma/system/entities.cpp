@@ -124,6 +124,31 @@ namespace Gamma {
     return maxObjects;
   }
 
+  uint16 ObjectPool::partitionByDistance(uint16 start, float lodDistance, const Vec3f& cameraPosition) {
+    uint16 current = start;
+    uint16 end = total() - 1;
+
+    while (end > current) {
+      float currentObjectDistance = (objects[current].position - cameraPosition).magnitude();
+
+      if (currentObjectDistance <= lodDistance) {
+        current++;
+      } else {
+        float endObjectDistance;
+
+        do {
+          endObjectDistance = (objects[end].position - cameraPosition).magnitude();
+        } while (endObjectDistance > lodDistance && --end > current);
+
+        if (current != end) {
+          swapObjects(current, end);
+        }
+      }
+    }
+
+    return current;
+  }
+
   void ObjectPool::removeById(uint16 objectId) {
     uint16 index = indices[objectId];
 
@@ -151,6 +176,20 @@ namespace Gamma {
     totalActiveObjects = 0;
     objects = new Object[size];
     matrices = new Matrix4f[size];
+  }
+
+  void ObjectPool::swapObjects(uint16 a, uint16 b) {
+    Object objectA = objects[a];
+    Matrix4f matrixA = matrices[a];
+
+    objects[a] = objects[b];
+    matrices[a] = matrices[b];
+
+    objects[b] = objectA;
+    matrices[b] = matrixA;
+
+    indices[objects[a]._record.id] = a;
+    indices[objects[b]._record.id] = b;
   }
 
   uint16 ObjectPool::total() const {
@@ -391,19 +430,9 @@ namespace Gamma {
 
     auto* mesh = new Mesh();
 
-    mesh->lods.push_back({
-      0,  // baseElement
-      0   // baseVertex
-    });
-
     Gm_BufferObjData(obj, mesh->vertices, mesh->faceElements);
     Gm_ComputeNormals(mesh);
     Gm_ComputeTangents(mesh);
-
-    mesh->lods.push_back({
-      mesh->faceElements.size(),  // baseElement
-      0                           // baseVertex
-    });
 
     return mesh;
   }
@@ -417,22 +446,33 @@ namespace Gamma {
   Mesh* Gm_LoadMesh(std::initializer_list<const char*> paths) {
     auto* mesh = new Mesh();
 
-    mesh->lods.push_back({
-      0,  // baseElement
-      0   // baseVertex
-    });
+    mesh->lods.resize(paths.size());
 
     for (uint32 i = 0; i < paths.size(); i++) {
       const char* path = *(paths.begin() + i);
 
       ObjLoader obj(path);
 
+      mesh->lods[i].elementOffset = mesh->faceElements.size();
+
       Gm_BufferObjData(obj, mesh->vertices, mesh->faceElements);
 
-      mesh->lods.push_back({
-        mesh->faceElements.size(),  // baseElement
-        0                           // baseVertex
-      });
+      mesh->lods[i].elementCount = mesh->faceElements.size() - mesh->lods[i].elementOffset;
+
+      // @todo (?) For now, the vertex offset is always 0,
+      // since the offset for each set of LoD vertices is
+      // already added to the element indexes. It may be
+      // necessary to revisit this when more geometry is
+      // packed into global vertex/element buffers. Normals
+      // and tangents are computed for each triplet of face
+      // elements, where those elements refer to vertex
+      // indexes without offsets considered. Eventually we
+      // might want to generate vertices + face elements
+      // locally, use the face elements to compute normals/
+      // tangents for those local vertices, and finally
+      // buffer the results into a global list, defining
+      // a vertex offset for the new set.
+      mesh->lods[i].vertexOffset = 0;
     }
 
     Gm_ComputeNormals(mesh);

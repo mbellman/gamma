@@ -10,21 +10,21 @@ void DemoScene::init() {
 
   camera.position.z = -300.0f;
 
-  auto* cubeMesh = addMesh("cube", 100, Gm_CreateCube());
-  auto* daVinciMesh = addMesh("daVinci", 1, Gm_LoadMesh("./demo/assets/models/da-vinci.obj"));
-  auto* planeMesh = addMesh("plane", 1, Gm_CreatePlane(10));
-  auto* wallMesh = addMesh("wall", 1, Gm_CreatePlane(10));
+  addMesh("cube", 100, Gm_CreateCube());
+  addMesh("daVinci", 1, Gm_LoadMesh("./demo/assets/models/da-vinci.obj"));
+  addMesh("plane", 1, Gm_CreatePlane(10));
+  addMesh("wall", 1, Gm_CreatePlane(10));
 
-  auto* rabbitMesh = addMesh("rabbit", 10, Gm_LoadMesh({
+  addMesh("rabbit", 10, Gm_LoadMesh({
     "./demo/assets/models/rabbit-lod1.obj",
     "./demo/assets/models/rabbit-lod2.obj"
   }));
 
-  cubeMesh->texture = "./demo/assets/images/cat.png";
-  wallMesh->texture = "./demo/assets/images/cat.png";
-  planeMesh->normalMap = "./demo/assets/images/metal-normal-map.png";
-  planeMesh->type = MeshType::REFLECTIVE;
-  daVinciMesh->type = MeshType::REFRACTIVE;
+  mesh("cube").texture = "./demo/assets/images/cat.png";
+  mesh("wall").texture = "./demo/assets/images/cat.png";
+  mesh("plane").normalMap = "./demo/assets/images/metal-normal-map.png";
+  mesh("plane").type = MeshType::REFLECTIVE;
+  mesh("daVinci").type = MeshType::REFRACTIVE;
 
   auto& daVinci = createObjectFrom("daVinci");
 
@@ -118,7 +118,7 @@ void DemoScene::init() {
     }
 
     if (key == Key::R) {
-      getMeshObjects("cube").removeById(lastRemovedIndex++);
+      mesh("cube").objects.removeById(lastRemovedIndex++);
     }
 
     if (key == Key::V) {
@@ -134,6 +134,8 @@ void DemoScene::init() {
 void DemoScene::destroy() {}
 
 void DemoScene::update(float dt) {
+  useLodByDistance(mesh("rabbit"), 100.0f);
+
   // for (auto& cube : getMeshObjects("cube")) {
   //   cube.rotation.y += dt;
   //   cube.position.y = sinf(0.5f * (float)cube._record.id + getRunningTime() * 3.0f) * 20.0f;

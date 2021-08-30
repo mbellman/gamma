@@ -62,10 +62,15 @@ namespace Gamma {
   /**
    * MeshLod
    * -------
+   *
+   * @todo description
    */
   struct MeshLod {
-    uint32 baseElement;
-    uint32 baseVertex;
+    uint32 elementOffset = 0;
+    uint32 elementCount = 0;
+    uint32 instanceOffset = 0;
+    uint32 instanceCount = 0;
+    uint32 vertexOffset = 0;
   };
 
   /**
@@ -99,6 +104,7 @@ namespace Gamma {
     Object* getByRecord(const ObjectRecord& record) const;
     Matrix4f* getMatrices() const;
     uint16 max() const;
+    uint16 partitionByDistance(uint16 start, float distance, const Vec3f& cameraPosition);
     void removeById(uint16 objectId);
     void reserve(uint16 size);
     uint16 total() const;
@@ -111,6 +117,8 @@ namespace Gamma {
     uint16 maxObjects = 0;
     uint16 totalActiveObjects = 0;
     uint16 runningId = 0;
+
+    void swapObjects(uint16 a, uint16 b);
   };
 
   /**
