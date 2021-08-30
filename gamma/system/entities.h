@@ -118,7 +118,7 @@ namespace Gamma {
     uint16 totalActiveObjects = 0;
     uint16 runningId = 0;
 
-    void swapObjects(uint16 a, uint16 b);
+    void swapObjects(uint16 indexA, uint16 indexB);
   };
 
   /**

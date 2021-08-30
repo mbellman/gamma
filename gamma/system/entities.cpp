@@ -143,6 +143,10 @@ namespace Gamma {
         if (current != end) {
           swapObjects(current, end);
         }
+
+        // @optimize we can increment 'current' here if endObjectDistance < distance
+        // to avoid recalculating the same distance on the next while loop cycle
+        // @todo test this out and make sure it works
       }
     }
 
@@ -178,18 +182,18 @@ namespace Gamma {
     matrices = new Matrix4f[size];
   }
 
-  void ObjectPool::swapObjects(uint16 a, uint16 b) {
-    Object objectA = objects[a];
-    Matrix4f matrixA = matrices[a];
+  void ObjectPool::swapObjects(uint16 indexA, uint16 indexB) {
+    Object objectA = objects[indexA];
+    Matrix4f matrixA = matrices[indexA];
 
-    objects[a] = objects[b];
-    matrices[a] = matrices[b];
+    objects[indexA] = objects[indexB];
+    matrices[indexA] = matrices[indexB];
 
-    objects[b] = objectA;
-    matrices[b] = matrixA;
+    objects[indexB] = objectA;
+    matrices[indexB] = matrixA;
 
-    indices[objects[a]._record.id] = a;
-    indices[objects[b]._record.id] = b;
+    indices[objects[indexA]._record.id] = indexA;
+    indices[objects[indexB]._record.id] = indexB;
   }
 
   uint16 ObjectPool::total() const {
