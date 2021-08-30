@@ -124,21 +124,21 @@ namespace Gamma {
     return maxObjects;
   }
 
-  uint16 ObjectPool::partitionByDistance(uint16 start, float lodDistance, const Vec3f& cameraPosition) {
+  uint16 ObjectPool::partitionByDistance(uint16 start, float distance, const Vec3f& cameraPosition) {
     uint16 current = start;
     uint16 end = total() - 1;
 
     while (end > current) {
       float currentObjectDistance = (objects[current].position - cameraPosition).magnitude();
 
-      if (currentObjectDistance <= lodDistance) {
+      if (currentObjectDistance <= distance) {
         current++;
       } else {
         float endObjectDistance;
 
         do {
           endObjectDistance = (objects[end].position - cameraPosition).magnitude();
-        } while (endObjectDistance > lodDistance && --end > current);
+        } while (endObjectDistance > distance && --end > current);
 
         if (current != end) {
           swapObjects(current, end);
