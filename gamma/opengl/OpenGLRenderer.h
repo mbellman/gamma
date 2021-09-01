@@ -16,40 +16,36 @@
 #include "SDL_ttf.h"
 
 namespace Gamma {
-  struct DeferredPath {
-    OpenGLLightDisc lightDisc;
+  struct RendererBuffers {
+    OpenGLFrameBuffer gBuffer;
+    OpenGLFrameBuffer reflections;
+    OpenGLFrameBuffer post;
+  };
 
-    struct {
-      OpenGLFrameBuffer gBuffer;
-      OpenGLFrameBuffer reflections;
-      OpenGLFrameBuffer post;
-    } buffers;
+  struct RendererShaders {
+    OpenGLShader copyFrame;
+    OpenGLShader geometry;
+    OpenGLShader emissives;
+    OpenGLShader copyDepth;
+    OpenGLShader pointLight;
+    OpenGLShader directionalLight;
+    OpenGLShader reflections;
+    OpenGLShader reflectionsDenoise;
+    OpenGLShader skybox;
+    OpenGLShader refractivePrepass;
+    OpenGLShader refractiveGeometry;
 
-    struct {
-      OpenGLShader copyFrame;
-      OpenGLShader geometry;
-      OpenGLShader emissives;
-      OpenGLShader copyDepth;
-      OpenGLShader pointLight;
-      OpenGLShader directionalLight;
-      OpenGLShader reflections;
-      OpenGLShader reflectionsDenoise;
-      OpenGLShader skybox;
-      OpenGLShader refractivePrepass;
-      OpenGLShader refractiveGeometry;
+    // Shadowcaster shaders
+    OpenGLShader directionalShadowcaster;
+    OpenGLShader directionalShadowcasterView;
+    OpenGLShader pointShadowcaster;
+    OpenGLShader pointShadowcasterView;
+    OpenGLShader spotShadowcaster;
+    OpenGLShader spotShadowcasterView;
 
-      // Shadowcaster shaders
-      OpenGLShader directionalShadowcaster;
-      OpenGLShader directionalShadowcasterView;
-      OpenGLShader pointShadowcaster;
-      OpenGLShader pointShadowcasterView;
-      OpenGLShader spotShadowcaster;
-      OpenGLShader spotShadowcasterView;
-
-      // Dev shaders
-      OpenGLShader gBufferDev;
-      OpenGLShader directionalShadowMapDev;
-    } shaders;
+    // Dev shaders
+    OpenGLShader gBufferDev;
+    OpenGLShader directionalShadowMapDev;
   };
 
   class OpenGLRenderer final : public AbstractRenderer {
@@ -58,8 +54,8 @@ namespace Gamma {
     ~OpenGLRenderer() {};
 
     virtual void init() override;
-    virtual void render() override;
     virtual void destroy() override;
+    virtual void render() override;
     virtual void createMesh(const Mesh* mesh) override;
     virtual void createShadowMap(const Light* light) override;
     virtual void destroyMesh(const Mesh* mesh) override;
@@ -72,7 +68,9 @@ namespace Gamma {
     uint32 frame = 0;
     SDL_GLContext glContext;
     GLuint screenTexture = 0;
-    DeferredPath deferred;
+    RendererBuffers buffers;
+    RendererShaders shaders;
+    OpenGLLightDisc lightDisc;
     OpenGLShader screen;
     std::vector<OpenGLMesh*> glMeshes;
     std::vector<OpenGLDirectionalShadowMap*> glDirectionalShadowMaps;

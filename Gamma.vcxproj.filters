@@ -111,10 +111,10 @@
     <ClCompile Include="gamma\opengl\shadowmaps.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gamma\opengl\renderer_helpers.cpp">
+    <ClCompile Include="gamma\opengl\indirect_buffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gamma\opengl\indirect_buffer.cpp">
+    <ClCompile Include="gamma\opengl\renderer_setup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -515,10 +515,10 @@
     <ClInclude Include="gamma\opengl\shadowmaps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="gamma\opengl\renderer_helpers.h">
+    <ClInclude Include="gamma\opengl\indirect_buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="gamma\opengl\indirect_buffer.h">
+    <ClInclude Include="gamma\opengl\renderer_setup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
