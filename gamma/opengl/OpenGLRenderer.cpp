@@ -28,7 +28,6 @@ namespace Gamma {
    * --------------
    */
   void OpenGLRenderer::init() {
-    flags = OpenGLRenderFlags::RENDER_DEFERRED;
     // internalResolution = { 960, 540 };
 
     // Initialize OpenGL
@@ -55,19 +54,7 @@ namespace Gamma {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // Initialize forward renderer
-    // @todo
-
-    // Initialize dynamic lights UBO
-    // @todo buffer lights to forward renderer geometry shader
-    // glGenBuffers(1, &forward.lightsUbo);
-    // glBindBuffer(GL_UNIFORM_BUFFER, forward.lightsUbo);
-    // glBufferData(GL_UNIFORM_BUFFER, MAX_LIGHTS * sizeof(Light), 0, GL_DYNAMIC_DRAW);
-    // glBindBufferBase(GL_UNIFORM_BUFFER, 0, forward.lightsUbo);
-    // glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
     // Initialize deferred renderer
-    // @todo define separate OpenGLDeferredRenderer/OpenGLForwardRenderer classes
     Gm_InitDeferredRenderPath(deferred, internalResolution);
 
     deferred.lightDisc.init();
@@ -86,83 +73,6 @@ namespace Gamma {
   }
 
   void OpenGLRenderer::render() {
-    // @todo define separate OpenGLDeferredRenderer/OpenGLForwardRenderer classes
-    if (flags & OpenGLRenderFlags::RENDER_DEFERRED) {
-      renderDeferred();
-    } else {
-      renderForward();
-    }
-  }
-
-  void OpenGLRenderer::destroy() {
-    Gm_DestroyDeferredRenderPath(deferred);
-    Gm_DestroyDrawIndirectBuffer();
-
-    // glDeleteBuffers(1, &forward.lightsUbo);
-    glDeleteTextures(1, &screenTexture);
-
-    SDL_GL_DeleteContext(glContext);
-  }
-
-  void OpenGLRenderer::createMesh(const Mesh* mesh) {
-    glMeshes.push_back(new OpenGLMesh(mesh));
-
-    #if GAMMA_DEVELOPER_MODE
-      uint32 totalVertices = mesh->vertices.size();
-      uint32 totalTriangles = mesh->faceElements.size() / 3;
-
-      Console::log("[Gamma] Mesh created!", totalVertices, "vertices,", totalTriangles, "triangles");
-    #endif
-  }
-
-  void OpenGLRenderer::createShadowMap(const Light* light) {
-    switch (light->type) {
-      case LightType::DIRECTIONAL_SHADOWCASTER:
-        glDirectionalShadowMaps.push_back(new OpenGLDirectionalShadowMap(light));
-        break;
-      case LightType::POINT_SHADOWCASTER:
-        glPointShadowMaps.push_back(new OpenGLPointShadowMap(light));
-        break;
-      case LightType::SPOT_SHADOWCASTER:
-        glSpotShadowMaps.push_back(new OpenGLSpotShadowMap(light));
-        break;
-    }
-
-    Console::log("[Gamma] Shadowcaster created!");
-  }
-
-  void OpenGLRenderer::destroyMesh(const Mesh* mesh) {
-    // @todo
-    Console::log("[Gamma] Mesh destroyed!");
-  }
-
-  void OpenGLRenderer::destroyShadowMap(const Light* light) {
-    // @todo
-    Console::log("[Gamma] Shadowcaster destroyed!");
-  }
-
-  const RenderStats& OpenGLRenderer::getRenderStats() {
-    GLint total = 0;
-    GLint available = 0;
-    const char* vendor = (const char*)glGetString(GL_VENDOR);
-
-    if (strcmp(vendor, "NVIDIA Corporation") == 0) {
-      glGetIntegerv(GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX, &total);
-      glGetIntegerv(GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX, &available);
-    }
-
-    stats.gpuMemoryTotal = total / 1000;
-    stats.gpuMemoryUsed = (total - available) / 1000;
-    stats.isVSynced = SDL_GL_GetSwapInterval() == 1;
-
-    return stats;
-  }
-
-  void OpenGLRenderer::present() {
-    SDL_GL_SwapWindow(sdl_window);
-  }
-
-  void OpenGLRenderer::renderDeferred() {
     if (AbstractScene::active == nullptr) {
       return;
     }
@@ -177,12 +87,11 @@ namespace Gamma {
     // Build light arrays by type
     //
     // @todo don't reallocate on every frame
-    auto& lights = AbstractScene::active->getLights();
     std::vector<Light> pointLights;
     std::vector<Light> directionalLights;
     std::vector<Light> directionalShadowcasters;
 
-    for (auto& light : lights) {
+    for (auto& light : AbstractScene::active->getLights()) {
       switch (light.type) {
         case LightType::POINT:
           pointLights.push_back(light);
@@ -609,8 +518,71 @@ namespace Gamma {
     frame++;
   }
 
-  void OpenGLRenderer::renderForward() {
+  void OpenGLRenderer::destroy() {
+    Gm_DestroyDeferredRenderPath(deferred);
+    Gm_DestroyDrawIndirectBuffer();
+
+    glDeleteTextures(1, &screenTexture);
+
+    SDL_GL_DeleteContext(glContext);
+  }
+
+  void OpenGLRenderer::createMesh(const Mesh* mesh) {
+    glMeshes.push_back(new OpenGLMesh(mesh));
+
+    #if GAMMA_DEVELOPER_MODE
+      uint32 totalVertices = mesh->vertices.size();
+      uint32 totalTriangles = mesh->faceElements.size() / 3;
+
+      Console::log("[Gamma] Mesh created!", totalVertices, "vertices,", totalTriangles, "triangles");
+    #endif
+  }
+
+  void OpenGLRenderer::createShadowMap(const Light* light) {
+    switch (light->type) {
+      case LightType::DIRECTIONAL_SHADOWCASTER:
+        glDirectionalShadowMaps.push_back(new OpenGLDirectionalShadowMap(light));
+        break;
+      case LightType::POINT_SHADOWCASTER:
+        glPointShadowMaps.push_back(new OpenGLPointShadowMap(light));
+        break;
+      case LightType::SPOT_SHADOWCASTER:
+        glSpotShadowMaps.push_back(new OpenGLSpotShadowMap(light));
+        break;
+    }
+
+    Console::log("[Gamma] Shadowcaster created!");
+  }
+
+  void OpenGLRenderer::destroyMesh(const Mesh* mesh) {
     // @todo
+    Console::log("[Gamma] Mesh destroyed!");
+  }
+
+  void OpenGLRenderer::destroyShadowMap(const Light* light) {
+    // @todo
+    Console::log("[Gamma] Shadowcaster destroyed!");
+  }
+
+  const RenderStats& OpenGLRenderer::getRenderStats() {
+    GLint total = 0;
+    GLint available = 0;
+    const char* vendor = (const char*)glGetString(GL_VENDOR);
+
+    if (strcmp(vendor, "NVIDIA Corporation") == 0) {
+      glGetIntegerv(GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX, &total);
+      glGetIntegerv(GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX, &available);
+    }
+
+    stats.gpuMemoryTotal = total / 1000;
+    stats.gpuMemoryUsed = (total - available) / 1000;
+    stats.isVSynced = SDL_GL_GetSwapInterval() == 1;
+
+    return stats;
+  }
+
+  void OpenGLRenderer::present() {
+    SDL_GL_SwapWindow(sdl_window);
   }
 
   void OpenGLRenderer::renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background) {

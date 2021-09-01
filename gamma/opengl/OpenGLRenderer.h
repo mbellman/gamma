@@ -16,10 +16,6 @@
 #include "SDL_ttf.h"
 
 namespace Gamma {
-  enum OpenGLRenderFlags {
-    RENDER_DEFERRED = 1 << 0
-  };
-
   struct DeferredPath {
     OpenGLLightDisc lightDisc;
 
@@ -73,29 +69,20 @@ namespace Gamma {
     virtual void renderText(TTF_Font* font, const char* message, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background) override;
 
   private:
-    uint32 flags = 0;
     uint32 frame = 0;
     SDL_GLContext glContext;
     GLuint screenTexture = 0;
+    DeferredPath deferred;
     OpenGLShader screen;
     std::vector<OpenGLMesh*> glMeshes;
     std::vector<OpenGLDirectionalShadowMap*> glDirectionalShadowMaps;
     std::vector<OpenGLPointShadowMap*> glPointShadowMaps;
     std::vector<OpenGLSpotShadowMap*> glSpotShadowMaps;
 
-    struct ForwardPath {
-      // @todo (?)
-      GLuint lightsUbo = 0;
-    } forward;
-
-    DeferredPath deferred;
-
     struct PostShaders {
       OpenGLShader debanding;
     } post;
 
-    void renderDeferred();
-    void renderForward();
     void renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background);
     void writeAccumulatedEffectsBackIntoGBuffer();
   };
