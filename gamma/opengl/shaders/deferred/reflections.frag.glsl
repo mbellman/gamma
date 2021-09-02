@@ -140,7 +140,9 @@ float getReflectionIntensity(vec2 uv) {
 }
 
 /**
- * @todo description
+ * Returns the distance between the geometry at a point
+ * defined by the tip of a ray in view space, and the
+ * tip of the ray itself.
  */
 float getRayDistance(vec3 test_ray) {
   vec2 test_uv = viewToScreenCoordinates(test_ray);
@@ -180,7 +182,11 @@ bool mightHaveDistantReflection(vec3 view_ray, vec3 normalized_view_reflection_r
 }
 
 /**
- * @todo description
+ * Returns a Reflection by converging on the likely point
+ * that a ray intersects geometry, determined in screen space.
+ * We march the ray forward or backward, depending on whether
+ * an intersection does not or does occur, respectively, using
+ * decreasing steps each time in a binary search.
  */
 Reflection getRefinedReflection(
   vec3 view_reflecting_surface_position,
@@ -221,7 +227,10 @@ Reflection getRefinedReflection(
 }
 
 /**
- * @todo description
+ * Returns a Reflection at a given reflecting surface fragment,
+ * which may or may not reflect actual screen-space geometry.
+ * Surfaces with reflection rays which 'miss' geometry instead
+ * reflect the sky.
  */
 Reflection getReflection(
   vec3 view_reflecting_surface_position,

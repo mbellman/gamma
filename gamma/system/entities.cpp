@@ -354,7 +354,9 @@ namespace Gamma {
    * Gm_BufferObjData
    * ----------------
    *
-   * @todo description
+   * Streams vertex and face element data from an ObjLoader,
+   * defined in a preliminary state, into vertex/face element
+   * buffers defined on Meshes or other global buffers.
    *
    * @todo we may not want to add the base vertex offset here;
    * once this is used to pack multiple (distinct, not merely LOD)
@@ -427,7 +429,7 @@ namespace Gamma {
    * Gm_LoadMesh
    * -----------
    *
-   * @todo description
+   * Loads an .obj file model into a Mesh.
    */
   Mesh* Gm_LoadMesh(const char* path) {
     ObjLoader obj(path);
@@ -445,7 +447,9 @@ namespace Gamma {
    * Gm_LoadMesh
    * -----------
    *
-   * @todo description
+   * Loads a sequence of .obj file models into a Mesh,
+   * treating each consecutive model as a lower level
+   * of detail.
    */
   Mesh* Gm_LoadMesh(std::initializer_list<const char*> paths) {
     auto* mesh = new Mesh();

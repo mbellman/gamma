@@ -22,23 +22,27 @@ namespace Gamma {
   };
 
   /**
-   * @todo description
+   * A set of Mesh types, particular to all instances of a Mesh,
+   * controlling the rendering priority and properties of those
+   * instances.
    */
   enum MeshType {
     /**
-     * @todo description
+     * @todo differentiate skybox/emissive types
      */
     EMISSIVE = 0x00,
     /**
-     * @todo description
+     * Defines translucent Meshes which refract and lens the
+     * objects and geometry behind them.
      */
     REFRACTIVE = 0xF0,
     /**
-     * @todo description
+     * Defines Meshes which reflect surrounding geometry in
+     * screen space, or the sky where geometry is not reflected.
      */
     REFLECTIVE = 0xFA,
     /**
-     * @todo description
+     * Defines standard Meshes without any unique rendering properties.
      */
     NON_EMISSIVE = 0xFF
   };
@@ -63,13 +67,29 @@ namespace Gamma {
    * MeshLod
    * -------
    *
-   * @todo description
+   * Defines vertices/face elements and instances particular
+   * to specific Mesh levels of detail.
    */
   struct MeshLod {
+    /**
+     * Defines the starting face element in the LOD model.
+     */
     uint32 elementOffset = 0;
+    /**
+     * Defines the number of face elements in the LOD model.
+     */
     uint32 elementCount = 0;
+    /**
+     * Defines the starting instance in the LOD group.
+     */
     uint32 instanceOffset = 0;
+    /**
+     * Defines the number of instances in the LOD group.
+     */
     uint32 instanceCount = 0;
+    /**
+     * Defines the starting vertex in the LOD model.
+     */
     uint32 vertexOffset = 0;
   };
 
@@ -92,7 +112,8 @@ namespace Gamma {
    * ObjectPool
    * ----------
    *
-   * @todo description
+   * A collection of Objects tied to a given Mesh, designed
+   * to facilitate instanced/batched rendering.
    */
   class ObjectPool {
   public:
@@ -171,7 +192,9 @@ namespace Gamma {
      */
     std::vector<uint32> faceElements;
     /**
-     * @todo description
+     * The LOD groups for the Mesh, if applicable.
+     *
+     * @see MeshLod
      */
     std::vector<MeshLod> lods;
     /**
@@ -198,7 +221,8 @@ namespace Gamma {
      */
     uint8 type = MeshType::NON_EMISSIVE;
     /**
-     * @todo description
+     * Controls the maximum directional cascaded shadow
+     * map that the mesh objects should be rendered to.
      */
     uint8 maxCascade = 3;
     /**

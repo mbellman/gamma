@@ -7,7 +7,9 @@ namespace Gamma {
    * Quaternion
    * ----------
    *
-   * @todo description
+   * A struct implementing basic quaternion math,
+   * used for managing rotations without degeneracies
+   * like gimbal lock.
    */
   struct Quaternion {
     float w;
