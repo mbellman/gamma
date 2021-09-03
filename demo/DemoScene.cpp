@@ -11,7 +11,7 @@ void DemoScene::init() {
   camera.position.z = -300.0f;
 
   addMesh("cube", 100, Gm_CreateCube());
-  addMesh("daVinci", 1, Gm_LoadMesh("./demo/assets/models/da-vinci.obj"));
+  addMesh("daVinci", 1, Gm_LoadMesh("./demo/assets/models/da-vinci-split.obj"));
   addMesh("plane", 1, Gm_CreatePlane(10));
   addMesh("wall", 1, Gm_CreatePlane(10));
 
@@ -23,8 +23,8 @@ void DemoScene::init() {
   mesh("cube").texture = "./demo/assets/images/cat.png";
   mesh("wall").texture = "./demo/assets/images/cat.png";
   mesh("plane").normalMap = "./demo/assets/images/metal-normal-map.png";
-  mesh("plane").type = MeshType::REFLECTIVE;
-  mesh("daVinci").type = MeshType::REFRACTIVE;
+  // mesh("plane").type = MeshType::REFLECTIVE;
+  // mesh("daVinci").type = MeshType::REFRACTIVE;
 
   auto& daVinci = createObjectFrom("daVinci");
 

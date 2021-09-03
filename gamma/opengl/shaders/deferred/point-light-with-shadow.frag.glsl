@@ -42,12 +42,11 @@ vec3 getWorldPosition(float depth) {
   return glVec3(world.xyz);
 }
 
-float getLightFactor(vec3 lightToSurface, float lightDistance, float incidence) {
-  float surface_depth = lightDistance / light.radius;
-  float shadow_map_depth = texture(shadowMap, glVec3(lightToSurface)).r;
-  float bias = mix(0.001, 0.01, 1.0 - incidence);
+float getLightFactor(vec3 light_to_surface, float light_distance, float incidence) {
+  float shadow_map_depth = texture(shadowMap, glVec3(light_to_surface)).r * light.radius;
+  float bias = 0.1 + pow(1.0 - incidence, 2) * light_distance * 0.2;
 
-  return shadow_map_depth > surface_depth - bias ? 1.0 : 0.0;
+  return shadow_map_depth > light_distance - bias ? 1.0 : 0.0;
 }
 
 /**
@@ -55,7 +54,7 @@ float getLightFactor(vec3 lightToSurface, float lightDistance, float incidence) 
  * a single light's diffuse and specular contributions.
  */
 vec3 getIlluminatedColor(Light light, vec3 position, vec3 normal, vec3 color) {
-  vec3 adjustedLightColor = light.color * light.power * light.radius;
+  vec3 radiant_flux = light.color * light.power * light.radius;
   vec3 surfaceToLight = light.position - position;
   float lightDistance = length(surfaceToLight);
   vec3 n_surfaceToLight = surfaceToLight / lightDistance;
@@ -72,10 +71,12 @@ vec3 getIlluminatedColor(Light light, vec3 position, vec3 normal, vec3 color) {
   // Loosely approximates ambient/indirect lighting
   vec3 hack_indirect_light = light.color * light.power * pow(max(1.0 - dot(n_surfaceToCamera, normal), 0.0), 2) * indirect_light_factor;
 
-  vec3 diffuseTerm = adjustedLightColor * incidence * attenuation * hack_radial_influence * hack_soft_tapering + hack_indirect_light;
-  vec3 specularTerm = adjustedLightColor * specularity * attenuation;
+  vec3 diffuseTerm = radiant_flux * incidence * attenuation * hack_radial_influence * hack_soft_tapering + hack_indirect_light;
+  vec3 specularTerm = radiant_flux * specularity * attenuation;
 
-  return color * (diffuseTerm + specularTerm) * getLightFactor(surfaceToLight * -1.0, lightDistance, incidence);
+  float light_factor = getLightFactor(surfaceToLight * -1.0, lightDistance, incidence);
+
+  return color * (diffuseTerm + specularTerm) * light_factor;
 }
 
 void main() {

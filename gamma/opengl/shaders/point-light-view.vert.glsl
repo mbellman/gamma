@@ -6,12 +6,6 @@ layout (location = 2) in vec3 vertexTangent;
 layout (location = 3) in vec2 vertexUv;
 layout (location = 4) in mat4 modelMatrix;
 
-mat4 glMat4(mat4 matrix) {
-  matrix[3][2] *= -1;
-
-  return matrix;
-}
-
 void main() {
-  gl_Position = glMat4(modelMatrix) * vec4(vertexPosition, 1.0);
+  gl_Position = modelMatrix * vec4(vertexPosition, 1.0);
 }
