@@ -22,11 +22,9 @@ namespace Gamma {
 
     buffer.init();
     buffer.setSize({ 2048, 2048 });
-
     buffer.addColorAttachment(ColorFormat::R, 3);  // Cascade 0 (GL_TEXTURE3)
     buffer.addColorAttachment(ColorFormat::R, 4);  // Cascade 1 (GL_TEXTURE4)
     buffer.addColorAttachment(ColorFormat::R, 5);  // Cascade 2 (GL_TEXTURE5)
-
     buffer.addDepthAttachment();
     buffer.bindColorAttachments();
   }
@@ -38,7 +36,9 @@ namespace Gamma {
   OpenGLPointShadowMap::OpenGLPointShadowMap(const Light* light) {
     lightId = light->id;
 
-    // @todo
+    buffer.init();
+    buffer.setSize({ 1024, 1024 });
+    buffer.addDepthAttachment(3);  // Depth (GL_TEXTURE3)
   }
 
   /**

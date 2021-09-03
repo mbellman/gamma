@@ -48,12 +48,21 @@ namespace Gamma {
     Area<uint32> size;
   };
 
-  class OpenGLCubeMap {
+  class OpenGLCubeMap : public Initable, public Destroyable {
   public:
-    // @todo
+    virtual void init() override;
+    virtual void destroy() override;
+    void read();
+    void addColorAttachment(ColorFormat format, uint32 unit);
+    void addDepthAttachment(uint32 unit);
+    void setSize(const Area<uint32>& size);
+    void write();
 
   private:
     GLuint fbo = 0;
     GLenum unit;
+    GLuint textureId;
+    // std::vector<ColorAttachment> colorAttachments;
+    Area<uint32> size;
   };
 }

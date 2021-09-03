@@ -46,6 +46,17 @@ namespace Gamma {
     shaders.pointLight.fragment("./gamma/opengl/shaders/deferred/point-light-without-shadow.frag.glsl");
     shaders.pointLight.link();
 
+    shaders.pointShadowcaster.init();
+    shaders.pointShadowcaster.vertex("./gamma/opengl/shaders/quad.vert.glsl");
+    shaders.pointShadowcaster.fragment("./gamma/opengl/shaders/deferred/point-light-with-shadow.frag.glsl");
+    shaders.pointShadowcaster.link();
+
+    shaders.pointShadowcasterView.init();
+    shaders.pointShadowcasterView.vertex("./gamma/opengl/shaders/point-light-view.vert.glsl");
+    shaders.pointShadowcasterView.geometry("./gamma/opengl/shaders/point-light-view.geom.glsl");
+    shaders.pointShadowcasterView.fragment("./gamma/opengl/shaders/point-light-view.frag.glsl");
+    shaders.pointShadowcasterView.link();
+
     shaders.directionalLight.init();
     shaders.directionalLight.vertex("./gamma/opengl/shaders/quad.vert.glsl");
     shaders.directionalLight.fragment("./gamma/opengl/shaders/deferred/directional-light-without-shadow.frag.glsl");

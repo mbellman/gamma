@@ -63,9 +63,9 @@ void DemoScene::init() {
     transform(rabbit);
   }
 
-  auto& daVinciLight = createLight(LightType::POINT);
+  auto& daVinciLight = createLight(LightType::POINT_SHADOWCASTER);
 
-  daVinciLight.position = Vec3f(0.f, 20.0f, 0.0f);
+  daVinciLight.position = Vec3f(0.0f, 20.0f, 0.0f);
   daVinciLight.color = Vec3f(1.0f, 0.0f, 1.0f);
   daVinciLight.radius = 250.0f;
   daVinciLight.power = 2.0f;

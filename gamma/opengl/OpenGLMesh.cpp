@@ -130,6 +130,8 @@ namespace Gamma {
       // For meshes with levels of detail, generate draw
       // commands for mesh instances at each level of detail,
       // and dispatch them all together
+      //
+      // @todo preallocate draw commands array
       auto* commands = new GlDrawElementsIndirectCommand[mesh.lods.size()];
 
       for (uint32 i = 0; i < mesh.lods.size(); i++) {

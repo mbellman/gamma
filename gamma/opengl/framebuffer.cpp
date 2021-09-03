@@ -30,6 +30,10 @@ namespace Gamma {
     { ColorFormat::RGBA16, GL_RGBA }
   };
 
+  /**
+   * OpenGLFrameBuffer
+   * -----------------
+   */
   void OpenGLFrameBuffer::init() {
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -130,5 +134,66 @@ namespace Gamma {
 
   void OpenGLFrameBuffer::writeToAttachment(uint32 attachment) {
     glDrawBuffer(GL_COLOR_ATTACHMENT0 + attachment);
+  }
+
+  /**
+   * OpenGLCubeMap
+   * -------------
+   */
+  void OpenGLCubeMap::init() {
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+  }
+
+  void OpenGLCubeMap::destroy() {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+    glDeleteFramebuffers(1, &fbo);
+    glDeleteTextures(1, &textureId);
+  }
+
+  void OpenGLCubeMap::addColorAttachment(ColorFormat format, uint32 unit) {
+    // @todo
+  }
+
+  void OpenGLCubeMap::addDepthAttachment(uint32 unit) {
+    this->unit = GL_TEXTURE0 + unit;
+
+    glGenTextures(1, &textureId);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+
+    for (uint32 i = 0; i < 6; i++) {
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, size.width, size.height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, textureId, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  }
+
+  void OpenGLCubeMap::read() {
+    glActiveTexture(unit);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+
+    // @todo bind different textures based on whether
+    // the cube map has color attachments
+  }
+
+  void OpenGLCubeMap::setSize(const Area<uint32>& size) {
+    this->size = size;
+  }
+
+  void OpenGLCubeMap::write() {
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+    glViewport(0, 0, size.width, size.height);
   }
 }

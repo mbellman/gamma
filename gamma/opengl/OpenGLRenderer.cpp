@@ -99,6 +99,7 @@ namespace Gamma {
     //
     // @todo don't reallocate on every frame
     std::vector<Light> pointLights;
+    std::vector<Light> pointShadowCasters;
     std::vector<Light> directionalLights;
     std::vector<Light> directionalShadowcasters;
 
@@ -106,6 +107,14 @@ namespace Gamma {
       switch (light.type) {
         case LightType::POINT:
           pointLights.push_back(light);
+          break;
+        case LightType::POINT_SHADOWCASTER:
+          if (Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
+            pointShadowCasters.push_back(light);
+          } else {
+            pointLights.push_back(light);
+          }
+
           break;
         case LightType::DIRECTIONAL:
           directionalLights.push_back(light);
@@ -215,12 +224,13 @@ namespace Gamma {
 
       for (uint32 mapIndex = 0; mapIndex < glDirectionalShadowMaps.size(); mapIndex++) {
         auto& glShadowMap = *glDirectionalShadowMaps[mapIndex];
+        auto& light = directionalShadowcasters[mapIndex];
 
         glShadowMap.buffer.write();
 
         for (uint32 cascade = 0; cascade < 3; cascade++) {
           glShadowMap.buffer.writeToAttachment(cascade);
-          Matrix4f lightView = Gm_CreateCascadedLightViewMatrixGL(cascade, directionalShadowcasters[mapIndex].direction, camera);
+          Matrix4f lightView = Gm_CreateCascadedLightViewMatrixGL(cascade, light.direction, camera);
 
           shader.setMatrix4f("lightView", lightView);
 
@@ -234,6 +244,65 @@ namespace Gamma {
             if (sourceMesh->canCastShadows && sourceMesh->maxCascade >= cascade) {
               glMesh->render(primitiveMode);
             }
+          }
+        }
+      }
+
+      glEnable(GL_STENCIL_TEST);
+    }
+
+    // Render point shadow maps
+    if (glPointShadowMaps.size() > 0 && Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
+      glDisable(GL_STENCIL_TEST);
+
+      Vec3f directions[6] = {
+        Vec3f(-1.0f, 0.0f, 0.0f),
+        Vec3f(1.0f, 0.0f, 0.0f),
+        Vec3f(0.0f, -1.0f, 0.0f),
+        Vec3f(0.0f, 1.0f, 0.0f),
+        Vec3f(0.0f, 0.0f, -1.0f),
+        Vec3f(0.0f, 0.0f, 1.0f)
+      };
+
+      Vec3f tops[6] = {
+        Vec3f(0.0f, -1.0f, 0.0f),
+        Vec3f(0.0f, -1.0f, 0.0f),
+        Vec3f(0.0f, 0.0f, 1.0f),
+        Vec3f(0.0f, 0.0f, -1.0f),
+        Vec3f(0.0f, -1.0f, 0.0f),
+        Vec3f(0.0f, -1.0f, 0.0f)
+      };
+
+      auto& shader = shaders.pointShadowcasterView;
+
+      shader.use();
+
+      for (uint32 mapIndex = 0; mapIndex < glPointShadowMaps.size(); mapIndex++) {
+        auto& glShadowMap = *glPointShadowMaps[mapIndex];
+        auto& light = pointShadowCasters[mapIndex];
+
+        glShadowMap.buffer.write();
+
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        for (uint32 i = 0; i < 6; i++) {
+          Matrix4f projection = Matrix4f::glPerspective({ 1024, 1024 }, 90.0f, 1.0f, light.radius);
+          Matrix4f view = Matrix4f::lookAt(light.position.gl(), directions[i], tops[i]);
+          Matrix4f lightMatrix = (projection * view).transpose();
+
+          shader.setMatrix4f("lightMatrices[" + std::to_string(i) + "]", lightMatrix);
+        }
+
+        shader.setVec3f("lightPosition", light.position.gl());
+        shader.setFloat("farPlane", light.radius);
+
+        // @todo glMultiDrawElementsIndirect for static world geometry
+        // (will require a handful of other changes to mesh organization/data buffering)
+        for (auto* glMesh : glMeshes) {
+          auto* sourceMesh = glMesh->getSourceMesh();
+
+          if (sourceMesh->canCastShadows) {
+            glMesh->render(primitiveMode);
           }
         }
       }
@@ -290,6 +359,35 @@ namespace Gamma {
       shader.setMatrix4f("inverseView", inverseView);
 
       lightDisc.draw(pointLights);
+    }
+
+    // Render point shadowcaster lights
+    if (pointShadowCasters.size() > 0) {
+      auto& shader = shaders.pointShadowcaster;
+
+      shader.use();
+      shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+      shader.setInt("colorAndDepth", 0);
+      shader.setInt("normalAndSpecularity", 1);
+      shader.setInt("shadowMap", 3);
+      shader.setVec3f("cameraPosition", camera.position);
+      shader.setMatrix4f("inverseProjection", inverseProjection);
+      shader.setMatrix4f("inverseView", inverseView);
+
+      for (uint32 i = 0; i < pointShadowCasters.size(); i++) {
+        auto& glShadowMap = *glPointShadowMaps[i];
+        auto& light = pointShadowCasters[i];
+
+        glShadowMap.buffer.read();
+
+        shader.setVec3f("light.position", light.position);
+        shader.setFloat("light.radius", light.radius);
+        shader.setVec3f("light.color", light.color);
+        shader.setFloat("light.power", light.power);
+
+        // @todo use a single-instance light disc instead of a screen quad
+        OpenGLScreenQuad::render();
+      }
     }
 
     // Render directional lights (non-shadowcasters)
@@ -553,7 +651,7 @@ namespace Gamma {
         break;
     }
 
-    Console::log("[Gamma] Shadowcaster created!");
+    Console::log("[Gamma] Shadow map created!");
   }
 
   void OpenGLRenderer::destroyMesh(const Mesh* mesh) {
