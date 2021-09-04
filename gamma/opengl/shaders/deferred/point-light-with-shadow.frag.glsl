@@ -1,5 +1,7 @@
 #version 460 core
 
+#define USE_VARIABLE_PENUMBRA_SIZE 1
+
 struct Light {
   vec3 position;
   float radius;
@@ -42,11 +44,47 @@ vec3 getWorldPosition(float depth) {
   return glVec3(world.xyz);
 }
 
-float getLightFactor(vec3 light_to_surface, float light_distance, float incidence) {
-  float shadow_map_depth = texture(shadowMap, glVec3(light_to_surface)).r * light.radius;
-  float bias = 0.1 + pow(1.0 - incidence, 2) * light_distance * 0.2;
+/**
+ * Returns a value within the range -1.0 - 1.0, constant
+ * in screen space, acting as a noise filter.
+ *
+ * @todo move to helpers/allow shader imports
+ */
+float noise(float seed) {
+  return 2.0 * (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * seed * 43758.545312) - 0.5);
+}
 
-  return shadow_map_depth > light_distance - bias ? 1.0 : 0.0;
+vec3 rotatedVogelDisc(int samples, int index) {
+  float rotation = noise(1.0) * 3.141592;
+  float theta = 2.4 * index + rotation;
+  float radius = sqrt(float(index) + 0.5) / sqrt(float(samples));
+
+  return radius * vec3(cos(theta), sin(theta), 0.0);
+}
+
+float saturate(float value) {
+  return clamp(value, 0.0, 1.0);
+}
+
+float getLightFactor(vec3 light_to_surface, float light_distance, float incidence) {
+  #if USE_VARIABLE_PENUMBRA_SIZE == 1
+    float max_spread = light.radius * mix(0.01, 1.0, saturate(light.radius / 10000.0));
+    float spread = pow(light_distance / light.radius, 2) * max_spread;
+  #else
+    float spread = 0.5;
+  #endif
+  
+  float factor = 0.0;
+
+  for (int i = 0; i < 7; i++) {
+    vec3 sample_offset = spread * rotatedVogelDisc(7, i);
+    float shadow_map_depth = texture(shadowMap, glVec3(light_to_surface + sample_offset)).r * light.radius;
+    float bias = spread + pow(1.0 - incidence, 3) * 5.0;
+
+    factor += shadow_map_depth > light_distance - bias ? 1.0 : 0.0;
+  }
+
+  return factor / 7.0;
 }
 
 /**

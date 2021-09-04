@@ -1,6 +1,6 @@
 #version 460 core
 
-#define VARIABLE_PENUMBRA_SIZE 1
+#define USE_VARIABLE_PENUMBRA_SIZE 1
 
 struct DirectionalLight {
   vec3 color;
@@ -89,7 +89,7 @@ Cascade getCascadeByDepth(float linearized_depth) {
   }
 }
 
-vec2 rotatedVogelDisk(int samples, int index) {
+vec2 rotatedVogelDisc(int samples, int index) {
   float rotation = noise(1.0) * 3.141592;
   float theta = 2.4 * index + rotation;
   float radius = sqrt(float(index) + 0.5) / sqrt(float(samples));
@@ -135,7 +135,7 @@ float getLightIntensity(Cascade cascade, vec4 transform) {
 
   vec2 shadow_map_texel_size = 1.0 / textureSize(shadowMaps[cascade.index], 0);
 
-  #if VARIABLE_PENUMBRA_SIZE == 1
+  #if USE_VARIABLE_PENUMBRA_SIZE == 1
     float closest_occluder = getClosestOccluder(shadowMaps[cascade.index], shadow_map_texel_size, transform, cascade.occluder_sweep_radius);
     float spread = 1.0 + cascade.spread_factor * pow(distance(transform.z, closest_occluder), 2);
   #else
@@ -145,7 +145,7 @@ float getLightIntensity(Cascade cascade, vec4 transform) {
   float light_intensity = 0.0;
 
   for (int i = 0; i < 16; i++) {
-    vec2 texel_offset = spread * rotatedVogelDisk(16, i) * shadow_map_texel_size;
+    vec2 texel_offset = spread * rotatedVogelDisc(16, i) * shadow_map_texel_size;
     vec2 texel_coords = transform.xy + texel_offset;
     float shadow_map_depth = texture(shadowMaps[cascade.index], texel_coords).r;
 
