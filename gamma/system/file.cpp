@@ -1,5 +1,6 @@
 #include <fstream>
 
+#include "system/assert.h"
 #include "system/console.h"
 #include "system/file.h"
 
@@ -8,14 +9,12 @@ namespace Gamma {
     std::string source;
     std::ifstream file(path);
 
-    if (file.fail()) {
-      Console::log("[Gamma] Gm_LoadFileContents failed to load file:", path);
-    } else {
-      std::string line;
+    assert(!file.fail(), "[Gamma] Gm_LoadFileContents failed to load file:" + std::string(path));
 
-      while (std::getline(file, line)) {
-        source.append(line + "\n");
-      }
+    std::string line;
+
+    while (std::getline(file, line)) {
+      source.append(line + "\n");
     }
 
     file.close();

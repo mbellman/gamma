@@ -32,52 +32,9 @@ layout (location = 0) out vec4 out_color_and_depth;
 const float cascade_depth_1 = 200.0;
 const float cascade_depth_2 = 600.0;
 
-// @todo move to gl helpers
-vec3 glVec3(vec3 vector) {
-  return vector * vec3(1, 1, -1);
-}
-
-vec4 glVec4(vec4 vector) {
-  return vector * vec4(1, 1, -1, 1);
-}
-
-vec4 glVec4(vec3 vector) {
-  return vec4(glVec3(vector), 1.0);
-}
-
-/**
- * Reconstructs the world position from pixel depth.
- */
-vec3 getWorldPosition(float depth) {
-  float z = depth * 2.0 - 1.0;
-  vec4 clip = vec4(fragUv * 2.0 - 1.0, z, 1.0);
-  vec4 view = inverseProjection * clip;
-
-  view /= view.w;
-
-  vec4 world = inverseView * view;
-
-  return world.xyz * vec3(1.0, 1.0, -1.0);
-}
-
-// @todo move to a helpers file; allow shader imports
-float getLinearizedDepth(float depth) {
-  float clip_depth = 2.0 * depth - 1.0;
-  float z_near = 1.0;
-  float z_far = 10000.0;
-
-  return 2.0 * z_near * z_far / (z_far + z_near - clip_depth * (z_far - z_near));
-}
-
-/**
- * Returns a value within the range -1.0 - 1.0, constant
- * in screen space, acting as a noise filter.
- *
- * @todo move to helpers/allow shader imports
- */
-float noise(float seed) {
-  return 2.0 * (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * seed * 43758.545312) - 0.5);
-}
+@include('utils/gl.glsl');
+@include('utils/conversion.glsl');
+@include('utils/random.glsl');
 
 Cascade getCascadeByDepth(float linearized_depth) {
   if (linearized_depth < cascade_depth_1) {
@@ -98,6 +55,7 @@ vec2 rotatedVogelDisc(int samples, int index) {
 }
 
 float getClosestOccluder(sampler2D shadow_map, vec2 shadow_map_texel_size, vec4 transform, float occluder_sweep_radius) {
+  // @todo move to utils/offsets.glsl
   const vec2 offsets[9] = {
     vec2(0.0),
     vec2(-1.0, 0.0),
@@ -160,7 +118,7 @@ float getLightIntensity(Cascade cascade, vec4 transform) {
 void main() {
   vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
   vec4 frag_normal_and_specularity = texture(normalAndSpecularity, fragUv);
-  vec3 position = getWorldPosition(frag_color_and_depth.w);
+  vec3 position = getWorldPosition(frag_color_and_depth.w, fragUv, inverseProjection, inverseView);
   vec3 normal = frag_normal_and_specularity.xyz;
   vec3 color = frag_color_and_depth.rgb;
 

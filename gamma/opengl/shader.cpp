@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <filesystem>
+#include <map>
 
 #include "opengl/shader.h"
 #include "system/console.h"
@@ -9,14 +11,54 @@
 #include "SDL.h"
 
 namespace Gamma {
+  const static std::string INCLUDE_START = "@include('";
+  const static std::string INCLUDE_END = "');";
+  const static std::string INCLUDE_ROOT_PATH = "./gamma/opengl/shaders/";
+
+  /**
+   * Gm_VectorContains
+   * -----------------
+   */
+  template<typename T>
+  static bool Gm_VectorContains(const std::vector<T>& vector, T element) {
+    return std::find(vector.begin(), vector.end(), element) != vector.end();
+  }
+
   /**
    * Gm_CompileShader
    * ----------------
+   *
+   * @todo allow #define constants to be controlled + shader recompiled on change
    */
   GLShaderRecord Gm_CompileShader(GLenum shaderType, const char* path) {
     GLuint shader = glCreateShader(shaderType);
 
     std::string source = Gm_LoadFileContents(path);
+    std::vector<std::string> includes;
+    uint32 nextInclude;
+
+    while ((nextInclude = source.find(INCLUDE_START)) != std::string::npos) {
+      // Capture and include code from files specified by @include('...') directives
+      uint32 pathStart = nextInclude + INCLUDE_START.size();
+      uint32 pathEnd = source.find(INCLUDE_END, pathStart);
+      // @todo store include paths in shader record;
+      // check all included files when hot reloading
+      std::string includePath = INCLUDE_ROOT_PATH + source.substr(pathStart, pathEnd - pathStart);
+      uint32 replaceStart = nextInclude;
+      uint32 replaceLength = (pathEnd + INCLUDE_END.size()) - nextInclude;
+
+      if (Gm_VectorContains(includes, includePath)) {
+        // File already included; simply remove the directive
+        source.replace(replaceStart, replaceLength, "");
+      } else {
+        // Replace the directive with the included file contents
+        std::string includeSource = Gm_LoadFileContents(includePath.c_str());
+
+        source.replace(replaceStart, replaceLength, includeSource);
+        includes.push_back(includePath);
+      }
+    }
+
     const GLchar* shaderSource = source.c_str();
 
     glShaderSource(shader, 1, (const GLchar**)&shaderSource, 0);
