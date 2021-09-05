@@ -8,20 +8,7 @@ noperspective in vec2 fragUv;
 
 layout (location = 0) out vec4 out_colorAndDepth;
 
-/**
- * Reconstructs the world position from pixel depth.
- */
-vec3 getWorldPosition(float depth) {
-  float z = depth * 2.0 - 1.0;
-  vec4 clip = vec4(fragUv * 2.0 - 1.0, z, 1.0);
-  vec4 view = inverseProjection * clip;
-
-  view /= view.w;
-
-  vec4 world = inverseView * view;
-
-  return world.xyz * vec3(1.0, 1.0, -1.0);
-}
+@include('utils/conversion.glsl');
 
 vec3 getSkyColor(vec3 direction) {
   // @todo receive parameters as uniforms
@@ -51,7 +38,7 @@ vec3 getSkyColor(vec3 direction) {
 void main() {
   // @todo figure out how to calculate direction
   // from camera direction + fragUv
-  vec3 position = getWorldPosition(1.0) - cameraPosition;
+  vec3 position = getWorldPosition(1.0, fragUv, inverseProjection, inverseView) - cameraPosition;
   vec3 direction = normalize(position);
 
   out_colorAndDepth = vec4(getSkyColor(direction), 1.0);

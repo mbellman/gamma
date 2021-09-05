@@ -8,17 +8,14 @@ layout (location = 4) in mat4 modelMatrix;
 
 uniform mat4 lightView;
 
+// @todo once mesh textures are checked for alpha
 // out vec2 fragUv;
 
-// @todo move to gl helpers
-mat4 glMat4(mat4 matrix) {
-  matrix[3][2] *= -1;
-
-  return matrix;
-}
+@include('utils/gl.glsl');
 
 void main() {
   gl_Position = lightView * glMat4(modelMatrix) * vec4(vertexPosition, 1.0);
 
+  // @todo once mesh textures are checked for alpha
   // fragUv = vertexUv;
 }

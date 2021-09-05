@@ -24,35 +24,9 @@ noperspective in vec2 fragUv;
 
 layout (location = 0) out vec4 out_colorAndDepth;
 
-// @todo move to helpers
-vec3 glVec3(vec3 vector) {
-  return vector * vec3(1, 1, -1);
-}
-
-/**
- * Reconstructs the world position from pixel depth.
- */
-vec3 getWorldPosition(float depth) {
-  float z = depth * 2.0 - 1.0;
-  vec4 clip = vec4(fragUv * 2.0 - 1.0, z, 1.0);
-  vec4 view = inverseProjection * clip;
-
-  view /= view.w;
-
-  vec4 world = inverseView * view;
-
-  return glVec3(world.xyz);
-}
-
-/**
- * Returns a value within the range -1.0 - 1.0, constant
- * in screen space, acting as a noise filter.
- *
- * @todo move to helpers/allow shader imports
- */
-float noise(float seed) {
-  return 2.0 * (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * seed * 43758.545312) - 0.5);
-}
+@include('utils/gl.glsl');
+@include('utils/conversion.glsl');
+@include('utils/random.glsl');
 
 vec3 rotatedVogelDisc(int samples, int index) {
   float rotation = noise(1.0) * 3.141592;
@@ -119,7 +93,7 @@ vec3 getIlluminatedColor(Light light, vec3 position, vec3 normal, vec3 color) {
 
 void main() {
   vec4 frag_colorAndDepth = texture(colorAndDepth, fragUv);
-  vec3 position = getWorldPosition(frag_colorAndDepth.w);
+  vec3 position = getWorldPosition(frag_colorAndDepth.w, fragUv, inverseProjection, inverseView);
 
   if (length(light.position - position) > light.radius) {
     discard;

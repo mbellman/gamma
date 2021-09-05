@@ -22,20 +22,7 @@ flat in Light light;
 
 layout (location = 0) out vec4 out_colorAndDepth;
 
-/**
- * Reconstructs the world position from pixel depth.
- */
-vec3 getWorldPosition(float depth) {
-  float z = depth * 2.0 - 1.0;
-  vec4 clip = vec4(fragUv * 2.0 - 1.0, z, 1.0);
-  vec4 view = inverseProjection * clip;
-
-  view /= view.w;
-
-  vec4 world = inverseView * view;
-
-  return world.xyz * vec3(1.0, 1.0, -1.0);
-}
+@include('utils/conversion.glsl');
 
 /**
  * Calculates the illuminated color of the pixel from
@@ -67,7 +54,7 @@ vec3 getIlluminatedColor(Light light, vec3 position, vec3 normal, vec3 color) {
 
 void main() {
   vec4 frag_colorAndDepth = texture(colorAndDepth, fragUv);
-  vec3 position = getWorldPosition(frag_colorAndDepth.w);
+  vec3 position = getWorldPosition(frag_colorAndDepth.w, fragUv, inverseProjection, inverseView);
 
   if (length(light.position - position) > light.radius) {
     discard;

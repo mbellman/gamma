@@ -6,16 +6,6 @@ noperspective in vec2 fragUv;
 
 layout (location = 0) out vec4 out_ColorAndDepth;
 
-/**
- * Returns a value within the range -1.0 - 1.0, constant
- * in screen space, acting as a noise filter.
- *
- * @todo move to helpers/allow shader imports
- */
-float noise(float seed) {
-  return 2.0 * (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * seed * 43758.545312) - 0.5);
-}
-
 float luminance(vec3 color) {
   return length(color * vec3(0.2126, 0.7152, 0.0722));
 }

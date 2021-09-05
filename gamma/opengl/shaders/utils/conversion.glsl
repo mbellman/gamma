@@ -31,3 +31,25 @@ float getLinearizedDepth(float depth) {
 
   return 2.0 * near_plane * far_plane / (far_plane + near_plane - clip_depth * (far_plane - near_plane));
 }
+
+/**
+ * Maps a linear [near, far] depth value to a nonlinear
+ * [0, 1] depth value.
+ */
+float getFragDepth(float linearized_depth, mat4 projection) {
+  float a = projection[2][2];
+  float b = projection[3][2];
+
+  return 0.5 * (-a * linearized_depth + b) / linearized_depth + 0.5;
+}
+
+/**
+ * Returns the 2D screen coordinates, normalized to the range
+ * [0.0, 1.0], corresponding to a point in view space.
+ */
+vec2 getScreenCoordinates(vec3 view_position, mat4 projection) {
+  vec4 proj = projection * glVec4(view_position);
+  vec3 clip = proj.xyz / proj.w;
+
+  return clip.xy * 0.5 + 0.5;
+}

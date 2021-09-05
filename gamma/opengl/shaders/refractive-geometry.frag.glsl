@@ -14,43 +14,11 @@ in vec2 fragUv;
 
 layout (location = 0) out vec4 out_color_and_depth;
 
-// @todo move to gl helpers
-vec3 glVec3(vec3 vector) {
-  return vector * vec3(1, 1, -1);
-}
-
-vec4 glVec4(vec4 vector) {
-  return vector * vec4(1, 1, -1, 1);
-}
-
-vec4 glVec4(vec3 vector) {
-  return vec4(glVec3(vector), 1.0);
-}
+@include('utils/gl.glsl');
+@include('utils/conversion.glsl');
 
 vec2 getPixelCoords() {
   return gl_FragCoord.xy / vec2(1920.0, 1080.0);
-}
-
-/**
- * Reconstructs the world position from pixel depth.
- */
-vec3 getWorldPosition(float depth) {
-  float z = depth * 2.0 - 1.0;
-  vec4 clip = vec4(getPixelCoords() * 2.0 - 1.0, z, 1.0);
-  vec4 view = inverseProjection * clip;
-
-  view /= view.w;
-
-  vec4 world = inverseView * view;
-
-  return glVec3(world.xyz);
-}
-
-vec2 viewToScreenCoordinates(vec3 view_position) {
-  vec4 proj = projection * glVec4(view_position);
-  vec3 clip = proj.xyz / proj.w;
-
-  return clip.xy * 0.5 + 0.5;
 }
 
 // @todo allow shader imports; import this function
@@ -88,7 +56,7 @@ void main() {
   const float REFRACTION_INTENSITY = 3.0;
   const vec3 GEOMETRY_COLOR = vec3(1, 0, 1);
 
-  vec3 position = getWorldPosition(gl_FragCoord.z);
+  vec3 position = getWorldPosition(gl_FragCoord.z, getPixelCoords(), inverseProjection, inverseView);
   vec3 color = vec3(1.0);
   vec3 normal = normalize(fragNormal);
 
@@ -98,7 +66,7 @@ void main() {
   vec3 world_refraction_ray = position - normal * REFRACTION_INTENSITY;
 
   vec3 view_refraction_ray = glVec4(view * glVec4(world_refraction_ray)).xyz;
-  vec2 refracted_color_coords = viewToScreenCoordinates(view_refraction_ray);
+  vec2 refracted_color_coords = getScreenCoordinates(view_refraction_ray, projection);
   float frag_depth = texture(colorAndDepth, getPixelCoords()).w;
 
   if (frag_depth < 1.0 && isOffScreen(refracted_color_coords)) {

@@ -14,20 +14,7 @@ out vec3 fragTangent;
 out vec3 fragBitangent;
 out vec2 fragUv;
 
-// @todo move to gl helpers
-vec3 glVec3(vec3 vector) {
-  return vector * vec3(1, 1, -1);
-}
-
-vec4 glVec4(vec4 vector) {
-  return vector * vec4(1, 1, -1, 1);
-}
-
-mat4 glMat4(mat4 matrix) {
-  matrix[3][2] *= -1;
-
-  return matrix;
-}
+@include('utils/gl.glsl');
 
 /**
  * Returns a bitangent from potentially non-orthonormal
@@ -46,11 +33,10 @@ vec3 getFragBitangent(vec3 normal, vec3 tangent) {
 }
 
 void main() {
-  mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
-
   gl_Position = projection * view * glMat4(modelMatrix) * vec4(vertexPosition, 1.0);
 
-  // Make similar adjustments to the normal/tangent z components
+  mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
+
   fragNormal = glVec3(normalMatrix * vertexNormal);
   fragTangent = glVec3(normalMatrix * vertexTangent);
   fragBitangent = getFragBitangent(fragNormal, fragTangent);

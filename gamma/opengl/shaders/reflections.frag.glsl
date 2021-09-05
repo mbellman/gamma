@@ -24,7 +24,7 @@ const float z_far = 10000.0;
 const float min_ray_step_size = 2.0;
 const float max_ray_step_size = 20.0;
 const float jitter = 1.0;
-const float reflection_factor = 0.5;
+const float reflection_factor = 1.0;
 const float thickness_threshold = 5.0;
 const float slowdown_distance_threshold = 30.0;
 const float distant_reflection_test_size = 4.0;
@@ -33,35 +33,9 @@ const float contact_ray_step_size = 1.0;
 const int TOTAL_MARCH_STEPS = 16;
 const int TOTAL_REFINEMENT_STEPS = 6;
 
-// @todo move to gl helpers
-vec3 glVec3(vec3 vector) {
-  return vector * vec3(1, 1, -1);
-}
-
-vec4 glVec4(vec4 vector) {
-  return vector * vec4(1, 1, -1, 1);
-}
-
-vec4 glVec4(vec3 vector) {
-  return vec4(glVec3(vector), 1.0);
-}
-
-/**
- * Reconstructs the world position from pixel depth.
- *
- * @todo move to helpers
- */
-vec3 getWorldPosition(float depth) {
-  float z = depth * 2.0 - 1.0;
-  vec4 clip = vec4(fragUv * 2.0 - 1.0, z, 1.0);
-  vec4 view = inverseProjection * clip;
-
-  view /= view.w;
-
-  vec4 world = inverseView * view;
-
-  return glVec3(world.xyz);
-}
+@include('utils/gl.glsl');
+@include('utils/conversion.glsl');
+@include('utils/random.glsl');
 
 // @todo allow shader imports; import this function
 // from skybox helpers or similar. track shader dependencies
@@ -90,36 +64,8 @@ vec3 getSkyColor(vec3 direction) {
   );
 }
 
-// @todo move to a helpers file; allow shader imports
-float getLinearizedDepth(float depth) {
-  float clip_depth = 2.0 * depth - 1.0;
-
-  return 2.0 * z_near * z_far / (z_far + z_near - clip_depth * (z_far - z_near));
-}
-
-vec2 viewToScreenCoordinates(vec3 view_position) {
-  vec4 proj = projection * glVec4(view_position);
-  vec3 clip = proj.xyz / proj.w;
-
-  return clip.xy * 0.5 + 0.5;
-}
-
 bool isOffScreen(vec2 uv) {
   return uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1;
-}
-
-/**
- * Returns a value within the range -1.0 - 1.0, constant
- * in screen space, acting as a noise filter.
- *
- * @todo move to helpers/allow shader imports
- */
-float noise(float seed) {
-  return 2.0 * (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * seed * 43758.545312) - 0.5);
-}
-
-float random(float low, float high) {
-  return low + (noise(1.0) * 0.5 + 0.5) * (high - low);
 }
 
 /**
@@ -145,7 +91,7 @@ float getReflectionIntensity(vec2 uv) {
  * tip of the ray itself.
  */
 float getRayDistance(vec3 test_ray) {
-  vec2 test_uv = viewToScreenCoordinates(test_ray);
+  vec2 test_uv = getScreenCoordinates(test_ray, projection);
   vec4 test_sample = texture(colorAndDepth, test_uv);
   float test_depth = getLinearizedDepth(test_sample.w);
 
@@ -204,7 +150,7 @@ Reflection getRefinedReflection(
     // Decrease step size by half and advance the ray
     ray_step *= 0.5;
     ray += ray_step;
-    refined_uv = viewToScreenCoordinates(ray);
+    refined_uv = getScreenCoordinates(ray, projection);
 
     vec4 test = texture(colorAndDepth, refined_uv);
 
@@ -257,7 +203,7 @@ Reflection getReflection(
 
     ray += ray_step;
 
-    vec2 uv = viewToScreenCoordinates(ray);
+    vec2 uv = getScreenCoordinates(ray, projection);
 
     if (isOffScreen(uv) || ray.z >= z_far) {
       break;
@@ -304,7 +250,7 @@ Reflection getReflection(
 void main() {
   vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
   vec4 frag_normal_and_specularity = texture(normalAndSpecularity, fragUv);
-  vec3 frag_world_position = getWorldPosition(frag_color_and_depth.w);
+  vec3 frag_world_position = getWorldPosition(frag_color_and_depth.w, fragUv, inverseProjection, inverseView);
   vec3 camera_to_fragment = frag_world_position - cameraPosition;
   vec3 normalized_camera_to_fragment = normalize(camera_to_fragment);
   vec3 frag_world_normal = frag_normal_and_specularity.rgb;

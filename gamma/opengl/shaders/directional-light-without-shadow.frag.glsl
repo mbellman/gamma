@@ -19,25 +19,12 @@ noperspective in vec2 fragUv;
 
 layout (location = 0) out vec4 out_colorAndDepth;
 
-/**
- * Reconstructs the world position from pixel depth.
- */
-vec3 getWorldPosition(float depth) {
-  float z = depth * 2.0 - 1.0;
-  vec4 clip = vec4(fragUv * 2.0 - 1.0, z, 1.0);
-  vec4 view = inverseProjection * clip;
-
-  view /= view.w;
-
-  vec4 world = inverseView * view;
-
-  return world.xyz * vec3(1.0, 1.0, -1.0);
-}
+@include('utils/conversion.glsl');
 
 void main() {
   vec4 frag_colorAndDepth = texture(colorAndDepth, fragUv);
   vec4 frag_normalAndSpecularity = texture(normalAndSpecularity, fragUv);
-  vec3 position = getWorldPosition(frag_colorAndDepth.w);
+  vec3 position = getWorldPosition(frag_colorAndDepth.w, fragUv, inverseProjection, inverseView);
   vec3 normal = frag_normalAndSpecularity.xyz;
   vec3 color = frag_colorAndDepth.rgb;
   vec3 accumulatedColor = vec3(0.0);

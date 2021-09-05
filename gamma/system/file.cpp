@@ -9,7 +9,7 @@ namespace Gamma {
     std::string source;
     std::ifstream file(path);
 
-    assert(!file.fail(), "[Gamma] Gm_LoadFileContents failed to load file:" + std::string(path));
+    assert(!file.fail(), "[Gamma] Gm_LoadFileContents failed to load file: " + std::string(path));
 
     std::string line;
 
