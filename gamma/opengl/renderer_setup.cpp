@@ -32,23 +32,23 @@ namespace Gamma {
 
     // Initialize shaders
     shaders.geometry.init();
-    shaders.geometry.vertex("./gamma/opengl/shaders/deferred/geometry.vert.glsl");
-    shaders.geometry.fragment("./gamma/opengl/shaders/deferred/geometry.frag.glsl");
+    shaders.geometry.vertex("./gamma/opengl/shaders/geometry.vert.glsl");
+    shaders.geometry.fragment("./gamma/opengl/shaders/geometry.frag.glsl");
     shaders.geometry.link();
 
     shaders.copyDepth.init();
     shaders.copyDepth.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    shaders.copyDepth.fragment("./gamma/opengl/shaders/deferred/copy-depth.frag.glsl");
+    shaders.copyDepth.fragment("./gamma/opengl/shaders/copy-depth.frag.glsl");
     shaders.copyDepth.link();
 
     shaders.pointLight.init();
-    shaders.pointLight.vertex("./gamma/opengl/shaders/deferred/instanced-light.vert.glsl");
-    shaders.pointLight.fragment("./gamma/opengl/shaders/deferred/point-light-without-shadow.frag.glsl");
+    shaders.pointLight.vertex("./gamma/opengl/shaders/instanced-light.vert.glsl");
+    shaders.pointLight.fragment("./gamma/opengl/shaders/point-light-without-shadow.frag.glsl");
     shaders.pointLight.link();
 
     shaders.pointShadowcaster.init();
     shaders.pointShadowcaster.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    shaders.pointShadowcaster.fragment("./gamma/opengl/shaders/deferred/point-light-with-shadow.frag.glsl");
+    shaders.pointShadowcaster.fragment("./gamma/opengl/shaders/point-light-with-shadow.frag.glsl");
     shaders.pointShadowcaster.link();
 
     shaders.pointShadowcasterView.init();
@@ -59,12 +59,12 @@ namespace Gamma {
 
     shaders.directionalLight.init();
     shaders.directionalLight.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    shaders.directionalLight.fragment("./gamma/opengl/shaders/deferred/directional-light-without-shadow.frag.glsl");
+    shaders.directionalLight.fragment("./gamma/opengl/shaders/directional-light-without-shadow.frag.glsl");
     shaders.directionalLight.link();
 
     shaders.directionalShadowcaster.init();
     shaders.directionalShadowcaster.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    shaders.directionalShadowcaster.fragment("./gamma/opengl/shaders/deferred/directional-light-with-shadow.frag.glsl");
+    shaders.directionalShadowcaster.fragment("./gamma/opengl/shaders/directional-light-with-shadow.frag.glsl");
     shaders.directionalShadowcaster.link();
 
     shaders.directionalShadowcasterView.init();
@@ -76,33 +76,33 @@ namespace Gamma {
 
     shaders.skybox.init();
     shaders.skybox.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    shaders.skybox.fragment("./gamma/opengl/shaders/deferred/skybox.frag.glsl");
+    shaders.skybox.fragment("./gamma/opengl/shaders/skybox.frag.glsl");
     shaders.skybox.link();
 
     shaders.copyFrame.init();
     shaders.copyFrame.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    shaders.copyFrame.fragment("./gamma/opengl/shaders/deferred/copy-frame.frag.glsl");
+    shaders.copyFrame.fragment("./gamma/opengl/shaders/copy-frame.frag.glsl");
     shaders.copyFrame.link();
 
     // @todo define different SSR quality levels
     shaders.reflections.init();
     shaders.reflections.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    shaders.reflections.fragment("./gamma/opengl/shaders/deferred/reflections.frag.glsl");
+    shaders.reflections.fragment("./gamma/opengl/shaders/reflections.frag.glsl");
     shaders.reflections.link();
 
     shaders.reflectionsDenoise.init();
     shaders.reflectionsDenoise.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    shaders.reflectionsDenoise.fragment("./gamma/opengl/shaders/deferred/reflections-denoise.frag.glsl");
+    shaders.reflectionsDenoise.fragment("./gamma/opengl/shaders/reflections-denoise.frag.glsl");
     shaders.reflectionsDenoise.link();
 
     shaders.refractiveGeometry.init();
-    shaders.refractiveGeometry.vertex("./gamma/opengl/shaders/deferred/geometry.vert.glsl");
-    shaders.refractiveGeometry.fragment("./gamma/opengl/shaders/deferred/refractive-geometry.frag.glsl");
+    shaders.refractiveGeometry.vertex("./gamma/opengl/shaders/geometry.vert.glsl");
+    shaders.refractiveGeometry.fragment("./gamma/opengl/shaders/refractive-geometry.frag.glsl");
     shaders.refractiveGeometry.link();
 
     shaders.refractivePrepass.init();
-    shaders.refractivePrepass.vertex("./gamma/opengl/shaders/deferred/geometry.vert.glsl");
-    shaders.refractivePrepass.fragment("./gamma/opengl/shaders/deferred/refractive-prepass.frag.glsl");
+    shaders.refractivePrepass.vertex("./gamma/opengl/shaders/geometry.vert.glsl");
+    shaders.refractivePrepass.fragment("./gamma/opengl/shaders/refractive-prepass.frag.glsl");
     shaders.refractivePrepass.link();
 
     #if GAMMA_DEVELOPER_MODE
