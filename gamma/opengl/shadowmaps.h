@@ -9,7 +9,9 @@
 
 namespace Gamma {
   struct OpenGLBaseShadowMap {
+    // @todo store a pointer to the light instead of the index
     uint32 lightId = UNUSED_LIGHT_INDEX;
+    bool isRendered = false;
   };
 
   struct OpenGLDirectionalShadowMap : public OpenGLBaseShadowMap {

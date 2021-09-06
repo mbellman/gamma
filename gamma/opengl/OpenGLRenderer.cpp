@@ -242,7 +242,7 @@ namespace Gamma {
             auto* sourceMesh = glMesh->getSourceMesh();
 
             if (sourceMesh->canCastShadows && sourceMesh->maxCascade >= cascade) {
-              glMesh->render(primitiveMode);
+              glMesh->render(primitiveMode, true);
             }
           }
         }
@@ -281,6 +281,10 @@ namespace Gamma {
         auto& glShadowMap = *glPointShadowMaps[mapIndex];
         auto& light = pointShadowCasters[mapIndex];
 
+        if (light.isStatic && glShadowMap.isRendered) {
+          continue;
+        }
+
         glShadowMap.buffer.write();
 
         glClear(GL_DEPTH_BUFFER_BIT);
@@ -302,9 +306,11 @@ namespace Gamma {
           auto* sourceMesh = glMesh->getSourceMesh();
 
           if (sourceMesh->canCastShadows) {
-            glMesh->render(primitiveMode);
+            glMesh->render(primitiveMode, true);
           }
         }
+
+        glShadowMap.isRendered = true;
       }
 
       glEnable(GL_STENCIL_TEST);

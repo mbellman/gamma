@@ -67,8 +67,9 @@ void DemoScene::init() {
 
   daVinciLight.position = Vec3f(0.0f, 20.0f, 0.0f);
   daVinciLight.color = Vec3f(1.0f, 0.0f, 1.0f);
-  daVinciLight.radius = 250.0f;
+  daVinciLight.radius = 2000.0f;
   daVinciLight.power = 2.0f;
+  daVinciLight.isStatic = true;
 
   auto& sunlight = createLight(LightType::DIRECTIONAL_SHADOWCASTER);
 
@@ -91,9 +92,8 @@ void DemoScene::init() {
       // auto& cubeLight = createLight(LightType::POINT);
 
       // cubeLight.color = Vec3f(0.1f, 0.3f, 1.0f);
-      // cubeLight.radius = 75.0f;
-      // cubeLight.position = cubePosition + Vec3f(0.0f, 50.0f, 0.0f);
-      // cubeLight.power = 2.0f;
+      // cubeLight.radius = 25.0f;
+      // cubeLight.position = cubePosition + Vec3f(0.0f, 10.0f, 0.0f);
 
       transform(cube);
     }

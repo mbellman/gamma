@@ -18,7 +18,7 @@ namespace Gamma {
     bool hasNormalMap() const;
     bool hasTexture() const;
     bool isMeshType(MeshType type) const;
-    void render(GLenum primitiveMode);
+    void render(GLenum primitiveMode, bool useLowestLevelOfDetail = false);
 
   private:
     const Mesh* sourceMesh = nullptr;

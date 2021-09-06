@@ -103,7 +103,7 @@ namespace Gamma {
     return sourceMesh->type == type;
   }
 
-  void OpenGLMesh::render(GLenum primitiveMode) {
+  void OpenGLMesh::render(GLenum primitiveMode, bool useLowestLevelOfDetail) {
     auto& mesh = *sourceMesh;
 
     if (mesh.type != MeshType::REFRACTIVE) {
@@ -127,29 +127,35 @@ namespace Gamma {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 
     if (mesh.lods.size() > 0) {
-      // For meshes with levels of detail, generate draw
-      // commands for mesh instances at each level of detail,
-      // and dispatch them all together
-      //
-      // @todo preallocate draw commands array
-      auto* commands = new GlDrawElementsIndirectCommand[mesh.lods.size()];
+      if (useLowestLevelOfDetail) {
+        // Render all instances using the last LOD
+        auto& lod = mesh.lods.back();
 
-      for (uint32 i = 0; i < mesh.lods.size(); i++) {
-        auto& command = commands[i];
-        auto& lod = mesh.lods[i];
+        glDrawElementsInstanced(primitiveMode, lod.elementCount, GL_UNSIGNED_INT, (void*)(lod.elementOffset * sizeof(uint32)), mesh.objects.total());
+      } else {
+        // Generate draw commands for mesh instances at each
+        // level of detail, and dispatch them all together
+        //
+        // @todo preallocate draw commands array
+        auto* commands = new GlDrawElementsIndirectCommand[mesh.lods.size()];
 
-        command.count = lod.elementCount;
-        command.firstIndex = lod.elementOffset;
-        command.instanceCount = lod.instanceCount;
-        command.baseInstance = lod.instanceOffset;
-        command.baseVertex = lod.vertexOffset;
+        for (uint32 i = 0; i < mesh.lods.size(); i++) {
+          auto& command = commands[i];
+          auto& lod = mesh.lods[i];
+
+          command.count = lod.elementCount;
+          command.firstIndex = lod.elementOffset;
+          command.instanceCount = lod.instanceCount;
+          command.baseInstance = lod.instanceOffset;
+          command.baseVertex = lod.vertexOffset;
+        }
+
+        Gm_BufferDrawElementsIndirectCommands(commands, 2);
+
+        glMultiDrawElementsIndirect(primitiveMode, GL_UNSIGNED_INT, 0, 2, 0);
+
+        delete[] commands;
       }
-
-      Gm_BufferDrawElementsIndirectCommands(commands, 2);
-
-      glMultiDrawElementsIndirect(primitiveMode, GL_UNSIGNED_INT, 0, 2, 0);
-
-      delete[] commands;
     } else {
       // No distinct level of detail meshes defined;
       // draw all mesh instances together
