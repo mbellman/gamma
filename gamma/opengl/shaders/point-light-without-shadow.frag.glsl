@@ -29,7 +29,7 @@ layout (location = 0) out vec4 out_colorAndDepth;
  * a single light's diffuse and specular contributions.
  */
 vec3 getIlluminatedColor(Light light, vec3 position, vec3 normal, vec3 color) {
-  vec3 adjustedLightColor = light.color * light.power * light.radius;
+  vec3 radiant_flux = light.color * light.power * light.radius;
   vec3 surfaceToLight = light.position - position;
   float lightDistance = length(surfaceToLight);
   vec3 n_surfaceToLight = surfaceToLight / lightDistance;
@@ -46,8 +46,8 @@ vec3 getIlluminatedColor(Light light, vec3 position, vec3 normal, vec3 color) {
   // Loosely approximates ambient/indirect lighting
   vec3 hack_indirect_light = light.color * light.power * pow(max(1.0 - dot(n_surfaceToCamera, normal), 0.0), 2) * indirect_light_factor;
 
-  vec3 diffuseTerm = adjustedLightColor * incidence * attenuation * hack_radial_influence * hack_soft_tapering + hack_indirect_light;
-  vec3 specularTerm = adjustedLightColor * specularity * attenuation;
+  vec3 diffuseTerm = radiant_flux * incidence * attenuation * hack_radial_influence * hack_soft_tapering + hack_indirect_light;
+  vec3 specularTerm = radiant_flux * specularity * attenuation;
 
   return color * (diffuseTerm + specularTerm);
 }

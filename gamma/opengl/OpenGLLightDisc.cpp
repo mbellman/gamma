@@ -28,12 +28,6 @@ namespace Gamma {
     DISC_LIGHT_DIRECTION
   };
 
-  struct Disc {
-    Vec2f offset;
-    Vec2f scale;
-    Light light;
-  };
-
   void OpenGLLightDisc::init() {
     glGenVertexArrays(1, &vao);
     glGenBuffers(2, &buffers[0]);
@@ -103,6 +97,51 @@ namespace Gamma {
     // @todo
   }
 
+  void OpenGLLightDisc::configureDisc(Disc& disc, const Light& light, const Matrix4f& projection, const Matrix4f& view, float windowAspectRatio) {
+    disc.light = light;
+
+    Vec3f localLightPosition = (view * light.position).toVec3f();
+
+    if (localLightPosition.z > 0.0f) {
+      // Light source in front of the camera
+      Vec3f screenLightPosition = (projection * localLightPosition).toVec3f() / localLightPosition.z;
+
+      disc.offset = Vec2f(screenLightPosition.x, screenLightPosition.y);
+      // @todo use 1 + log(light.power) or similar for scaling term
+      disc.scale.x = 1.3f * light.radius / localLightPosition.z;
+      disc.scale.y = 1.3f * light.radius / localLightPosition.z * windowAspectRatio;
+    } else {
+      // Light source behind the camera; scale to cover
+      // screen when within range, and scale to 0 when
+      // out of range
+      float scale = localLightPosition.magnitude() < light.radius ? 2.0f : 0.0f;
+
+      disc.offset = Vec2f(0.0f);
+      disc.scale = Vec2f(scale);
+    }
+  }
+
+  void OpenGLLightDisc::draw(const Light& light) {
+    Disc discs[1];
+    auto& disc = discs[0];
+    auto& camera = *Camera::active;
+    float aspectRatio = (float)Window::size.width / (float)Window::size.height;
+    Matrix4f projection = Matrix4f::glPerspective(Window::size, 90.0f * 0.5f, 1.0f, 10000.0f);
+
+    Matrix4f view = (
+      Matrix4f::rotation(camera.orientation.toVec3f().invert()) *
+      Matrix4f::translation(camera.position.invert())
+    );
+
+    configureDisc(disc, light, projection, view, aspectRatio);
+
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::DISC]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Disc), discs, GL_DYNAMIC_DRAW);
+
+    glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, DISC_SLICES * 3);
+  }
+
   void OpenGLLightDisc::draw(const std::vector<Light>& lights) {
     // @todo avoid reallocating/freeing the disc array on each draw
     Disc* discs = new Disc[lights.size()];
@@ -118,25 +157,8 @@ namespace Gamma {
     for (uint32 i = 0; i < lights.size(); i++) {
       auto& light = lights[i];
       auto& disc = discs[i];
-      Vec3f localLightPosition = (view * light.position).toVec3f();
 
-      disc.light = light;
-
-      if (localLightPosition.z > 0.0f) {
-        // Light source in front of the camera
-        Vec3f screenLightPosition = (projection * localLightPosition).toVec3f() / localLightPosition.z;
-
-        disc.offset = Vec2f(screenLightPosition.x, screenLightPosition.y);
-        // @todo use 1 + log(light.power) or similar for scaling term
-        disc.scale.x = 1.3f * light.radius / localLightPosition.z;
-        disc.scale.y = 1.3f * light.radius / localLightPosition.z * aspectRatio;
-      } else {
-        // Light source behind the camera
-        float scale = localLightPosition.magnitude() < light.radius ? 2.0f : 0.0f;
-
-        disc.offset = Vec2f(0.0f);
-        disc.scale = Vec2f(scale);
-      }
+      configureDisc(disc, light, projection, view, aspectRatio);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::DISC]);

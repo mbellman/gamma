@@ -42,12 +42,12 @@ namespace Gamma {
     shaders.copyDepth.link();
 
     shaders.pointLight.init();
-    shaders.pointLight.vertex("./gamma/opengl/shaders/instanced-light.vert.glsl");
+    shaders.pointLight.vertex("./gamma/opengl/shaders/light-disc.vert.glsl");
     shaders.pointLight.fragment("./gamma/opengl/shaders/point-light-without-shadow.frag.glsl");
     shaders.pointLight.link();
 
     shaders.pointShadowcaster.init();
-    shaders.pointShadowcaster.vertex("./gamma/opengl/shaders/quad.vert.glsl");
+    shaders.pointShadowcaster.vertex("./gamma/opengl/shaders/light-disc.vert.glsl");
     shaders.pointShadowcaster.fragment("./gamma/opengl/shaders/point-light-with-shadow.frag.glsl");
     shaders.pointShadowcaster.link();
 

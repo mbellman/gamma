@@ -7,6 +7,7 @@ struct Light {
   float radius;
   vec3 color;
   float power;
+  vec3 direction;
 };
 
 uniform sampler2D colorAndDepth;
@@ -15,12 +16,12 @@ uniform samplerCube shadowMap;
 uniform vec3 cameraPosition;
 uniform mat4 inverseProjection;
 uniform mat4 inverseView;
-uniform Light light;
 
 // @todo pass in as a uniform
 const float indirect_light_factor = 0.01;
 
 noperspective in vec2 fragUv;
+flat in Light light;
 
 layout (location = 0) out vec4 out_colorAndDepth;
 

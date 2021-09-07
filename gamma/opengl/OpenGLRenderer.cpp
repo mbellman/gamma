@@ -372,7 +372,6 @@ namespace Gamma {
       auto& shader = shaders.pointShadowcaster;
 
       shader.use();
-      shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
       shader.setInt("colorAndDepth", 0);
       shader.setInt("normalAndSpecularity", 1);
       shader.setInt("shadowMap", 3);
@@ -385,14 +384,7 @@ namespace Gamma {
         auto& light = pointShadowCasters[i];
 
         glShadowMap.buffer.read();
-
-        shader.setVec3f("light.position", light.position);
-        shader.setFloat("light.radius", light.radius);
-        shader.setVec3f("light.color", light.color);
-        shader.setFloat("light.power", light.power);
-
-        // @todo use a single-instance light disc instead of a screen quad
-        OpenGLScreenQuad::render();
+        lightDisc.draw(light);
       }
     }
 
