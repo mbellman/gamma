@@ -126,7 +126,7 @@ namespace Gamma {
 
   uint16 ObjectPool::partitionByDistance(uint16 start, float distance, const Vec3f& cameraPosition) {
     uint16 current = start;
-    uint16 end = total() - 1;
+    uint16 end = total();
 
     while (end > current) {
       float currentObjectDistance = (objects[current].position - cameraPosition).magnitude();
@@ -137,8 +137,8 @@ namespace Gamma {
         float endObjectDistance;
 
         do {
-          endObjectDistance = (objects[end].position - cameraPosition).magnitude();
-        } while (endObjectDistance > distance && --end > current);
+          endObjectDistance = (objects[--end].position - cameraPosition).magnitude();
+        } while (endObjectDistance > distance && end > current);
 
         if (current != end) {
           swapObjects(current, end);
