@@ -25,7 +25,8 @@ namespace Gamma {
     DISC_LIGHT_RADIUS,
     DISC_LIGHT_COLOR,
     DISC_LIGHT_POWER,
-    DISC_LIGHT_DIRECTION
+    DISC_LIGHT_DIRECTION,
+    DISC_LIGHT_FOV
   };
 
   void OpenGLLightDisc::init() {
@@ -91,6 +92,10 @@ namespace Gamma {
     glEnableVertexAttribArray(GLAttribute::DISC_LIGHT_DIRECTION);
     glVertexAttribPointer(GLAttribute::DISC_LIGHT_DIRECTION, 3, GL_FLOAT, GL_FALSE, sizeof(Disc), (void*)(offsetof(Disc, light) + offsetof(Light, direction)));
     glVertexAttribDivisor(GLAttribute::DISC_LIGHT_DIRECTION, 1);
+
+    glEnableVertexAttribArray(GLAttribute::DISC_LIGHT_FOV);
+    glVertexAttribPointer(GLAttribute::DISC_LIGHT_FOV, 1, GL_FLOAT, GL_FALSE, sizeof(Disc), (void*)(offsetof(Disc, light) + offsetof(Light, fov)));
+    glVertexAttribDivisor(GLAttribute::DISC_LIGHT_FOV, 1);
   }
 
   void OpenGLLightDisc::destroy() {
@@ -98,9 +103,9 @@ namespace Gamma {
   }
 
   void OpenGLLightDisc::configureDisc(Disc& disc, const Light& light, const Matrix4f& projection, const Matrix4f& view, float windowAspectRatio) {
-    disc.light = light;
-
     Vec3f localLightPosition = (view * light.position).toVec3f();
+
+    disc.light = light;
 
     if (localLightPosition.z > 0.0f) {
       // Light source in front of the camera

@@ -155,6 +155,7 @@ namespace Gamma {
     Vec3f color = Vec3f(1.0f);
     float power = 1.0f;
     Vec3f direction;
+    float fov = 0.0f;
     uint32 type = LightType::POINT;
     bool isStatic = false;
     int id = UNUSED_LIGHT_INDEX;
