@@ -72,7 +72,13 @@ namespace Gamma {
     shaders.directionalShadowcasterView.fragment("./gamma/opengl/shaders/directional-light-view.frag.glsl");
     shaders.directionalShadowcasterView.link();
 
-    // @todo define remaining shadowcaster shaders
+    shaders.spotLight.init();
+    shaders.spotLight.vertex("./gamma/opengl/shaders/light-disc.vert.glsl");
+    shaders.spotLight.fragment("./gamma/opengl/shaders/spot-light-without-shadow.frag.glsl");
+    shaders.spotLight.link();
+
+    // @todo shaders.spotShadowcaster
+    // @todo shaders.spotShadowcasterView
 
     shaders.skybox.init();
     shaders.skybox.vertex("./gamma/opengl/shaders/quad.vert.glsl");
@@ -126,9 +132,12 @@ namespace Gamma {
     shaders.geometry.destroy();
     shaders.copyDepth.destroy();
     shaders.pointLight.destroy();
+    shaders.pointShadowcaster.destroy();
+    shaders.pointShadowcasterView.destroy();
     shaders.directionalLight.destroy();
     shaders.directionalShadowcaster.destroy();
     shaders.directionalShadowcasterView.destroy();
+    shaders.spotLight.destroy();
     shaders.skybox.destroy();
     shaders.copyFrame.destroy();
     shaders.reflections.destroy();

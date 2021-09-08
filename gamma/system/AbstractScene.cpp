@@ -34,6 +34,7 @@ namespace Gamma {
 
   Light& AbstractScene::createLight(LightType type) {
     // @todo recycle removed/deactivated Lights
+    // @todo new Light()
     lights.push_back(Light());
 
     auto& light = lights.back();

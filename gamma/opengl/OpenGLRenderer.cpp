@@ -83,6 +83,8 @@ namespace Gamma {
     SDL_GL_DeleteContext(glContext);
   }
 
+  // @todo time to split this up into sub-methods. use a 'render context'
+  // to keep track of matrices/lights/etc.
   void OpenGLRenderer::render() {
     if (AbstractScene::active == nullptr) {
       return;
@@ -102,6 +104,8 @@ namespace Gamma {
     std::vector<Light> pointShadowCasters;
     std::vector<Light> directionalLights;
     std::vector<Light> directionalShadowcasters;
+    std::vector<Light> spotLights;
+    std::vector<Light> spotShadowcasters;
 
     for (auto& light : AbstractScene::active->getLights()) {
       switch (light.type) {
@@ -124,6 +128,17 @@ namespace Gamma {
             directionalShadowcasters.push_back(light);
           } else {
             directionalLights.push_back(light);
+          }
+
+          break;
+        case LightType::SPOT:
+          spotLights.push_back(light);
+          break;
+        case LightType::SPOT_SHADOWCASTER:
+          if (Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
+            spotShadowcasters.push_back(light);
+          } else {
+            spotLights.push_back(light);
           }
 
           break;
@@ -316,6 +331,10 @@ namespace Gamma {
       glEnable(GL_STENCIL_TEST);
     }
 
+    if (glSpotShadowMaps.size() > 0 && Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
+      // @todo
+    }
+
     // Lighting pass; read from G-Buffer and preemptively write to post buffer
     buffers.gBuffer.read();
     buffers.post.write();
@@ -448,7 +467,22 @@ namespace Gamma {
       }
     }
 
-    // @todo additional shadowcaster light passes
+    if (spotLights.size() > 0) {
+      auto& shader = shaders.spotLight;
+
+      shader.use();
+      shader.setInt("colorAndDepth", 0);
+      shader.setInt("normalAndSpecularity", 1);
+      shader.setVec3f("cameraPosition", camera.position);
+      shader.setMatrix4f("inverseProjection", inverseProjection);
+      shader.setMatrix4f("inverseView", inverseView);
+
+      lightDisc.draw(spotLights);
+    }
+
+    if (spotShadowcasters.size() > 0) {
+      // @todo
+    }
 
     // Render skybox
     glDisable(GL_BLEND);

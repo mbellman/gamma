@@ -64,7 +64,7 @@ void DemoScene::init() {
   }
 
   // auto& daVinciLight = createLight(LightType::POINT_SHADOWCASTER);
-  auto& daVinciLight = createLight(LightType::POINT_SHADOWCASTER);
+  auto& daVinciLight = createLight(LightType::SPOT);
 
   daVinciLight.position = Vec3f(0.0f, 20.0f, 0.0f);
   daVinciLight.color = Vec3f(1.0f, 0.0f, 1.0f);
