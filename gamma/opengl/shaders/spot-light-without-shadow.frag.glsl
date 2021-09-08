@@ -53,7 +53,15 @@ vec3 getIlluminatedColor(Light light, vec3 position, vec3 normal, vec3 color) {
   vec3 diffuseTerm = radiant_flux * incidence * attenuation * hack_radial_influence * hack_soft_tapering + hack_indirect_light;
   vec3 specularTerm = radiant_flux * specularity * attenuation;
 
-  return color * (diffuseTerm + specularTerm);
+  // @optimize discard fragments outside of the light area
+  float direction_factor = dot(n_surfaceToLight * -1, normalize(light.direction));
+  float max_factor = 1.0;
+  float min_factor = 1.0 - (light.fov / 180.0);
+  float range = max_factor - min_factor;
+  float adjusted_factor = direction_factor - min_factor;
+  float spot_factor = sqrt(adjusted_factor / range);
+
+  return color * spot_factor * (diffuseTerm + specularTerm);
 }
 
 void main() {

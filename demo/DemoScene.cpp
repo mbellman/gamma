@@ -70,6 +70,8 @@ void DemoScene::init() {
   daVinciLight.color = Vec3f(1.0f, 0.0f, 1.0f);
   daVinciLight.radius = 1000.0f;
   daVinciLight.power = 2.0f;
+  daVinciLight.direction = Vec3f(-0.3f, -1.0f, 0.9f);
+  daVinciLight.fov = 70.0f;
   daVinciLight.isStatic = true;
 
   // auto& sunlight = createLight(LightType::DIRECTIONAL_SHADOWCASTER);

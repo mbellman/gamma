@@ -154,8 +154,8 @@ namespace Gamma {
     float radius = 100.0f;
     Vec3f color = Vec3f(1.0f);
     float power = 1.0f;
-    Vec3f direction;
-    float fov = 0.0f;
+    Vec3f direction = Vec3f(0.0f, -1.0f, 0.0f);
+    float fov = 90.0f;
     uint32 type = LightType::POINT;
     bool isStatic = false;
     int id = UNUSED_LIGHT_INDEX;
