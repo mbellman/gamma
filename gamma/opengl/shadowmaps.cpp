@@ -48,7 +48,11 @@ namespace Gamma {
   OpenGLSpotShadowMap::OpenGLSpotShadowMap(const Light* light) {
     lightId = light->id;
 
-    // @todo
+    buffer.init();
+    buffer.setSize({ 1024, 1024  });
+    buffer.addColorAttachment(ColorFormat::R, 3);  // Depth (GL_TEXTURE3)
+    buffer.addDepthAttachment();
+    buffer.bindColorAttachments();
   }
 
   /**

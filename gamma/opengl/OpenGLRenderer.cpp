@@ -331,8 +331,42 @@ namespace Gamma {
       glEnable(GL_STENCIL_TEST);
     }
 
+    // Render spot shadow maps
     if (glSpotShadowMaps.size() > 0 && Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
-      // @todo
+      auto& shader = shaders.spotShadowcasterView;
+
+      shader.use();
+
+      for (uint32 mapIndex = 0; mapIndex < glSpotShadowMaps.size(); mapIndex++) {
+        auto& glShadowMap = *glSpotShadowMaps[mapIndex];
+        auto& light = spotShadowcasters[mapIndex];
+
+        if (light.isStatic && glShadowMap.isRendered) {
+          continue;
+        }
+
+        Matrix4f lightProjection = Matrix4f::glPerspective({ 1024, 1024 }, 120.0f, 1.0f, light.radius);
+        Matrix4f lightView = Matrix4f::lookAt(light.position.gl(), light.direction.invert().gl(), Vec3f(0.0f, 1.0f, 0.0f));
+        Matrix4f lightMatrix = (lightProjection * lightView).transpose();
+
+        glShadowMap.buffer.write();
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        shader.setMatrix4f("lightMatrix", lightMatrix);
+
+        // @todo glMultiDrawElementsIndirect for static world geometry
+        // (will require a handful of other changes to mesh organization/data buffering)
+        for (auto* glMesh : glMeshes) {
+          auto* sourceMesh = glMesh->getSourceMesh();
+
+          if (sourceMesh->canCastShadows) {
+            glMesh->render(primitiveMode, true);
+          }
+        }
+
+        glShadowMap.isRendered = true;
+      }
     }
 
     // Lighting pass; read from G-Buffer and preemptively write to post buffer
@@ -467,6 +501,7 @@ namespace Gamma {
       }
     }
 
+    // Render spot lights (non-shadowcasters)
     if (spotLights.size() > 0) {
       auto& shader = shaders.spotLight;
 
@@ -480,8 +515,31 @@ namespace Gamma {
       lightDisc.draw(spotLights);
     }
 
+    // Render spot shadowcaster lights
     if (spotShadowcasters.size() > 0) {
-      // @todo
+      auto& shader = shaders.spotShadowcaster;
+
+      shader.use();
+      shader.setInt("colorAndDepth", 0);
+      shader.setInt("normalAndSpecularity", 1);
+      shader.setInt("shadowMap", 3);
+      shader.setVec3f("cameraPosition", camera.position);
+      shader.setMatrix4f("inverseProjection", inverseProjection);
+      shader.setMatrix4f("inverseView", inverseView);
+
+      for (uint32 i = 0; i < spotShadowcasters.size(); i++) {
+        auto& glShadowMap = *glSpotShadowMaps[i];
+        auto& light = spotShadowcasters[i];
+
+        Matrix4f lightProjection = Matrix4f::glPerspective({ 1024, 1024 }, 120.0f, 1.0f, light.radius);
+        Matrix4f lightView = Matrix4f::lookAt(light.position.gl(), light.direction.invert().gl(), Vec3f(0.0f, 1.0f, 0.0f));
+        Matrix4f lightMatrix = (lightProjection * lightView).transpose();
+
+        shader.setMatrix4f("lightMatrix", lightMatrix);
+
+        glShadowMap.buffer.read();
+        lightDisc.draw(light);
+      }
     }
 
     // Render skybox

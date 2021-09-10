@@ -63,32 +63,32 @@ void DemoScene::init() {
     transform(rabbit);
   }
 
-  auto& daVinciLight = createLight(LightType::SPOT);
+  auto& daVinciLight = createLight(LightType::SPOT_SHADOWCASTER);
 
-  daVinciLight.position = Vec3f(0.0f, 20.0f, 0.0f);
+  daVinciLight.position = Vec3f(0.0f, 20.0f, 20.0f);
   daVinciLight.color = Vec3f(1.0f, 0.0f, 0.0f);
   daVinciLight.radius = 500.0f;
   daVinciLight.power = 2.0f;
   daVinciLight.direction = Vec3f(0.0f, -1.0f, 0.5f);
-  daVinciLight.fov = 60.0f;
+  daVinciLight.fov = 80.0f;
 
-  auto& daVinciLight2 = createLight(LightType::SPOT);
+  auto& daVinciLight2 = createLight(LightType::SPOT_SHADOWCASTER);
 
-  daVinciLight2.position = Vec3f(0.0f, 20.0f, 0.0f);
+  daVinciLight2.position = Vec3f(-10.0f, 20.0f, -10.0f);
   daVinciLight2.color = Vec3f(0.0f, 0.0f, 1.0f);
   daVinciLight2.radius = 500.0f;
   daVinciLight2.power = 2.0f;
   daVinciLight2.direction = Vec3f(-0.3f, -1.0f, -0.3f);
-  daVinciLight2.fov = 60.0f;
+  daVinciLight2.fov = 80.0f;
 
-  auto& daVinciLight3 = createLight(LightType::SPOT);
+  auto& daVinciLight3 = createLight(LightType::SPOT_SHADOWCASTER);
 
-  daVinciLight3.position = Vec3f(0.0f, 20.0f, 0.0f);
+  daVinciLight3.position = Vec3f(10.0f, 20.0f, -10.0f);
   daVinciLight3.color = Vec3f(1.0f, 1.0f, 0.0f);
   daVinciLight3.radius = 500.0f;
   daVinciLight3.power = 2.0f;
   daVinciLight3.direction = Vec3f(0.3f, -1.0f, -0.3f);
-  daVinciLight3.fov = 60.0f;
+  daVinciLight3.fov = 80.0f;
 
   // auto& sunlight = createLight(LightType::DIRECTIONAL_SHADOWCASTER);
 

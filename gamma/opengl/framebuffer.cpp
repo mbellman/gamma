@@ -158,6 +158,9 @@ namespace Gamma {
   }
 
   void OpenGLCubeMap::addDepthAttachment(uint32 unit) {
+    // @todo it's confusing to store the depth texture unit
+    // on the 'unit' field like this. figure out how to
+    // store this when adding support for color attachments.
     this->unit = GL_TEXTURE0 + unit;
 
     glGenTextures(1, &textureId);

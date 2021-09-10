@@ -77,8 +77,15 @@ namespace Gamma {
     shaders.spotLight.fragment("./gamma/opengl/shaders/spot-light-without-shadow.frag.glsl");
     shaders.spotLight.link();
 
-    // @todo shaders.spotShadowcaster
-    // @todo shaders.spotShadowcasterView
+    shaders.spotShadowcaster.init();
+    shaders.spotShadowcaster.vertex("./gamma/opengl/shaders/light-disc.vert.glsl");
+    shaders.spotShadowcaster.fragment("./gamma/opengl/shaders/spot-light-with-shadow.frag.glsl");
+    shaders.spotShadowcaster.link();
+
+    shaders.spotShadowcasterView.init();
+    shaders.spotShadowcasterView.vertex("./gamma/opengl/shaders/spot-light-view.vert.glsl");
+    shaders.spotShadowcasterView.fragment("./gamma/opengl/shaders/spot-light-view.frag.glsl");
+    shaders.spotShadowcasterView.link();
 
     shaders.skybox.init();
     shaders.skybox.vertex("./gamma/opengl/shaders/quad.vert.glsl");
@@ -138,6 +145,8 @@ namespace Gamma {
     shaders.directionalShadowcaster.destroy();
     shaders.directionalShadowcasterView.destroy();
     shaders.spotLight.destroy();
+    shaders.spotShadowcaster.destroy();
+    shaders.spotShadowcasterView.destroy();
     shaders.skybox.destroy();
     shaders.copyFrame.destroy();
     shaders.reflections.destroy();
