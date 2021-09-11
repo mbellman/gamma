@@ -49,6 +49,22 @@ namespace Gamma {
     OpenGLShader directionalShadowMapDev;
   };
 
+  struct RendererContext {
+    uint32 internalWidth;
+    uint32 internalHeight;
+    bool hasReflectiveObjects;
+    bool hasRefractiveObjects;
+    GLenum primitiveMode;
+    std::vector<Light> pointLights;
+    std::vector<Light> pointShadowCasters;
+    std::vector<Light> directionalLights;
+    std::vector<Light> directionalShadowcasters;
+    std::vector<Light> spotLights;
+    std::vector<Light> spotShadowcasters;
+    Matrix4f projection;
+    Matrix4f view;
+  };
+
   class OpenGLRenderer final : public AbstractRenderer {
   public:
     OpenGLRenderer(SDL_Window* sdl_window): AbstractRenderer(sdl_window) {};
@@ -66,13 +82,14 @@ namespace Gamma {
     virtual void renderText(TTF_Font* font, const char* message, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background) override;
 
   private:
-    uint32 frame = 0;
     SDL_GLContext glContext;
-    GLuint screenTexture = 0;
     RendererBuffers buffers;
     RendererShaders shaders;
+    RendererContext ctx;
     OpenGLLightDisc lightDisc;
     OpenGLShader screen;
+    GLuint screenTexture = 0;
+    uint32 frame = 0;
     std::vector<OpenGLMesh*> glMeshes;
     std::vector<OpenGLDirectionalShadowMap*> glDirectionalShadowMaps;
     std::vector<OpenGLPointShadowMap*> glPointShadowMaps;
