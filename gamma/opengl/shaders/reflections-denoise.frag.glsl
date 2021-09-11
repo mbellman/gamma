@@ -10,6 +10,8 @@ float luminance(vec3 color) {
   return length(color * vec3(0.2126, 0.7152, 0.0722));
 }
 
+// @todo improve denoising quality; as of right now this
+// acts more as a crude selective blur filter
 void main() {
   vec2 texel = 1.0 / vec2(1920.0, 1080.0);
 

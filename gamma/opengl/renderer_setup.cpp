@@ -19,7 +19,7 @@ namespace Gamma {
     buffers.post.bindColorAttachments();
 
     buffers.reflections.init();
-    buffers.reflections.setSize({ internalResolution.width, internalResolution.height });
+    buffers.reflections.setSize(internalResolution);
     buffers.reflections.addColorAttachment(ColorFormat::RGBA);
     buffers.gBuffer.shareDepthStencilAttachment(buffers.reflections);
     buffers.reflections.bindColorAttachments();

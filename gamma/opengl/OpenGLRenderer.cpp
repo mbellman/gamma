@@ -188,7 +188,7 @@ namespace Gamma {
     // Render camera view
     auto& camera = *Camera::active;
 
-    ctx.projection = Matrix4f::glPerspective({ ctx.internalWidth, ctx.internalHeight }, 45.0f, 1.0f, 10000.0f).transpose();
+    ctx.projection = Matrix4f::glPerspective(internalResolution, 45.0f, 1.0f, 10000.0f).transpose();
 
     ctx.view = (
       Matrix4f::rotation(camera.orientation.toVec3f()) *
