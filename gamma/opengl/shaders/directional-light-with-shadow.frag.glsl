@@ -122,21 +122,8 @@ void main() {
   vec3 normal = frag_normal_and_specularity.xyz;
   vec3 color = frag_color_and_depth.rgb;
 
-  // Regular directional light calculations
-  vec3 adjusted_light_color = light.color * light.power;
-  vec3 normalized_surface_to_light = normalize(light.direction) * -1.0;
-  vec3 normalized_surface_to_camera = normalize(cameraPosition - position);
-  vec3 half_vector = normalize(normalized_surface_to_light + normalized_surface_to_camera);
-  float incidence = max(dot(normalized_surface_to_light, normal), 0.0);
-  float specularity = pow(max(dot(half_vector, normal), 0.0), 50);
+  @include('inline/directional-light.glsl');
 
-  vec3 diffuse_term = adjusted_light_color * incidence;
-  vec3 specular_term = adjusted_light_color * specularity;
-
-  // Loosely approximates indirect lighting
-  vec3 hack_ambient_light = color * adjusted_light_color * pow(max(1.0 - dot(normalized_surface_to_camera, normal), 0.0), 2) * 0.2;
-
-  // Shadow/light intensity calculations
   Cascade cascade = getCascadeByDepth(getLinearizedDepth(frag_color_and_depth.w));
   vec4 shadow_map_transform = lightMatrices[cascade.index] * glVec4(position);
   
@@ -146,5 +133,5 @@ void main() {
 
   float light_intensity = getLightIntensity(cascade, shadow_map_transform);
 
-  out_color_and_depth = vec4(color * (diffuse_term + specular_term) * light_intensity + hack_ambient_light, frag_color_and_depth.w);
+  out_color_and_depth = vec4(illuminated_color * light_intensity + hack_ambient_light, frag_color_and_depth.w);
 }

@@ -32,20 +32,9 @@ void main() {
   for (int i = 0; i < MAX_LIGHTS; i++) {
     DirectionalLight light = lights[i];
 
-    // Diffuse lighting
-    vec3 n_surfaceToLight = normalize(light.direction) * -1.0;
-    vec3 n_surfaceToCamera = normalize(cameraPosition - position);
-    vec3 halfVector = normalize(n_surfaceToLight + n_surfaceToCamera);
-    float incidence = max(dot(n_surfaceToLight, normal), 0.0);
-    float specularity = pow(max(dot(halfVector, normal), 0.0), 50);
+    @include('inline/directional-light.glsl');
 
-    // Loosely approximates ambient/indirect lighting
-    vec3 hack_ambient_light = light.color * light.power * pow(max(1.0 - dot(n_surfaceToCamera, normal), 0.0), 2) * 0.2;
-
-    vec3 diffuseTerm = light.color * light.power * incidence + hack_ambient_light;
-    vec3 specularTerm = light.color * light.power * specularity;
-
-    accumulatedColor += color * (diffuseTerm + specularTerm);
+    accumulatedColor += illuminated_color + hack_ambient_light;
   }
 
   out_colorAndDepth = vec4(accumulatedColor, frag_colorAndDepth.w);
