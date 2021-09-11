@@ -8,6 +8,7 @@
 #include "opengl/shader.h"
 #include "opengl/shadowmaps.h"
 #include "system/AbstractRenderer.h"
+#include "system/camera.h"
 #include "system/entities.h"
 #include "system/type_aliases.h"
 #include "math/vector.h"
@@ -62,7 +63,10 @@ namespace Gamma {
     std::vector<Light> spotLights;
     std::vector<Light> spotShadowcasters;
     Matrix4f projection;
+    Matrix4f inverseProjection;
     Matrix4f view;
+    Matrix4f inverseView;
+    // @todo target (fbo)
   };
 
   class OpenGLRenderer final : public AbstractRenderer {

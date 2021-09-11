@@ -91,54 +91,52 @@ namespace Gamma {
     }
   
     // Setup variables
-    uint32 internalWidth = internalResolution.width;
-    uint32 internalHeight = internalResolution.height;
-    bool hasReflectiveObjects = false;
-    bool hasRefractiveObjects = false;
-    GLenum primitiveMode = Gm_IsFlagEnabled(GammaFlags::WIREFRAME_MODE) ? GL_LINES : GL_TRIANGLES;
+    ctx.internalWidth = internalResolution.width;
+    ctx.internalHeight = internalResolution.height;
+    ctx.hasReflectiveObjects = false;
+    ctx.hasRefractiveObjects = false;
+    ctx.primitiveMode = Gm_IsFlagEnabled(GammaFlags::WIREFRAME_MODE) ? GL_LINES : GL_TRIANGLES;
 
     // Build light arrays by type
-    //
-    // @todo don't reallocate on every frame
-    std::vector<Light> pointLights;
-    std::vector<Light> pointShadowCasters;
-    std::vector<Light> directionalLights;
-    std::vector<Light> directionalShadowcasters;
-    std::vector<Light> spotLights;
-    std::vector<Light> spotShadowcasters;
+    ctx.pointLights.clear();
+    ctx.pointShadowCasters.clear();
+    ctx.directionalLights.clear();
+    ctx.directionalShadowcasters.clear();
+    ctx.spotLights.clear();
+    ctx.spotShadowcasters.clear();
 
     for (auto& light : AbstractScene::active->getLights()) {
       switch (light.type) {
         case LightType::POINT:
-          pointLights.push_back(light);
+          ctx.pointLights.push_back(light);
           break;
         case LightType::POINT_SHADOWCASTER:
           if (Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
-            pointShadowCasters.push_back(light);
+            ctx.pointShadowCasters.push_back(light);
           } else {
-            pointLights.push_back(light);
+            ctx.pointLights.push_back(light);
           }
 
           break;
         case LightType::DIRECTIONAL:
-          directionalLights.push_back(light);
+          ctx.directionalLights.push_back(light);
           break;
         case LightType::DIRECTIONAL_SHADOWCASTER:
           if (Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
-            directionalShadowcasters.push_back(light);
+            ctx.directionalShadowcasters.push_back(light);
           } else {
-            directionalLights.push_back(light);
+            ctx.directionalLights.push_back(light);
           }
 
           break;
         case LightType::SPOT:
-          spotLights.push_back(light);
+          ctx.spotLights.push_back(light);
           break;
         case LightType::SPOT_SHADOWCASTER:
           if (Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
-            spotShadowcasters.push_back(light);
+            ctx.spotShadowcasters.push_back(light);
           } else {
-            spotLights.push_back(light);
+            ctx.spotLights.push_back(light);
           }
 
           break;
@@ -149,9 +147,9 @@ namespace Gamma {
     for (auto* glMesh : glMeshes) {
       if (glMesh->getObjectCount() > 0) {
         if (glMesh->isMeshType(MeshType::REFLECTIVE)) {
-          hasReflectiveObjects = true;
+          ctx.hasReflectiveObjects = true;
         } else if (glMesh->isMeshType(MeshType::REFRACTIVE)) {
-          hasRefractiveObjects = true;
+          ctx.hasRefractiveObjects = true;
         }
       }
     }
@@ -175,7 +173,7 @@ namespace Gamma {
     buffers.gBuffer.write();
 
     // Clear buffers, reset state
-    glViewport(0, 0, internalWidth, internalHeight);
+    glViewport(0, 0, ctx.internalWidth, ctx.internalHeight);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glEnable(GL_CULL_FACE);
@@ -189,16 +187,20 @@ namespace Gamma {
 
     // Render camera view
     auto& camera = *Camera::active;
-    Matrix4f projection = Matrix4f::glPerspective({ internalWidth, internalHeight }, 45.0f, 1.0f, 10000.0f).transpose();
 
-    Matrix4f view = (
+    ctx.projection = Matrix4f::glPerspective({ ctx.internalWidth, ctx.internalHeight }, 45.0f, 1.0f, 10000.0f).transpose();
+
+    ctx.view = (
       Matrix4f::rotation(camera.orientation.toVec3f()) *
       Matrix4f::translation(camera.position.invert().gl())
     ).transpose();
 
+    ctx.inverseProjection = ctx.projection.inverse();
+    ctx.inverseView = ctx.view.inverse();
+
     shaders.geometry.use();
-    shaders.geometry.setMatrix4f("projection", projection);
-    shaders.geometry.setMatrix4f("view", view);
+    shaders.geometry.setMatrix4f("projection", ctx.projection);
+    shaders.geometry.setMatrix4f("view", ctx.view);
     shaders.geometry.setInt("meshTexture", 0);
     shaders.geometry.setInt("meshNormalMap", 1);
 
@@ -213,7 +215,7 @@ namespace Gamma {
         shaders.geometry.setBool("hasTexture", glMesh->hasTexture());
         shaders.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
 
-        glMesh->render(primitiveMode);
+        glMesh->render(ctx.primitiveMode);
       }
     }
 
@@ -225,7 +227,7 @@ namespace Gamma {
         shaders.geometry.setBool("hasTexture", glMesh->hasTexture());
         shaders.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
 
-        glMesh->render(primitiveMode);
+        glMesh->render(ctx.primitiveMode);
       }
     }
 
@@ -239,7 +241,7 @@ namespace Gamma {
 
       for (uint32 mapIndex = 0; mapIndex < glDirectionalShadowMaps.size(); mapIndex++) {
         auto& glShadowMap = *glDirectionalShadowMaps[mapIndex];
-        auto& light = directionalShadowcasters[mapIndex];
+        auto& light = ctx.directionalShadowcasters[mapIndex];
 
         glShadowMap.buffer.write();
 
@@ -257,7 +259,7 @@ namespace Gamma {
             auto* sourceMesh = glMesh->getSourceMesh();
 
             if (sourceMesh->canCastShadows && sourceMesh->maxCascade >= cascade) {
-              glMesh->render(primitiveMode, true);
+              glMesh->render(ctx.primitiveMode, true);
             }
           }
         }
@@ -294,7 +296,7 @@ namespace Gamma {
 
       for (uint32 mapIndex = 0; mapIndex < glPointShadowMaps.size(); mapIndex++) {
         auto& glShadowMap = *glPointShadowMaps[mapIndex];
-        auto& light = pointShadowCasters[mapIndex];
+        auto& light = ctx.pointShadowCasters[mapIndex];
 
         if (light.isStatic && glShadowMap.isRendered) {
           continue;
@@ -321,7 +323,7 @@ namespace Gamma {
           auto* sourceMesh = glMesh->getSourceMesh();
 
           if (sourceMesh->canCastShadows) {
-            glMesh->render(primitiveMode, true);
+            glMesh->render(ctx.primitiveMode, true);
           }
         }
 
@@ -339,7 +341,7 @@ namespace Gamma {
 
       for (uint32 mapIndex = 0; mapIndex < glSpotShadowMaps.size(); mapIndex++) {
         auto& glShadowMap = *glSpotShadowMaps[mapIndex];
-        auto& light = spotShadowcasters[mapIndex];
+        auto& light = ctx.spotShadowcasters[mapIndex];
 
         if (light.isStatic && glShadowMap.isRendered) {
           continue;
@@ -361,7 +363,7 @@ namespace Gamma {
           auto* sourceMesh = glMesh->getSourceMesh();
 
           if (sourceMesh->canCastShadows) {
-            glMesh->render(primitiveMode, true);
+            glMesh->render(ctx.primitiveMode, true);
           }
         }
 
@@ -373,7 +375,7 @@ namespace Gamma {
     buffers.gBuffer.read();
     buffers.post.write();
 
-    glViewport(0, 0, internalWidth, internalHeight);
+    glViewport(0, 0, ctx.internalWidth, ctx.internalHeight);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_CULL_FACE);
@@ -381,9 +383,6 @@ namespace Gamma {
     glEnable(GL_BLEND);
     glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
     glStencilMask(0x00);
-
-    Matrix4f inverseProjection = projection.inverse();
-    Matrix4f inverseView = view.inverse();
 
     // If no directional lights/shadowcasters are available,
     // perform a screen pass to copy depth information for
@@ -396,7 +395,7 @@ namespace Gamma {
     // miss any surfaces which aren't directly illuminated,
     // i.e. otherwise written to the post buffer in the
     // directional lighting passes.
-    if (directionalLights.size() == 0 && directionalShadowcasters.size() == 0) {
+    if (ctx.directionalLights.size() == 0 && ctx.directionalShadowcasters.size() == 0) {
       auto& shader = shaders.copyDepth;
 
       shader.use();
@@ -407,21 +406,21 @@ namespace Gamma {
     }
 
     // Render point lights (non-shadowcasters)
-    if (pointLights.size() > 0) {
+    if (ctx.pointLights.size() > 0) {
       auto& shader = shaders.pointLight;
 
       shader.use();
       shader.setInt("colorAndDepth", 0);
       shader.setInt("normalAndSpecularity", 1);
       shader.setVec3f("cameraPosition", camera.position);
-      shader.setMatrix4f("inverseProjection", inverseProjection);
-      shader.setMatrix4f("inverseView", inverseView);
+      shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
+      shader.setMatrix4f("inverseView", ctx.inverseView);
 
-      lightDisc.draw(pointLights);
+      lightDisc.draw(ctx.pointLights);
     }
 
     // Render point shadowcaster lights
-    if (pointShadowCasters.size() > 0) {
+    if (ctx.pointShadowCasters.size() > 0) {
       auto& shader = shaders.pointShadowcaster;
 
       shader.use();
@@ -429,12 +428,12 @@ namespace Gamma {
       shader.setInt("normalAndSpecularity", 1);
       shader.setInt("shadowMap", 3);
       shader.setVec3f("cameraPosition", camera.position);
-      shader.setMatrix4f("inverseProjection", inverseProjection);
-      shader.setMatrix4f("inverseView", inverseView);
+      shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
+      shader.setMatrix4f("inverseView", ctx.inverseView);
 
-      for (uint32 i = 0; i < pointShadowCasters.size(); i++) {
+      for (uint32 i = 0; i < ctx.pointShadowCasters.size(); i++) {
         auto& glShadowMap = *glPointShadowMaps[i];
-        auto& light = pointShadowCasters[i];
+        auto& light = ctx.pointShadowCasters[i];
 
         glShadowMap.buffer.read();
         lightDisc.draw(light);
@@ -442,7 +441,7 @@ namespace Gamma {
     }
 
     // Render directional lights (non-shadowcasters)
-    if (directionalLights.size() > 0) {
+    if (ctx.directionalLights.size() > 0) {
       auto& shader = shaders.directionalLight;
 
       shader.use();
@@ -450,11 +449,11 @@ namespace Gamma {
       shader.setInt("colorAndDepth", 0);
       shader.setInt("normalAndSpecularity", 1);
       shader.setVec3f("cameraPosition", camera.position);
-      shader.setMatrix4f("inverseProjection", inverseProjection);
-      shader.setMatrix4f("inverseView", inverseView);
+      shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
+      shader.setMatrix4f("inverseView", ctx.inverseView);
 
-      for (uint32 i = 0; i < directionalLights.size(); i++) {
-        auto& light = directionalLights[i];
+      for (uint32 i = 0; i < ctx.directionalLights.size(); i++) {
+        auto& light = ctx.directionalLights[i];
         std::string indexedLight = "lights[" + std::to_string(i) + "]";
 
         shader.setVec3f(indexedLight + ".color", light.color);
@@ -466,7 +465,7 @@ namespace Gamma {
     }
 
     // Render directional shadowcaster lights
-    if (directionalShadowcasters.size() > 0) {
+    if (ctx.directionalShadowcasters.size() > 0) {
       buffers.gBuffer.read();
       buffers.post.write();
 
@@ -474,8 +473,8 @@ namespace Gamma {
 
       shader.use();
 
-      for (uint32 i = 0; i < directionalShadowcasters.size(); i++) {
-        auto& light = directionalShadowcasters[i];
+      for (uint32 i = 0; i < ctx.directionalShadowcasters.size(); i++) {
+        auto& light = ctx.directionalShadowcasters[i];
         auto& glShadowMap = *glDirectionalShadowMaps[i];
 
         glShadowMap.buffer.read();
@@ -491,8 +490,8 @@ namespace Gamma {
         shader.setMatrix4f("lightMatrices[1]", Gm_CreateCascadedLightViewMatrixGL(1, light.direction, camera));
         shader.setMatrix4f("lightMatrices[2]", Gm_CreateCascadedLightViewMatrixGL(2, light.direction, camera));
         shader.setVec3f("cameraPosition", camera.position);
-        shader.setMatrix4f("inverseProjection", inverseProjection);
-        shader.setMatrix4f("inverseView", inverseView);
+        shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
+        shader.setMatrix4f("inverseView", ctx.inverseView);
         shader.setVec3f("light.color", light.color);
         shader.setFloat("light.power", light.power);
         shader.setVec3f("light.direction", light.direction);
@@ -502,21 +501,21 @@ namespace Gamma {
     }
 
     // Render spot lights (non-shadowcasters)
-    if (spotLights.size() > 0) {
+    if (ctx.spotLights.size() > 0) {
       auto& shader = shaders.spotLight;
 
       shader.use();
       shader.setInt("colorAndDepth", 0);
       shader.setInt("normalAndSpecularity", 1);
       shader.setVec3f("cameraPosition", camera.position);
-      shader.setMatrix4f("inverseProjection", inverseProjection);
-      shader.setMatrix4f("inverseView", inverseView);
+      shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
+      shader.setMatrix4f("inverseView", ctx.inverseView);
 
-      lightDisc.draw(spotLights);
+      lightDisc.draw(ctx.spotLights);
     }
 
     // Render spot shadowcaster lights
-    if (spotShadowcasters.size() > 0) {
+    if (ctx.spotShadowcasters.size() > 0) {
       auto& shader = shaders.spotShadowcaster;
 
       shader.use();
@@ -524,12 +523,12 @@ namespace Gamma {
       shader.setInt("normalAndSpecularity", 1);
       shader.setInt("shadowMap", 3);
       shader.setVec3f("cameraPosition", camera.position);
-      shader.setMatrix4f("inverseProjection", inverseProjection);
-      shader.setMatrix4f("inverseView", inverseView);
+      shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
+      shader.setMatrix4f("inverseView", ctx.inverseView);
 
-      for (uint32 i = 0; i < spotShadowcasters.size(); i++) {
+      for (uint32 i = 0; i < ctx.spotShadowcasters.size(); i++) {
         auto& glShadowMap = *glSpotShadowMaps[i];
-        auto& light = spotShadowcasters[i];
+        auto& light = ctx.spotShadowcasters[i];
 
         Matrix4f lightProjection = Matrix4f::glPerspective({ 1024, 1024 }, 120.0f, 1.0f, light.radius);
         Matrix4f lightView = Matrix4f::lookAt(light.position.gl(), light.direction.invert().gl(), Vec3f(0.0f, 1.0f, 0.0f));
@@ -549,12 +548,12 @@ namespace Gamma {
     shaders.skybox.use();
     shaders.skybox.setVec4f("transform", FULL_SCREEN_TRANSFORM);
     shaders.skybox.setVec3f("cameraPosition", camera.position);
-    shaders.skybox.setMatrix4f("inverseProjection", inverseProjection);
-    shaders.skybox.setMatrix4f("inverseView", inverseView);
+    shaders.skybox.setMatrix4f("inverseProjection", ctx.inverseProjection);
+    shaders.skybox.setMatrix4f("inverseView", ctx.inverseView);
 
     OpenGLScreenQuad::render();
 
-    if (hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
+    if (ctx.hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
       // Copy the rendered frame back into the color accumulation
       // channel of the G-Buffer, since reflections rely on both
       // accumulated color/depth and surface normals. We exclude
@@ -568,7 +567,7 @@ namespace Gamma {
       writeAccumulatedEffectsBackIntoGBuffer();
 
       if (
-        hasRefractiveObjects &&
+        ctx.hasRefractiveObjects &&
         Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS) &&
         Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS_WITHIN_REFLECTIONS)
       ) {
@@ -581,12 +580,12 @@ namespace Gamma {
 
         shaders.refractivePrepass.use();
         shaders.refractivePrepass.setInt("color_and_depth", 0);
-        shaders.refractivePrepass.setMatrix4f("projection", projection);
-        shaders.refractivePrepass.setMatrix4f("view", view);
+        shaders.refractivePrepass.setMatrix4f("projection", ctx.projection);
+        shaders.refractivePrepass.setMatrix4f("view", ctx.view);
 
         for (auto* glMesh : glMeshes) {
           if (glMesh->isMeshType(MeshType::REFRACTIVE)) {
-            glMesh->render(primitiveMode);
+            glMesh->render(ctx.primitiveMode);
           }
         }
 
@@ -601,20 +600,20 @@ namespace Gamma {
       //
       // @todo allow controllable reflection parameters
       glStencilFunc(GL_EQUAL, MeshType::REFLECTIVE, 0xFF);
-      // glViewport(0, 0, internalWidth / 2, internalHeight / 2);
+      // glViewport(0, 0, ctx.internalWidth / 2, ctx.internalHeight / 2);
 
       shaders.reflections.use();
       shaders.reflections.setVec4f("transform", FULL_SCREEN_TRANSFORM);
       shaders.reflections.setInt("normalAndSpecularity", 1);
       shaders.reflections.setInt("colorAndDepth", 2);
       shaders.reflections.setVec3f("cameraPosition", camera.position);
-      shaders.reflections.setMatrix4f("view", view);
-      shaders.reflections.setMatrix4f("inverseView", inverseView);
-      shaders.reflections.setMatrix4f("projection", projection);
-      shaders.reflections.setMatrix4f("inverseProjection", inverseProjection);
+      shaders.reflections.setMatrix4f("view", ctx.view);
+      shaders.reflections.setMatrix4f("inverseView", ctx.inverseView);
+      shaders.reflections.setMatrix4f("projection", ctx.projection);
+      shaders.reflections.setMatrix4f("inverseProjection", ctx.inverseProjection);
 
       OpenGLScreenQuad::render();
-      // glViewport(0, 0, internalWidth, internalHeight);
+      // glViewport(0, 0, ctx.internalWidth, ctx.internalHeight);
 
       buffers.reflections.read();
       buffers.post.write();
@@ -626,11 +625,11 @@ namespace Gamma {
       OpenGLScreenQuad::render();
     }
 
-    if (hasRefractiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS)) {
+    if (ctx.hasRefractiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS)) {
       // Copy the rendered frame back into the color accumulation channel
       // of the G-Buffer so we can accurately render refractive geometry,
       // which relies on both accumulated color/depth and surface normals.
-      if (hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
+      if (ctx.hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
         // Only reflective surfaces need to be copied now, since we copied
         // all non-skybox pixels into the color accumulation buffer before
         // rendering reflections.
@@ -657,15 +656,15 @@ namespace Gamma {
 
       shaders.refractiveGeometry.use();
       shaders.refractiveGeometry.setInt("colorAndDepth", 2);
-      shaders.refractiveGeometry.setMatrix4f("projection", projection);
-      shaders.refractiveGeometry.setMatrix4f("inverseProjection", inverseProjection);
-      shaders.refractiveGeometry.setMatrix4f("view", view);
-      shaders.refractiveGeometry.setMatrix4f("inverseView", inverseView);
+      shaders.refractiveGeometry.setMatrix4f("projection", ctx.projection);
+      shaders.refractiveGeometry.setMatrix4f("inverseProjection", ctx.inverseProjection);
+      shaders.refractiveGeometry.setMatrix4f("view", ctx.view);
+      shaders.refractiveGeometry.setMatrix4f("inverseView", ctx.inverseView);
       shaders.refractiveGeometry.setVec3f("cameraPosition", camera.position);
 
       for (auto* glMesh : glMeshes) {
         if (glMesh->isMeshType(MeshType::REFRACTIVE)) {
-          glMesh->render(primitiveMode);
+          glMesh->render(ctx.primitiveMode);
         }
       }
 
