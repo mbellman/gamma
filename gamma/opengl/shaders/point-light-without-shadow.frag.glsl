@@ -25,45 +25,8 @@ layout (location = 0) out vec4 out_colorAndDepth;
 
 @include('utils/conversion.glsl');
 
-/**
- * Calculates the illuminated color of the pixel from
- * a single light's diffuse and specular contributions.
- */
-vec3 getIlluminatedColor(Light light, vec3 position, vec3 normal, vec3 color) {
-  vec3 radiant_flux = light.color * light.power * light.radius;
-  vec3 surfaceToLight = light.position - position;
-  float lightDistance = length(surfaceToLight);
-  vec3 n_surfaceToLight = surfaceToLight / lightDistance;
-  vec3 n_surfaceToCamera = normalize(cameraPosition - position);
-  vec3 halfVector = normalize(n_surfaceToLight + n_surfaceToCamera);
-  float incidence = max(dot(n_surfaceToLight, normal), 0.0);
-  float attenuation = pow(1.0 / lightDistance, 2);
-  float specularity = pow(max(dot(halfVector, normal), 0.0), 50);
-
-  // Have light intensity 'fall off' toward radius boundary
-  float hack_radial_influence = max(1.0 - lightDistance / light.radius, 0.0);
-  // Taper light intensity more softly to preserve light with distance
-  float hack_soft_tapering = (20.0 * (lightDistance / light.radius));
-  // Loosely approximates ambient/indirect lighting
-  vec3 hack_indirect_light = light.color * light.power * pow(max(1.0 - dot(n_surfaceToCamera, normal), 0.0), 2) * indirect_light_factor;
-
-  vec3 diffuseTerm = radiant_flux * incidence * attenuation * hack_radial_influence * hack_soft_tapering + hack_indirect_light;
-  vec3 specularTerm = radiant_flux * specularity * attenuation;
-
-  return color * (diffuseTerm + specularTerm);
-}
-
 void main() {
-  vec4 frag_colorAndDepth = texture(colorAndDepth, fragUv);
-  vec3 position = getWorldPosition(frag_colorAndDepth.w, fragUv, inverseProjection, inverseView);
+  @include('inline/point-light.glsl');
 
-  if (length(light.position - position) > light.radius) {
-    discard;
-  }
-
-  vec4 frag_normalAndSpecularity = texture(normalAndSpecularity, fragUv);
-  vec3 normal = frag_normalAndSpecularity.xyz;
-  vec3 color = frag_colorAndDepth.rgb;
-
-  out_colorAndDepth = vec4(getIlluminatedColor(light, position, normal, color), frag_colorAndDepth.w);
+  out_colorAndDepth = vec4(illuminated_color, frag_color_and_depth.w);
 }
