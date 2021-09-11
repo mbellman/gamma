@@ -15,9 +15,6 @@ uniform vec3 cameraPosition;
 uniform mat4 inverseProjection;
 uniform mat4 inverseView;
 
-// @todo pass in as a uniform
-const float indirect_light_factor = 0.01;
-
 noperspective in vec2 fragUv;
 flat in Light light;
 
