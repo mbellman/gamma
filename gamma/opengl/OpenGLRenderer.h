@@ -8,7 +8,6 @@
 #include "opengl/shader.h"
 #include "opengl/shadowmaps.h"
 #include "system/AbstractRenderer.h"
-#include "system/camera.h"
 #include "system/entities.h"
 #include "system/type_aliases.h"
 #include "math/vector.h"
@@ -102,6 +101,22 @@ namespace Gamma {
     struct PostShaders {
       OpenGLShader debanding;
     } post;
+
+    void initializeRendererContext();
+    void initializeLightArrays();
+    void handleVsyncChanges();
+    void renderSceneToGBuffer();
+    void renderDirectionalShadowMaps();
+    void renderPointShadowMaps();
+    void renderSpotShadowMaps();
+    void prepareLightingPass();
+    void copyDepthInformationIntoPostBuffer();
+    void renderPointLights();
+    void renderPointShadowcasters();
+    void renderDirectionalLights();
+    void renderDirectionalShadowcasters();
+    void renderSpotLights();
+    void renderSpotShadowcasters();
 
     void renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background);
     void writeAccumulatedEffectsBackIntoGBuffer();

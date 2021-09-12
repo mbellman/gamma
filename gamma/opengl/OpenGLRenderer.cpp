@@ -83,465 +83,64 @@ namespace Gamma {
     SDL_GL_DeleteContext(glContext);
   }
 
-  // @todo time to split this up into sub-methods. use a 'render context'
-  // to keep track of matrices/lights/etc.
+  // @todo separate remaining blocks into their own methods
   void OpenGLRenderer::render() {
     if (AbstractScene::active == nullptr) {
       return;
     }
-  
-    // Setup variables
-    ctx.internalWidth = internalResolution.width;
-    ctx.internalHeight = internalResolution.height;
-    ctx.hasReflectiveObjects = false;
-    ctx.hasRefractiveObjects = false;
-    ctx.primitiveMode = Gm_IsFlagEnabled(GammaFlags::WIREFRAME_MODE) ? GL_LINES : GL_TRIANGLES;
 
-    // Build light arrays by type
-    ctx.pointLights.clear();
-    ctx.pointShadowCasters.clear();
-    ctx.directionalLights.clear();
-    ctx.directionalShadowcasters.clear();
-    ctx.spotLights.clear();
-    ctx.spotShadowcasters.clear();
+    initializeRendererContext();
+    initializeLightArrays();
+    handleVsyncChanges();
+    renderSceneToGBuffer();
 
-    for (auto& light : AbstractScene::active->getLights()) {
-      switch (light.type) {
-        case LightType::POINT:
-          ctx.pointLights.push_back(light);
-          break;
-        case LightType::POINT_SHADOWCASTER:
-          if (Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
-            ctx.pointShadowCasters.push_back(light);
-          } else {
-            ctx.pointLights.push_back(light);
-          }
+    if (Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
+      if (glDirectionalShadowMaps.size() > 0) {
+        renderDirectionalShadowMaps();
+      }
 
-          break;
-        case LightType::DIRECTIONAL:
-          ctx.directionalLights.push_back(light);
-          break;
-        case LightType::DIRECTIONAL_SHADOWCASTER:
-          if (Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
-            ctx.directionalShadowcasters.push_back(light);
-          } else {
-            ctx.directionalLights.push_back(light);
-          }
+      if (glPointShadowMaps.size() > 0) {
+        renderPointShadowMaps();
+      }
 
-          break;
-        case LightType::SPOT:
-          ctx.spotLights.push_back(light);
-          break;
-        case LightType::SPOT_SHADOWCASTER:
-          if (Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
-            ctx.spotShadowcasters.push_back(light);
-          } else {
-            ctx.spotLights.push_back(light);
-          }
-
-          break;
+      if (glSpotShadowMaps.size() > 0) {
+        renderSpotShadowMaps();
       }
     }
 
-    // Check to see if reflective/refractive geometry passes are necessary
-    for (auto* glMesh : glMeshes) {
-      if (glMesh->getObjectCount() > 0) {
-        if (glMesh->isMeshType(MeshType::REFLECTIVE)) {
-          ctx.hasReflectiveObjects = true;
-        } else if (glMesh->isMeshType(MeshType::REFRACTIVE)) {
-          ctx.hasRefractiveObjects = true;
-        }
-      }
-    }
+    prepareLightingPass();
 
-    // Handle vsync setting changes
-    if (Gm_IsFlagEnabled(GammaFlags::VSYNC) && SDL_GL_GetSwapInterval() == 0) {
-      SDL_GL_SetSwapInterval(1);
-
-      #if GAMMA_DEVELOPER_MODE
-        Console::log("[Gamma] V-Sync enabled");
-      #endif
-    } else if (!Gm_IsFlagEnabled(GammaFlags::VSYNC) && SDL_GL_GetSwapInterval() == 1) {
-      SDL_GL_SetSwapInterval(0);
-
-      #if GAMMA_DEVELOPER_MODE
-        Console::log("[Gamma] V-Sync disabled");
-      #endif
-    }
-
-    // Set G-Buffer as render target
-    buffers.gBuffer.write();
-
-    // Clear buffers, reset state
-    glViewport(0, 0, ctx.internalWidth, ctx.internalHeight);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_STENCIL_TEST);
-    glDisable(GL_BLEND);
-    glCullFace(GL_BACK);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-    glStencilFunc(GL_ALWAYS, 0xFF, 0xFF);
-    glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
-
-    // Render camera view
-    auto& camera = *Camera::active;
-
-    ctx.projection = Matrix4f::glPerspective(internalResolution, 45.0f, 1.0f, 10000.0f).transpose();
-
-    ctx.view = (
-      Matrix4f::rotation(camera.orientation.toVec3f()) *
-      Matrix4f::translation(camera.position.invert().gl())
-    ).transpose();
-
-    ctx.inverseProjection = ctx.projection.inverse();
-    ctx.inverseView = ctx.view.inverse();
-
-    shaders.geometry.use();
-    shaders.geometry.setMatrix4f("projection", ctx.projection);
-    shaders.geometry.setMatrix4f("view", ctx.view);
-    shaders.geometry.setInt("meshTexture", 0);
-    shaders.geometry.setInt("meshNormalMap", 1);
-
-    // @todo render emissive objects
-    // glStencilMask(MeshType::EMISSIVE);
-
-    // Render reflective objects
-    glStencilMask(MeshType::REFLECTIVE);
-
-    for (auto* glMesh : glMeshes) {
-      if (glMesh->isMeshType(MeshType::REFLECTIVE)) {
-        shaders.geometry.setBool("hasTexture", glMesh->hasTexture());
-        shaders.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
-
-        glMesh->render(ctx.primitiveMode);
-      }
-    }
-
-    // Render non-emissive, non-reflective objects
-    glStencilMask(MeshType::NON_EMISSIVE);
-
-    for (auto* glMesh : glMeshes) {
-      if (glMesh->isMeshType(MeshType::NON_EMISSIVE)) {
-        shaders.geometry.setBool("hasTexture", glMesh->hasTexture());
-        shaders.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
-
-        glMesh->render(ctx.primitiveMode);
-      }
-    }
-
-    // Render directional shadow maps
-    if (glDirectionalShadowMaps.size() > 0 && Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
-      glDisable(GL_STENCIL_TEST);
-
-      auto& shader = shaders.directionalShadowcasterView;
-
-      shader.use();
-
-      for (uint32 mapIndex = 0; mapIndex < glDirectionalShadowMaps.size(); mapIndex++) {
-        auto& glShadowMap = *glDirectionalShadowMaps[mapIndex];
-        auto& light = ctx.directionalShadowcasters[mapIndex];
-
-        glShadowMap.buffer.write();
-
-        for (uint32 cascade = 0; cascade < 3; cascade++) {
-          glShadowMap.buffer.writeToAttachment(cascade);
-          Matrix4f lightView = Gm_CreateCascadedLightViewMatrixGL(cascade, light.direction, camera);
-
-          shader.setMatrix4f("lightView", lightView);
-
-          glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-          // @todo glMultiDrawElementsIndirect for static world geometry
-          // (will require a handful of other changes to mesh organization/data buffering)
-          for (auto* glMesh : glMeshes) {
-            auto* sourceMesh = glMesh->getSourceMesh();
-
-            if (sourceMesh->canCastShadows && sourceMesh->maxCascade >= cascade) {
-              glMesh->render(ctx.primitiveMode, true);
-            }
-          }
-        }
-      }
-
-      glEnable(GL_STENCIL_TEST);
-    }
-
-    // Render point shadow maps
-    if (glPointShadowMaps.size() > 0 && Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
-      glDisable(GL_STENCIL_TEST);
-
-      Vec3f directions[6] = {
-        Vec3f(-1.0f, 0.0f, 0.0f),
-        Vec3f(1.0f, 0.0f, 0.0f),
-        Vec3f(0.0f, -1.0f, 0.0f),
-        Vec3f(0.0f, 1.0f, 0.0f),
-        Vec3f(0.0f, 0.0f, -1.0f),
-        Vec3f(0.0f, 0.0f, 1.0f)
-      };
-
-      Vec3f tops[6] = {
-        Vec3f(0.0f, -1.0f, 0.0f),
-        Vec3f(0.0f, -1.0f, 0.0f),
-        Vec3f(0.0f, 0.0f, 1.0f),
-        Vec3f(0.0f, 0.0f, -1.0f),
-        Vec3f(0.0f, -1.0f, 0.0f),
-        Vec3f(0.0f, -1.0f, 0.0f)
-      };
-
-      auto& shader = shaders.pointShadowcasterView;
-
-      shader.use();
-
-      for (uint32 mapIndex = 0; mapIndex < glPointShadowMaps.size(); mapIndex++) {
-        auto& glShadowMap = *glPointShadowMaps[mapIndex];
-        auto& light = ctx.pointShadowCasters[mapIndex];
-
-        if (light.isStatic && glShadowMap.isRendered) {
-          continue;
-        }
-
-        glShadowMap.buffer.write();
-
-        glClear(GL_DEPTH_BUFFER_BIT);
-
-        for (uint32 i = 0; i < 6; i++) {
-          Matrix4f projection = Matrix4f::glPerspective({ 1024, 1024 }, 90.0f, 1.0f, light.radius);
-          Matrix4f view = Matrix4f::lookAt(light.position.gl(), directions[i], tops[i]);
-          Matrix4f lightMatrix = (projection * view).transpose();
-
-          shader.setMatrix4f("lightMatrices[" + std::to_string(i) + "]", lightMatrix);
-        }
-
-        shader.setVec3f("lightPosition", light.position.gl());
-        shader.setFloat("farPlane", light.radius);
-
-        // @todo glMultiDrawElementsIndirect for static world geometry
-        // (will require a handful of other changes to mesh organization/data buffering)
-        for (auto* glMesh : glMeshes) {
-          auto* sourceMesh = glMesh->getSourceMesh();
-
-          if (sourceMesh->canCastShadows) {
-            glMesh->render(ctx.primitiveMode, true);
-          }
-        }
-
-        glShadowMap.isRendered = true;
-      }
-
-      glEnable(GL_STENCIL_TEST);
-    }
-
-    // Render spot shadow maps
-    if (glSpotShadowMaps.size() > 0 && Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
-      auto& shader = shaders.spotShadowcasterView;
-
-      shader.use();
-
-      for (uint32 mapIndex = 0; mapIndex < glSpotShadowMaps.size(); mapIndex++) {
-        auto& glShadowMap = *glSpotShadowMaps[mapIndex];
-        auto& light = ctx.spotShadowcasters[mapIndex];
-
-        if (light.isStatic && glShadowMap.isRendered) {
-          continue;
-        }
-
-        Matrix4f lightProjection = Matrix4f::glPerspective({ 1024, 1024 }, 120.0f, 1.0f, light.radius);
-        Matrix4f lightView = Matrix4f::lookAt(light.position.gl(), light.direction.invert().gl(), Vec3f(0.0f, 1.0f, 0.0f));
-        Matrix4f lightMatrix = (lightProjection * lightView).transpose();
-
-        glShadowMap.buffer.write();
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        shader.setMatrix4f("lightMatrix", lightMatrix);
-
-        // @todo glMultiDrawElementsIndirect for static world geometry
-        // (will require a handful of other changes to mesh organization/data buffering)
-        for (auto* glMesh : glMeshes) {
-          auto* sourceMesh = glMesh->getSourceMesh();
-
-          if (sourceMesh->canCastShadows) {
-            glMesh->render(ctx.primitiveMode, true);
-          }
-        }
-
-        glShadowMap.isRendered = true;
-      }
-    }
-
-    // Lighting pass; read from G-Buffer and preemptively write to post buffer
-    buffers.gBuffer.read();
-    buffers.post.write();
-
-    glViewport(0, 0, ctx.internalWidth, ctx.internalHeight);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
-    glStencilMask(0x00);
-
-    // If no directional lights/shadowcasters are available,
-    // perform a screen pass to copy depth information for
-    // all on-screen geometry into the post buffer. During
-    // the reflection and refractive geometry passes, we
-    // copy the post buffer back into G-Buffer attachment 2
-    // so that accumulated effects and normals can continue
-    // to be read when writing to the post buffer again. If
-    // we don't do this, reflections and refractions will
-    // miss any surfaces which aren't directly illuminated,
-    // i.e. otherwise written to the post buffer in the
-    // directional lighting passes.
     if (ctx.directionalLights.size() == 0 && ctx.directionalShadowcasters.size() == 0) {
-      auto& shader = shaders.copyDepth;
-
-      shader.use();
-      shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-      shader.setInt("color_and_depth", 0);
-
-      OpenGLScreenQuad::render();
+      copyDepthInformationIntoPostBuffer();
     }
 
-    // Render point lights (non-shadowcasters)
     if (ctx.pointLights.size() > 0) {
-      auto& shader = shaders.pointLight;
-
-      shader.use();
-      shader.setInt("colorAndDepth", 0);
-      shader.setInt("normalAndSpecularity", 1);
-      shader.setVec3f("cameraPosition", camera.position);
-      shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
-      shader.setMatrix4f("inverseView", ctx.inverseView);
-
-      lightDisc.draw(ctx.pointLights);
+      renderPointLights();
     }
 
-    // Render point shadowcaster lights
     if (ctx.pointShadowCasters.size() > 0) {
-      auto& shader = shaders.pointShadowcaster;
-
-      shader.use();
-      shader.setInt("colorAndDepth", 0);
-      shader.setInt("normalAndSpecularity", 1);
-      shader.setInt("shadowMap", 3);
-      shader.setVec3f("cameraPosition", camera.position);
-      shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
-      shader.setMatrix4f("inverseView", ctx.inverseView);
-
-      for (uint32 i = 0; i < ctx.pointShadowCasters.size(); i++) {
-        auto& glShadowMap = *glPointShadowMaps[i];
-        auto& light = ctx.pointShadowCasters[i];
-
-        glShadowMap.buffer.read();
-        lightDisc.draw(light);
-      }
+      renderPointShadowcasters();
     }
 
-    // Render directional lights (non-shadowcasters)
     if (ctx.directionalLights.size() > 0) {
-      auto& shader = shaders.directionalLight;
-
-      shader.use();
-      shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-      shader.setInt("colorAndDepth", 0);
-      shader.setInt("normalAndSpecularity", 1);
-      shader.setVec3f("cameraPosition", camera.position);
-      shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
-      shader.setMatrix4f("inverseView", ctx.inverseView);
-
-      for (uint32 i = 0; i < ctx.directionalLights.size(); i++) {
-        auto& light = ctx.directionalLights[i];
-        std::string indexedLight = "lights[" + std::to_string(i) + "]";
-
-        shader.setVec3f(indexedLight + ".color", light.color);
-        shader.setFloat(indexedLight + ".power", light.power);
-        shader.setVec3f(indexedLight + ".direction", light.direction);
-      }
-
-      OpenGLScreenQuad::render();
+      renderDirectionalLights();
     }
 
-    // Render directional shadowcaster lights
     if (ctx.directionalShadowcasters.size() > 0) {
-      buffers.gBuffer.read();
-      buffers.post.write();
-
-      auto& shader = shaders.directionalShadowcaster;
-
-      shader.use();
-
-      for (uint32 i = 0; i < ctx.directionalShadowcasters.size(); i++) {
-        auto& light = ctx.directionalShadowcasters[i];
-        auto& glShadowMap = *glDirectionalShadowMaps[i];
-
-        glShadowMap.buffer.read();
-
-        shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-        // @todo define an enum for reserved color attachment indexes
-        shader.setInt("colorAndDepth", 0);
-        shader.setInt("normalAndSpecularity", 1);
-        shader.setInt("shadowMaps[0]", 3);
-        shader.setInt("shadowMaps[1]", 4);
-        shader.setInt("shadowMaps[2]", 5);
-        shader.setMatrix4f("lightMatrices[0]", Gm_CreateCascadedLightViewMatrixGL(0, light.direction, camera));
-        shader.setMatrix4f("lightMatrices[1]", Gm_CreateCascadedLightViewMatrixGL(1, light.direction, camera));
-        shader.setMatrix4f("lightMatrices[2]", Gm_CreateCascadedLightViewMatrixGL(2, light.direction, camera));
-        shader.setVec3f("cameraPosition", camera.position);
-        shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
-        shader.setMatrix4f("inverseView", ctx.inverseView);
-        shader.setVec3f("light.color", light.color);
-        shader.setFloat("light.power", light.power);
-        shader.setVec3f("light.direction", light.direction);
-
-        OpenGLScreenQuad::render();
-      }
+      renderDirectionalShadowcasters();
     }
 
-    // Render spot lights (non-shadowcasters)
     if (ctx.spotLights.size() > 0) {
-      auto& shader = shaders.spotLight;
-
-      shader.use();
-      shader.setInt("colorAndDepth", 0);
-      shader.setInt("normalAndSpecularity", 1);
-      shader.setVec3f("cameraPosition", camera.position);
-      shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
-      shader.setMatrix4f("inverseView", ctx.inverseView);
-
-      lightDisc.draw(ctx.spotLights);
+      renderSpotLights();
     }
 
-    // Render spot shadowcaster lights
     if (ctx.spotShadowcasters.size() > 0) {
-      auto& shader = shaders.spotShadowcaster;
-
-      shader.use();
-      shader.setInt("colorAndDepth", 0);
-      shader.setInt("normalAndSpecularity", 1);
-      shader.setInt("shadowMap", 3);
-      shader.setVec3f("cameraPosition", camera.position);
-      shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
-      shader.setMatrix4f("inverseView", ctx.inverseView);
-
-      for (uint32 i = 0; i < ctx.spotShadowcasters.size(); i++) {
-        auto& glShadowMap = *glSpotShadowMaps[i];
-        auto& light = ctx.spotShadowcasters[i];
-
-        Matrix4f lightProjection = Matrix4f::glPerspective({ 1024, 1024 }, 120.0f, 1.0f, light.radius);
-        Matrix4f lightView = Matrix4f::lookAt(light.position.gl(), light.direction.invert().gl(), Vec3f(0.0f, 1.0f, 0.0f));
-        Matrix4f lightMatrix = (lightProjection * lightView).transpose();
-
-        shader.setMatrix4f("lightMatrix", lightMatrix);
-
-        glShadowMap.buffer.read();
-        lightDisc.draw(light);
-      }
+      renderSpotShadowcasters();
     }
 
     // Render skybox
+    auto& camera = *Camera::active;
+
     glDisable(GL_BLEND);
     glStencilFunc(GL_EQUAL, MeshType::EMISSIVE, 0xFF);
 
@@ -714,6 +313,498 @@ namespace Gamma {
     #endif
 
     frame++;
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::initializeRendererContext() {
+    auto& camera = *Camera::active;
+
+    // Render dimensions/primitive type
+    ctx.internalWidth = internalResolution.width;
+    ctx.internalHeight = internalResolution.height;
+    ctx.primitiveMode = Gm_IsFlagEnabled(GammaFlags::WIREFRAME_MODE) ? GL_LINES : GL_TRIANGLES;
+
+    // Camera projection/view/inverse matrices
+    ctx.projection = Matrix4f::glPerspective(internalResolution, 45.0f, 1.0f, 10000.0f).transpose();
+
+    ctx.view = (
+      Matrix4f::rotation(camera.orientation.toVec3f()) *
+      Matrix4f::translation(camera.position.invert().gl())
+    ).transpose();
+
+    ctx.inverseProjection = ctx.projection.inverse();
+    ctx.inverseView = ctx.view.inverse();
+
+    // Track reflective/refractive objects
+    ctx.hasReflectiveObjects = false;
+    ctx.hasRefractiveObjects = false;
+
+    for (auto* glMesh : glMeshes) {
+      if (glMesh->getObjectCount() > 0) {
+        if (glMesh->isMeshType(MeshType::REFLECTIVE)) {
+          ctx.hasReflectiveObjects = true;
+        } else if (glMesh->isMeshType(MeshType::REFRACTIVE)) {
+          ctx.hasRefractiveObjects = true;
+        }
+      }
+    }
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::initializeLightArrays() {
+    ctx.pointLights.clear();
+    ctx.pointShadowCasters.clear();
+    ctx.directionalLights.clear();
+    ctx.directionalShadowcasters.clear();
+    ctx.spotLights.clear();
+    ctx.spotShadowcasters.clear();
+
+    for (auto& light : AbstractScene::active->getLights()) {
+      switch (light.type) {
+        case LightType::POINT:
+          ctx.pointLights.push_back(light);
+          break;
+        case LightType::POINT_SHADOWCASTER:
+          if (Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
+            ctx.pointShadowCasters.push_back(light);
+          } else {
+            ctx.pointLights.push_back(light);
+          }
+
+          break;
+        case LightType::DIRECTIONAL:
+          ctx.directionalLights.push_back(light);
+          break;
+        case LightType::DIRECTIONAL_SHADOWCASTER:
+          if (Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
+            ctx.directionalShadowcasters.push_back(light);
+          } else {
+            ctx.directionalLights.push_back(light);
+          }
+
+          break;
+        case LightType::SPOT:
+          ctx.spotLights.push_back(light);
+          break;
+        case LightType::SPOT_SHADOWCASTER:
+          if (Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
+            ctx.spotShadowcasters.push_back(light);
+          } else {
+            ctx.spotLights.push_back(light);
+          }
+
+          break;
+      }
+    }
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::handleVsyncChanges() {
+    if (Gm_IsFlagEnabled(GammaFlags::VSYNC) && SDL_GL_GetSwapInterval() == 0) {
+      SDL_GL_SetSwapInterval(1);
+
+      #if GAMMA_DEVELOPER_MODE
+        Console::log("[Gamma] V-Sync enabled");
+      #endif
+    } else if (!Gm_IsFlagEnabled(GammaFlags::VSYNC) && SDL_GL_GetSwapInterval() == 1) {
+      SDL_GL_SetSwapInterval(0);
+
+      #if GAMMA_DEVELOPER_MODE
+        Console::log("[Gamma] V-Sync disabled");
+      #endif
+    }
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderSceneToGBuffer() {
+    buffers.gBuffer.write();
+
+    glViewport(0, 0, ctx.internalWidth, ctx.internalHeight);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_STENCIL_TEST);
+    glDisable(GL_BLEND);
+    glCullFace(GL_BACK);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glStencilFunc(GL_ALWAYS, 0xFF, 0xFF);
+    glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
+
+    auto& camera = *Camera::active;
+
+    shaders.geometry.use();
+    shaders.geometry.setMatrix4f("projection", ctx.projection);
+    shaders.geometry.setMatrix4f("view", ctx.view);
+    shaders.geometry.setInt("meshTexture", 0);
+    shaders.geometry.setInt("meshNormalMap", 1);
+
+    // @todo render emissive objects
+    // glStencilMask(MeshType::EMISSIVE);
+
+    // Render reflective objects
+    glStencilMask(MeshType::REFLECTIVE);
+
+    for (auto* glMesh : glMeshes) {
+      if (glMesh->isMeshType(MeshType::REFLECTIVE)) {
+        shaders.geometry.setBool("hasTexture", glMesh->hasTexture());
+        shaders.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
+
+        glMesh->render(ctx.primitiveMode);
+      }
+    }
+
+    // Render non-emissive, non-reflective objects
+    glStencilMask(MeshType::NON_EMISSIVE);
+
+    for (auto* glMesh : glMeshes) {
+      if (glMesh->isMeshType(MeshType::NON_EMISSIVE)) {
+        shaders.geometry.setBool("hasTexture", glMesh->hasTexture());
+        shaders.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
+
+        glMesh->render(ctx.primitiveMode);
+      }
+    }
+
+    glDisable(GL_STENCIL_TEST);
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderDirectionalShadowMaps() {
+    auto& camera = *Camera::active;
+    auto& shader = shaders.directionalShadowcasterView;
+
+    shader.use();
+
+    for (uint32 mapIndex = 0; mapIndex < glDirectionalShadowMaps.size(); mapIndex++) {
+      auto& glShadowMap = *glDirectionalShadowMaps[mapIndex];
+      auto& light = ctx.directionalShadowcasters[mapIndex];
+
+      glShadowMap.buffer.write();
+
+      for (uint32 cascade = 0; cascade < 3; cascade++) {
+        glShadowMap.buffer.writeToAttachment(cascade);
+        Matrix4f lightView = Gm_CreateCascadedLightViewMatrixGL(cascade, light.direction, camera);
+
+        shader.setMatrix4f("lightView", lightView);
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // @todo glMultiDrawElementsIndirect for static world geometry
+        // (will require a handful of other changes to mesh organization/data buffering)
+        for (auto* glMesh : glMeshes) {
+          auto* sourceMesh = glMesh->getSourceMesh();
+
+          if (sourceMesh->canCastShadows && sourceMesh->maxCascade >= cascade) {
+            glMesh->render(ctx.primitiveMode, true);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderPointShadowMaps() {
+    const static Vec3f directions[6] = {
+      Vec3f(-1.0f, 0.0f, 0.0f),
+      Vec3f(1.0f, 0.0f, 0.0f),
+      Vec3f(0.0f, -1.0f, 0.0f),
+      Vec3f(0.0f, 1.0f, 0.0f),
+      Vec3f(0.0f, 0.0f, -1.0f),
+      Vec3f(0.0f, 0.0f, 1.0f)
+    };
+
+    const static Vec3f tops[6] = {
+      Vec3f(0.0f, -1.0f, 0.0f),
+      Vec3f(0.0f, -1.0f, 0.0f),
+      Vec3f(0.0f, 0.0f, 1.0f),
+      Vec3f(0.0f, 0.0f, -1.0f),
+      Vec3f(0.0f, -1.0f, 0.0f),
+      Vec3f(0.0f, -1.0f, 0.0f)
+    };
+
+    auto& shader = shaders.pointShadowcasterView;
+
+    shader.use();
+
+    for (uint32 mapIndex = 0; mapIndex < glPointShadowMaps.size(); mapIndex++) {
+      auto& glShadowMap = *glPointShadowMaps[mapIndex];
+      auto& light = ctx.pointShadowCasters[mapIndex];
+
+      if (light.isStatic && glShadowMap.isRendered) {
+        continue;
+      }
+
+      glShadowMap.buffer.write();
+
+      glClear(GL_DEPTH_BUFFER_BIT);
+
+      for (uint32 i = 0; i < 6; i++) {
+        Matrix4f projection = Matrix4f::glPerspective({ 1024, 1024 }, 90.0f, 1.0f, light.radius);
+        Matrix4f view = Matrix4f::lookAt(light.position.gl(), directions[i], tops[i]);
+        Matrix4f lightMatrix = (projection * view).transpose();
+
+        shader.setMatrix4f("lightMatrices[" + std::to_string(i) + "]", lightMatrix);
+      }
+
+      shader.setVec3f("lightPosition", light.position.gl());
+      shader.setFloat("farPlane", light.radius);
+
+      // @todo glMultiDrawElementsIndirect for static world geometry
+      // (will require a handful of other changes to mesh organization/data buffering)
+      for (auto* glMesh : glMeshes) {
+        auto* sourceMesh = glMesh->getSourceMesh();
+
+        if (sourceMesh->canCastShadows) {
+          glMesh->render(ctx.primitiveMode, true);
+        }
+      }
+
+      glShadowMap.isRendered = true;
+    }
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderSpotShadowMaps() {
+    auto& shader = shaders.spotShadowcasterView;
+
+    shader.use();
+
+    for (uint32 mapIndex = 0; mapIndex < glSpotShadowMaps.size(); mapIndex++) {
+      auto& glShadowMap = *glSpotShadowMaps[mapIndex];
+      auto& light = ctx.spotShadowcasters[mapIndex];
+
+      if (light.isStatic && glShadowMap.isRendered) {
+        continue;
+      }
+
+      Matrix4f lightProjection = Matrix4f::glPerspective({ 1024, 1024 }, 120.0f, 1.0f, light.radius);
+      Matrix4f lightView = Matrix4f::lookAt(light.position.gl(), light.direction.invert().gl(), Vec3f(0.0f, 1.0f, 0.0f));
+      Matrix4f lightMatrix = (lightProjection * lightView).transpose();
+
+      glShadowMap.buffer.write();
+
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      shader.setMatrix4f("lightMatrix", lightMatrix);
+
+      // @todo glMultiDrawElementsIndirect for static world geometry
+      // (will require a handful of other changes to mesh organization/data buffering)
+      for (auto* glMesh : glMeshes) {
+        auto* sourceMesh = glMesh->getSourceMesh();
+
+        if (sourceMesh->canCastShadows) {
+          glMesh->render(ctx.primitiveMode, true);
+        }
+      }
+
+      glShadowMap.isRendered = true;
+    }
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::prepareLightingPass() {
+    buffers.gBuffer.read();
+    buffers.post.write();
+
+    glViewport(0, 0, ctx.internalWidth, ctx.internalHeight);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
+    glStencilMask(0x00);
+  }
+
+  /**
+   * When no directional lights/shadowcasters are available,
+   * we perform a screen pass to copy depth information for
+   * all on-screen geometry into the post buffer. During the
+   * reflection and refractive geometry passes, we copy the
+   * post buffer back into G-Buffer attachment 2 so that
+   * accumulated effects and normals can continue to be read
+   * when writing to the post buffer again. If we don't do
+   * this, reflections and refractions will miss any surfaces
+   * which aren't directly illuminated, i.e. otherwise written
+   * to the post buffer in the directional lighting passes.
+   */
+  void OpenGLRenderer::copyDepthInformationIntoPostBuffer() {
+    auto& shader = shaders.copyDepth;
+
+    shader.use();
+    shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+    shader.setInt("color_and_depth", 0);
+
+    OpenGLScreenQuad::render();
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderPointLights() {
+    auto& camera = *Camera::active;
+    auto& shader = shaders.pointLight;
+
+    shader.use();
+    shader.setInt("colorAndDepth", 0);
+    shader.setInt("normalAndSpecularity", 1);
+    shader.setVec3f("cameraPosition", camera.position);
+    shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
+    shader.setMatrix4f("inverseView", ctx.inverseView);
+
+    lightDisc.draw(ctx.pointLights);
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderPointShadowcasters() {
+    auto& camera = *Camera::active;
+    auto& shader = shaders.pointShadowcaster;
+
+    shader.use();
+    shader.setInt("colorAndDepth", 0);
+    shader.setInt("normalAndSpecularity", 1);
+    shader.setInt("shadowMap", 3);
+    shader.setVec3f("cameraPosition", camera.position);
+    shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
+    shader.setMatrix4f("inverseView", ctx.inverseView);
+
+    for (uint32 i = 0; i < ctx.pointShadowCasters.size(); i++) {
+      auto& glShadowMap = *glPointShadowMaps[i];
+      auto& light = ctx.pointShadowCasters[i];
+
+      glShadowMap.buffer.read();
+      lightDisc.draw(light);
+    }
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderDirectionalLights() {
+    auto& camera = *Camera::active;
+    auto& shader = shaders.directionalLight;
+
+    shader.use();
+    shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+    shader.setInt("colorAndDepth", 0);
+    shader.setInt("normalAndSpecularity", 1);
+    shader.setVec3f("cameraPosition", camera.position);
+    shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
+    shader.setMatrix4f("inverseView", ctx.inverseView);
+
+    for (uint32 i = 0; i < ctx.directionalLights.size(); i++) {
+      auto& light = ctx.directionalLights[i];
+      std::string indexedLight = "lights[" + std::to_string(i) + "]";
+
+      shader.setVec3f(indexedLight + ".color", light.color);
+      shader.setFloat(indexedLight + ".power", light.power);
+      shader.setVec3f(indexedLight + ".direction", light.direction);
+    }
+
+    OpenGLScreenQuad::render();
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderDirectionalShadowcasters() {
+    auto& camera = *Camera::active;
+    auto& shader = shaders.directionalShadowcaster;
+
+    shader.use();
+
+    for (uint32 i = 0; i < ctx.directionalShadowcasters.size(); i++) {
+      auto& light = ctx.directionalShadowcasters[i];
+      auto& glShadowMap = *glDirectionalShadowMaps[i];
+
+      glShadowMap.buffer.read();
+
+      shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+      // @todo define an enum for reserved color attachment indexes
+      shader.setInt("colorAndDepth", 0);
+      shader.setInt("normalAndSpecularity", 1);
+      shader.setInt("shadowMaps[0]", 3);
+      shader.setInt("shadowMaps[1]", 4);
+      shader.setInt("shadowMaps[2]", 5);
+      shader.setMatrix4f("lightMatrices[0]", Gm_CreateCascadedLightViewMatrixGL(0, light.direction, camera));
+      shader.setMatrix4f("lightMatrices[1]", Gm_CreateCascadedLightViewMatrixGL(1, light.direction, camera));
+      shader.setMatrix4f("lightMatrices[2]", Gm_CreateCascadedLightViewMatrixGL(2, light.direction, camera));
+      shader.setVec3f("cameraPosition", camera.position);
+      shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
+      shader.setMatrix4f("inverseView", ctx.inverseView);
+      shader.setVec3f("light.color", light.color);
+      shader.setFloat("light.power", light.power);
+      shader.setVec3f("light.direction", light.direction);
+
+      OpenGLScreenQuad::render();
+    }
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderSpotLights() {
+    auto& camera = *Camera::active;
+    auto& shader = shaders.spotLight;
+
+    shader.use();
+    shader.setInt("colorAndDepth", 0);
+    shader.setInt("normalAndSpecularity", 1);
+    shader.setVec3f("cameraPosition", camera.position);
+    shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
+    shader.setMatrix4f("inverseView", ctx.inverseView);
+
+    lightDisc.draw(ctx.spotLights);
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderSpotShadowcasters() {
+    auto& camera = *Camera::active;
+    auto& shader = shaders.spotShadowcaster;
+
+    shader.use();
+    shader.setInt("colorAndDepth", 0);
+    shader.setInt("normalAndSpecularity", 1);
+    shader.setInt("shadowMap", 3);
+    shader.setVec3f("cameraPosition", camera.position);
+    shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
+    shader.setMatrix4f("inverseView", ctx.inverseView);
+
+    for (uint32 i = 0; i < ctx.spotShadowcasters.size(); i++) {
+      auto& glShadowMap = *glSpotShadowMaps[i];
+      auto& light = ctx.spotShadowcasters[i];
+
+      Matrix4f lightProjection = Matrix4f::glPerspective({ 1024, 1024 }, 120.0f, 1.0f, light.radius);
+      Matrix4f lightView = Matrix4f::lookAt(light.position.gl(), light.direction.invert().gl(), Vec3f(0.0f, 1.0f, 0.0f));
+      Matrix4f lightMatrix = (lightProjection * lightView).transpose();
+
+      shader.setMatrix4f("lightMatrix", lightMatrix);
+
+      glShadowMap.buffer.read();
+      lightDisc.draw(light);
+    }
   }
 
   void OpenGLRenderer::createMesh(const Mesh* mesh) {
