@@ -111,8 +111,8 @@ namespace Gamma {
 
     if (
       ctx.directionalLights.size() == 0 &&
-      ctx.directionalShadowcasters.size() == 0
-      // @todo && ctx.hasReflectiveObjects && ctx.hasRefractiveObjects
+      ctx.directionalShadowcasters.size() == 0 &&
+      (ctx.hasReflectiveObjects || ctx.hasRefractiveObjects)
     ) {
       copyDepthInformationIntoPostBuffer();
     }
