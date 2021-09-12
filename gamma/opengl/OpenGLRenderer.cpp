@@ -83,7 +83,6 @@ namespace Gamma {
     SDL_GL_DeleteContext(glContext);
   }
 
-  // @todo separate remaining blocks into their own methods
   void OpenGLRenderer::render() {
     if (AbstractScene::active == nullptr) {
       return;
@@ -110,7 +109,11 @@ namespace Gamma {
 
     prepareLightingPass();
 
-    if (ctx.directionalLights.size() == 0 && ctx.directionalShadowcasters.size() == 0) {
+    if (
+      ctx.directionalLights.size() == 0 &&
+      ctx.directionalShadowcasters.size() == 0
+      // @todo && ctx.hasReflectiveObjects && ctx.hasRefractiveObjects
+    ) {
       copyDepthInformationIntoPostBuffer();
     }
 
@@ -138,177 +141,21 @@ namespace Gamma {
       renderSpotShadowcasters();
     }
 
-    // Render skybox
-    auto& camera = *Camera::active;
-
-    glDisable(GL_BLEND);
-    glStencilFunc(GL_EQUAL, MeshType::EMISSIVE, 0xFF);
-
-    shaders.skybox.use();
-    shaders.skybox.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-    shaders.skybox.setVec3f("cameraPosition", camera.position);
-    shaders.skybox.setMatrix4f("inverseProjection", ctx.inverseProjection);
-    shaders.skybox.setMatrix4f("inverseView", ctx.inverseView);
-
-    OpenGLScreenQuad::render();
+    renderSkybox();
 
     if (ctx.hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
-      // Copy the rendered frame back into the color accumulation
-      // channel of the G-Buffer, since reflections rely on both
-      // accumulated color/depth and surface normals. We exclude
-      // skybox pixels since we recompute skybox color in the
-      // reflection shader for any skybound reflection rays.
-      //
-      // @todo distinguish between skybox and emissive pixels so
-      // emissive geometry can still be reflected
-      glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
-
-      writeAccumulatedEffectsBackIntoGBuffer();
-
-      if (
-        ctx.hasRefractiveObjects &&
-        Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS) &&
-        Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS_WITHIN_REFLECTIONS)
-      ) {
-        // @todo explain this
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_CULL_FACE);
-
-        glStencilFunc(GL_NOTEQUAL, MeshType::REFLECTIVE, 0xFF);
-        glStencilMask(MeshType::REFRACTIVE);
-
-        shaders.refractivePrepass.use();
-        shaders.refractivePrepass.setInt("color_and_depth", 0);
-        shaders.refractivePrepass.setMatrix4f("projection", ctx.projection);
-        shaders.refractivePrepass.setMatrix4f("view", ctx.view);
-
-        for (auto* glMesh : glMeshes) {
-          if (glMesh->isMeshType(MeshType::REFRACTIVE)) {
-            glMesh->render(ctx.primitiveMode);
-          }
-        }
-
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-      }
-
-      buffers.gBuffer.read();
-      buffers.reflections.write();
-
-      // Render reflections (screen-space + skybox)
-      //
-      // @todo allow controllable reflection parameters
-      glStencilFunc(GL_EQUAL, MeshType::REFLECTIVE, 0xFF);
-      // glViewport(0, 0, ctx.internalWidth / 2, ctx.internalHeight / 2);
-
-      shaders.reflections.use();
-      shaders.reflections.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-      shaders.reflections.setInt("normalAndSpecularity", 1);
-      shaders.reflections.setInt("colorAndDepth", 2);
-      shaders.reflections.setVec3f("cameraPosition", camera.position);
-      shaders.reflections.setMatrix4f("view", ctx.view);
-      shaders.reflections.setMatrix4f("inverseView", ctx.inverseView);
-      shaders.reflections.setMatrix4f("projection", ctx.projection);
-      shaders.reflections.setMatrix4f("inverseProjection", ctx.inverseProjection);
-
-      OpenGLScreenQuad::render();
-      // glViewport(0, 0, ctx.internalWidth, ctx.internalHeight);
-
-      buffers.reflections.read();
-      buffers.post.write();
-
-      shaders.reflectionsDenoise.use();
-      shaders.reflectionsDenoise.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-      shaders.reflectionsDenoise.setInt("colorAndDepth", 0);
-
-      OpenGLScreenQuad::render();
+      renderReflections();
     }
 
     if (ctx.hasRefractiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS)) {
-      // Copy the rendered frame back into the color accumulation channel
-      // of the G-Buffer so we can accurately render refractive geometry,
-      // which relies on both accumulated color/depth and surface normals.
-      if (ctx.hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
-        // Only reflective surfaces need to be copied now, since we copied
-        // all non-skybox pixels into the color accumulation buffer before
-        // rendering reflections.
-        glStencilFunc(GL_EQUAL, MeshType::REFLECTIVE, 0xFF);
-      } else {
-        // If no reflections were rendered, we need to copy all non-skybox
-        // pixels back into the color accumulation channel here. The skybox
-        // color will be recomputed in the refractive geometry shader for
-        // any skybound refraction rays.
-        //
-        // @todo distinguish between skybox and emissive pixels so
-        // emissive geometry can still be refracted
-        glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
-      }
-
-      writeAccumulatedEffectsBackIntoGBuffer();
-
-      buffers.gBuffer.read();
-      buffers.post.write();
-
-      glEnable(GL_CULL_FACE);
-      glEnable(GL_DEPTH_TEST);
-      glDisable(GL_STENCIL_TEST);
-
-      shaders.refractiveGeometry.use();
-      shaders.refractiveGeometry.setInt("colorAndDepth", 2);
-      shaders.refractiveGeometry.setMatrix4f("projection", ctx.projection);
-      shaders.refractiveGeometry.setMatrix4f("inverseProjection", ctx.inverseProjection);
-      shaders.refractiveGeometry.setMatrix4f("view", ctx.view);
-      shaders.refractiveGeometry.setMatrix4f("inverseView", ctx.inverseView);
-      shaders.refractiveGeometry.setVec3f("cameraPosition", camera.position);
-
-      for (auto* glMesh : glMeshes) {
-        if (glMesh->isMeshType(MeshType::REFRACTIVE)) {
-          glMesh->render(ctx.primitiveMode);
-        }
-      }
-
-      glDisable(GL_DEPTH_TEST);
-      glDisable(GL_CULL_FACE);
+      renderRefractiveObjects();
     }
 
-    // Post-processing pass
-    buffers.post.read();
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-    glViewport(0, 0, Window::size.width, Window::size.height);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glDisable(GL_STENCIL_TEST);
-    glStencilMask(0xFF);
-
-    post.debanding.use();
-    post.debanding.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-
-    OpenGLScreenQuad::render();
+    renderPostEffects();
 
     #if GAMMA_DEVELOPER_MODE
       if (Gm_IsFlagEnabled(GammaFlags::SHOW_DEV_BUFFERS)) {
-        buffers.gBuffer.read();
-
-        shaders.gBufferDev.use();
-        shaders.gBufferDev.setInt("colorAndDepth", 0);
-        shaders.gBufferDev.setInt("normalAndSpecularity", 1);
-        shaders.gBufferDev.setVec4f("transform", { 0.53f, 0.82f, 0.43f, 0.11f });
-
-        OpenGLScreenQuad::render();
-
-        for (uint32 i = 0; i < glDirectionalShadowMaps.size(); i++) {
-          float yOffset = 0.52f - float(i) * 0.32f;
-
-          glDirectionalShadowMaps[i]->buffer.read();
-
-          shaders.directionalShadowMapDev.use();
-          shaders.directionalShadowMapDev.setInt("cascade0", 3);
-          shaders.directionalShadowMapDev.setInt("cascade1", 4);
-          shaders.directionalShadowMapDev.setInt("cascade2", 5);
-          shaders.directionalShadowMapDev.setVec4f("transform", { 0.695f, yOffset, 0.266f, 0.15f });
-
-          OpenGLScreenQuad::render();
-        }
+        renderDevBuffers();
       }
     #endif
 
@@ -805,6 +652,202 @@ namespace Gamma {
       glShadowMap.buffer.read();
       lightDisc.draw(light);
     }
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderSkybox() {
+    auto& camera = *Camera::active;
+
+    glDisable(GL_BLEND);
+    glStencilFunc(GL_EQUAL, MeshType::EMISSIVE, 0xFF);
+
+    shaders.skybox.use();
+    shaders.skybox.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+    shaders.skybox.setVec3f("cameraPosition", camera.position);
+    shaders.skybox.setMatrix4f("inverseProjection", ctx.inverseProjection);
+    shaders.skybox.setMatrix4f("inverseView", ctx.inverseView);
+
+    OpenGLScreenQuad::render();
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderReflections() {
+    // Copy the rendered frame back into the color accumulation
+    // channel of the G-Buffer, since reflections rely on both
+    // accumulated color/depth and surface normals. We exclude
+    // skybox pixels since we recompute skybox color in the
+    // reflection shader for any skybound reflection rays.
+    //
+    // @todo distinguish between skybox and emissive pixels so
+    // emissive geometry can still be reflected
+    glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
+
+    writeAccumulatedEffectsBackIntoGBuffer();
+
+    if (
+      ctx.hasRefractiveObjects &&
+      Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS) &&
+      Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS_WITHIN_REFLECTIONS)
+    ) {
+      // @todo explain this
+      glEnable(GL_DEPTH_TEST);
+      glEnable(GL_CULL_FACE);
+
+      glStencilFunc(GL_NOTEQUAL, MeshType::REFLECTIVE, 0xFF);
+      glStencilMask(MeshType::REFRACTIVE);
+
+      shaders.refractivePrepass.use();
+      shaders.refractivePrepass.setInt("color_and_depth", 0);
+      shaders.refractivePrepass.setMatrix4f("projection", ctx.projection);
+      shaders.refractivePrepass.setMatrix4f("view", ctx.view);
+
+      for (auto* glMesh : glMeshes) {
+        if (glMesh->isMeshType(MeshType::REFRACTIVE)) {
+          glMesh->render(ctx.primitiveMode);
+        }
+      }
+
+      glDisable(GL_DEPTH_TEST);
+      glDisable(GL_CULL_FACE);
+    }
+
+    auto& camera = *Camera::active;
+
+    buffers.gBuffer.read();
+    buffers.reflections.write();
+
+    // Render reflections (screen-space + skybox)
+    //
+    // @todo allow controllable reflection parameters
+    glStencilFunc(GL_EQUAL, MeshType::REFLECTIVE, 0xFF);
+    // glViewport(0, 0, ctx.internalWidth / 2, ctx.internalHeight / 2);
+
+    shaders.reflections.use();
+    shaders.reflections.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+    shaders.reflections.setInt("normalAndSpecularity", 1);
+    shaders.reflections.setInt("colorAndDepth", 2);
+    shaders.reflections.setVec3f("cameraPosition", camera.position);
+    shaders.reflections.setMatrix4f("view", ctx.view);
+    shaders.reflections.setMatrix4f("inverseView", ctx.inverseView);
+    shaders.reflections.setMatrix4f("projection", ctx.projection);
+    shaders.reflections.setMatrix4f("inverseProjection", ctx.inverseProjection);
+
+    OpenGLScreenQuad::render();
+    // glViewport(0, 0, ctx.internalWidth, ctx.internalHeight);
+
+    buffers.reflections.read();
+    buffers.post.write();
+
+    shaders.reflectionsDenoise.use();
+    shaders.reflectionsDenoise.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+    shaders.reflectionsDenoise.setInt("colorAndDepth", 0);
+
+    OpenGLScreenQuad::render();
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderRefractiveObjects() {
+    // Copy the rendered frame back into the color accumulation channel
+    // of the G-Buffer so we can accurately render refractive geometry,
+    // which relies on both accumulated color/depth and surface normals.
+    if (ctx.hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
+      // Only reflective surfaces need to be copied now, since we copied
+      // all non-skybox pixels into the color accumulation buffer before
+      // rendering reflections.
+      glStencilFunc(GL_EQUAL, MeshType::REFLECTIVE, 0xFF);
+    } else {
+      // If no reflections were rendered, we need to copy all non-skybox
+      // pixels back into the color accumulation channel here. The skybox
+      // color will be recomputed in the refractive geometry shader for
+      // any skybound refraction rays.
+      //
+      // @todo distinguish between skybox and emissive pixels so
+      // emissive geometry can still be refracted
+      glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
+    }
+
+    writeAccumulatedEffectsBackIntoGBuffer();
+
+    auto& camera = *Camera::active;
+
+    buffers.gBuffer.read();
+    buffers.post.write();
+
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_STENCIL_TEST);
+
+    shaders.refractiveGeometry.use();
+    shaders.refractiveGeometry.setInt("colorAndDepth", 2);
+    shaders.refractiveGeometry.setMatrix4f("projection", ctx.projection);
+    shaders.refractiveGeometry.setMatrix4f("inverseProjection", ctx.inverseProjection);
+    shaders.refractiveGeometry.setMatrix4f("view", ctx.view);
+    shaders.refractiveGeometry.setMatrix4f("inverseView", ctx.inverseView);
+    shaders.refractiveGeometry.setVec3f("cameraPosition", camera.position);
+
+    for (auto* glMesh : glMeshes) {
+      if (glMesh->isMeshType(MeshType::REFRACTIVE)) {
+        glMesh->render(ctx.primitiveMode);
+      }
+    }
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderPostEffects() {
+    buffers.post.read();
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+    glViewport(0, 0, Window::size.width, Window::size.height);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDisable(GL_STENCIL_TEST);
+    glStencilMask(0xFF);
+
+    post.debanding.use();
+    post.debanding.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+
+    OpenGLScreenQuad::render();
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderDevBuffers() {
+    buffers.gBuffer.read();
+
+    shaders.gBufferDev.use();
+    shaders.gBufferDev.setInt("colorAndDepth", 0);
+    shaders.gBufferDev.setInt("normalAndSpecularity", 1);
+    shaders.gBufferDev.setVec4f("transform", { 0.53f, 0.82f, 0.43f, 0.11f });
+
+    OpenGLScreenQuad::render();
+
+    for (uint32 i = 0; i < glDirectionalShadowMaps.size(); i++) {
+      float yOffset = 0.52f - float(i) * 0.32f;
+
+      glDirectionalShadowMaps[i]->buffer.read();
+
+      shaders.directionalShadowMapDev.use();
+      shaders.directionalShadowMapDev.setInt("cascade0", 3);
+      shaders.directionalShadowMapDev.setInt("cascade1", 4);
+      shaders.directionalShadowMapDev.setInt("cascade2", 5);
+      shaders.directionalShadowMapDev.setVec4f("transform", { 0.695f, yOffset, 0.266f, 0.15f });
+
+      OpenGLScreenQuad::render();
+    }
+
+    // @todo point light shadow maps?
+    // @todo spot light shadow maps?
   }
 
   void OpenGLRenderer::createMesh(const Mesh* mesh) {

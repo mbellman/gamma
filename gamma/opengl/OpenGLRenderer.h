@@ -117,6 +117,11 @@ namespace Gamma {
     void renderDirectionalShadowcasters();
     void renderSpotLights();
     void renderSpotShadowcasters();
+    void renderSkybox();
+    void renderReflections();
+    void renderRefractiveObjects();
+    void renderPostEffects();
+    void renderDevBuffers();
 
     void renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background);
     void writeAccumulatedEffectsBackIntoGBuffer();
