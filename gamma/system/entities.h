@@ -22,29 +22,22 @@ namespace Gamma {
   };
 
   /**
-   * A set of Mesh types, particular to all instances of a Mesh,
-   * controlling the rendering priority and properties of those
-   * instances.
+   * Light
+   * -----
+   *
+   * Defines a light source, which affects scene illumination
+   * and color/reflective properties of illuminated surfaces.
    */
-  enum MeshType {
-    /**
-     * @todo differentiate skybox/emissive types
-     */
-    EMISSIVE = 0x00,
-    /**
-     * Defines translucent Meshes which refract and lens the
-     * objects and geometry behind them.
-     */
-    REFRACTIVE = 0xF0,
-    /**
-     * Defines Meshes which reflect surrounding geometry in
-     * screen space, or the sky where geometry is not reflected.
-     */
-    REFLECTIVE = 0xFA,
-    /**
-     * Defines standard Meshes without any unique rendering properties.
-     */
-    NON_EMISSIVE = 0xFF
+  struct Light {
+    Vec3f position;
+    float radius = 100.0f;
+    Vec3f color = Vec3f(1.0f);
+    float power = 1.0f;
+    Vec3f direction = Vec3f(0.0f, -1.0f, 0.0f);
+    float fov = 90.0f;
+    uint32 type = LightType::POINT;
+    bool isStatic = false;
+    int id = UNUSED_LIGHT_INDEX;
   };
 
   /**
@@ -61,36 +54,6 @@ namespace Gamma {
     uint16 meshId = 0;
     uint16 id = 0;
     uint16 generation = 0;
-  };
-
-  /**
-   * MeshLod
-   * -------
-   *
-   * Defines vertices/face elements and instances particular
-   * to specific Mesh levels of detail.
-   */
-  struct MeshLod {
-    /**
-     * Defines the starting face element in the LOD model.
-     */
-    uint32 elementOffset = 0;
-    /**
-     * Defines the number of face elements in the LOD model.
-     */
-    uint32 elementCount = 0;
-    /**
-     * Defines the starting instance in the LOD group.
-     */
-    uint32 instanceOffset = 0;
-    /**
-     * Defines the number of instances in the LOD group.
-     */
-    uint32 instanceCount = 0;
-    /**
-     * Defines the starting vertex in the LOD model.
-     */
-    uint32 vertexOffset = 0;
   };
 
   /**
@@ -134,6 +97,9 @@ namespace Gamma {
   private:
     Object* objects = nullptr;
     Matrix4f* matrices = nullptr;
+    // @todo if we cycle through indices to find unoccupied slots
+    // when creating new objects, we needn't preallocate the entire
+    // indices array up to USHRT_MAX
     uint16 indices[USHRT_MAX];
     uint16 maxObjects = 0;
     uint16 totalActiveObjects = 0;
@@ -143,22 +109,75 @@ namespace Gamma {
   };
 
   /**
-   * Light
-   * -----
-   *
-   * Defines a light source, which affects scene illumination
-   * and color/reflective properties of illuminated surfaces.
+   * A set of Mesh types, particular to all instances of a Mesh,
+   * controlling the rendering priority and properties of those
+   * instances.
    */
-  struct Light {
-    Vec3f position;
-    float radius = 100.0f;
-    Vec3f color = Vec3f(1.0f);
-    float power = 1.0f;
-    Vec3f direction = Vec3f(0.0f, -1.0f, 0.0f);
-    float fov = 90.0f;
-    uint32 type = LightType::POINT;
-    bool isStatic = false;
-    int id = UNUSED_LIGHT_INDEX;
+  enum MeshType {
+    /**
+     * @todo differentiate skybox/emissive types
+     */
+    EMISSIVE = 0x00,
+    /**
+     * Defines a set of GPU-accelerated particles, with custom
+     * parameters for controlling particle behavior.
+     */
+    PARTICLE_SYSTEM = 0xA0,
+    /**
+     * Defines translucent Meshes which refract and lens the
+     * objects and geometry behind them.
+     */
+    REFRACTIVE = 0xF0,
+    /**
+     * Defines Meshes which reflect surrounding geometry in
+     * screen space, or the sky where geometry is not reflected.
+     */
+    REFLECTIVE = 0xFA,
+    /**
+     * Defines standard Meshes without any unique rendering properties.
+     */
+    NON_EMISSIVE = 0xFF
+  };
+
+  /**
+   * MeshLod
+   * -------
+   *
+   * Defines vertices/face elements and instances particular
+   * to specific Mesh levels of detail.
+   */
+  struct MeshLod {
+    /**
+     * Defines the starting face element in the LOD model.
+     */
+    uint32 elementOffset = 0;
+    /**
+     * Defines the number of face elements in the LOD model.
+     */
+    uint32 elementCount = 0;
+    /**
+     * Defines the starting instance in the LOD group.
+     */
+    uint32 instanceOffset = 0;
+    /**
+     * Defines the number of instances in the LOD group.
+     */
+    uint32 instanceCount = 0;
+    /**
+     * Defines the starting vertex in the LOD model.
+     */
+    uint32 vertexOffset = 0;
+  };
+
+  /**
+   * ParticleSystem
+   * --------------
+   *
+   * @todo description
+   */
+  struct ParticleSystem {
+    Vec3f spawn;
+    // @todo additional configuration params
   };
 
   /**
@@ -232,6 +251,10 @@ namespace Gamma {
      * to shadow maps, enabling them to cast shadows.
      */
     bool canCastShadows = true;
+    /**
+     * Configuration parameters for particle system meshes.
+     */
+    ParticleSystem particleSystem;
   };
 
   /**

@@ -141,6 +141,31 @@ namespace Gamma {
       renderSpotShadowcasters();
     }
 
+    // @todo extract into its own function
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
+    glStencilFunc(GL_ALWAYS, 0xFF, 0xFF);
+    glStencilMask(MeshType::PARTICLE_SYSTEM);
+
+    shaders.particles.use();
+    shaders.particles.setMatrix4f("projection", ctx.projection);
+    shaders.particles.setMatrix4f("view", ctx.view);
+
+    for (auto& glMesh : glMeshes) {
+      if (glMesh->isMeshType(MeshType::PARTICLE_SYSTEM)) {
+        auto& system = glMesh->getSourceMesh()->particleSystem;
+
+        shaders.particles.setVec3f("spawn", system.spawn);
+
+        glMesh->render(ctx.primitiveMode);
+      }
+    }
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+
     renderSkybox();
 
     if (ctx.hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
@@ -477,7 +502,7 @@ namespace Gamma {
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glEnable(GL_STENCIL_TEST);
-    glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
+    glStencilFunc(GL_LESS, MeshType::PARTICLE_SYSTEM, 0xFF);
     glStencilMask(0x00);
   }
 

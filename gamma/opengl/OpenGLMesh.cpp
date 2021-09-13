@@ -119,8 +119,12 @@ namespace Gamma {
     }
 
     // Buffer instance matrices
-    glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::MATRIX]);
-    glBufferData(GL_ARRAY_BUFFER, mesh.objects.total() * sizeof(Matrix4f), mesh.objects.getMatrices(), GL_DYNAMIC_DRAW);
+    if (!isMatrixBufferCreated || mesh.type != MeshType::PARTICLE_SYSTEM) {
+      glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::MATRIX]);
+      glBufferData(GL_ARRAY_BUFFER, mesh.objects.total() * sizeof(Matrix4f), mesh.objects.getMatrices(), GL_DYNAMIC_DRAW);
+
+      isMatrixBufferCreated = true;
+    }
 
     // Bind VAO/EBO and draw instances
     glBindVertexArray(vao);

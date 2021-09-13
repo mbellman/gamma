@@ -26,6 +26,7 @@ namespace Gamma {
     OpenGLShader copyFrame;
     OpenGLShader geometry;
     OpenGLShader emissives;
+    OpenGLShader particles;
     OpenGLShader copyDepth;
     OpenGLShader pointLight;
     OpenGLShader directionalLight;

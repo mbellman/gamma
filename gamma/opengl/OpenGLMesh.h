@@ -34,6 +34,7 @@ namespace Gamma {
     OpenGLTexture* glTexture = nullptr;
     OpenGLTexture* glNormalMap = nullptr;
     OpenGLTexture* glSpecularityMap = nullptr;
+    bool isMatrixBufferCreated = false;
 
     void checkAndLoadTexture(std::string path, OpenGLTexture*& texture, GLenum unit);
   };

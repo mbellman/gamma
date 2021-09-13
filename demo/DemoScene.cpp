@@ -14,6 +14,7 @@ void DemoScene::init() {
   addMesh("daVinci", 1, Gm_LoadMesh("./demo/assets/models/da-vinci-split.obj"));
   addMesh("plane", 1, Gm_CreatePlane(10));
   addMesh("wall", 1, Gm_CreatePlane(10));
+  addMesh("particles", 10000, Gm_CreateCube());
 
   addMesh("rabbit", 10, Gm_LoadMesh({
     "./demo/assets/models/rabbit-lod1.obj",
@@ -23,6 +24,13 @@ void DemoScene::init() {
   mesh("cube").texture = "./demo/assets/images/cat.png";
   mesh("wall").texture = "./demo/assets/images/cat.png";
   mesh("plane").normalMap = "./demo/assets/images/metal-normal-map.png";
+  mesh("particles").type = MeshType::PARTICLE_SYSTEM;
+  mesh("particles").particleSystem.spawn = Vec3f(0.0f, 20.0f, 0.0f);
+
+  for (uint32 i = 0; i < 10000; i++) {
+    // @todo don't require explicit creation of particle objects
+    createObjectFrom("particles");
+  }
   // mesh("plane").type = MeshType::REFLECTIVE;
   // mesh("daVinci").type = MeshType::REFRACTIVE;
 

@@ -7,6 +7,7 @@ namespace Gamma {
     buffers.gBuffer.init();
     buffers.gBuffer.setSize(internalResolution);
     buffers.gBuffer.addColorAttachment(ColorFormat::RGBA);    // (RGB) Albedo, (A) Depth
+    // @todo specularity -> material? meshId + UBO/SSBO for materials?
     buffers.gBuffer.addColorAttachment(ColorFormat::RGBA16);  // (RGB) Normal, (A) Specularity
     buffers.gBuffer.addColorAttachment(ColorFormat::RGBA);    // (RGB) Accumulated effects color, (A) Depth
     buffers.gBuffer.addDepthStencilAttachment();
@@ -20,7 +21,7 @@ namespace Gamma {
 
     buffers.reflections.init();
     buffers.reflections.setSize(internalResolution);
-    buffers.reflections.addColorAttachment(ColorFormat::RGBA);
+    buffers.reflections.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
     buffers.gBuffer.shareDepthStencilAttachment(buffers.reflections);
     buffers.reflections.bindColorAttachments();
 
@@ -35,6 +36,11 @@ namespace Gamma {
     shaders.geometry.vertex("./gamma/opengl/shaders/geometry.vert.glsl");
     shaders.geometry.fragment("./gamma/opengl/shaders/geometry.frag.glsl");
     shaders.geometry.link();
+
+    shaders.particles.init();
+    shaders.particles.vertex("./gamma/opengl/shaders/particle-system.vert.glsl");
+    shaders.particles.fragment("./gamma/opengl/shaders/particle-system.frag.glsl");
+    shaders.particles.link();
 
     shaders.copyDepth.init();
     shaders.copyDepth.vertex("./gamma/opengl/shaders/quad.vert.glsl");
@@ -137,6 +143,7 @@ namespace Gamma {
     buffers.post.destroy();
 
     shaders.geometry.destroy();
+    shaders.particles.destroy();
     shaders.copyDepth.destroy();
     shaders.pointLight.destroy();
     shaders.pointShadowcaster.destroy();

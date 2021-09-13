@@ -59,6 +59,7 @@ namespace Gamma {
     uint16 id = runningId++;
 
     assert(max() > total(), "Object Pool out of space: " + std::to_string(max()) + " objects allowed in this pool");
+    // @todo cycle through indices until an unoccupied slot is found
     assert(indices[id] == UNUSED_OBJECT_INDEX, "Attempted to create an Object in an occupied slot");
 
     // Retrieve and initialize object
