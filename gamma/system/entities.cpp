@@ -384,53 +384,6 @@ namespace Gamma {
   }
 
   /**
-   * Mesh::Plane()
-   * -------------
-   *
-   * @todo description
-   */
-  Mesh* Mesh::Plane(uint32 size) {
-    auto* mesh = new Mesh();
-    auto& vertices = mesh->vertices;
-    auto& faceElements = mesh->faceElements;
-
-    // @bug size should represent the total number of
-    // tiles across the plane, not the total vertices
-    for (uint32 x = 0; x < size; x++) {
-      for (uint32 z = 0; z < size; z++) {
-        Vertex vertex;
-
-        float u = (float)x / (float)(size - 1);
-        float v = (float)z / (float)(size - 1);
-
-        vertex.position = Vec3f(u - 0.5f, 0.0f, -v + 0.5f);
-        vertex.uv = Vec2f(u, 1.0f - v);
-
-        vertices.push_back(vertex);
-      }
-    }
-
-    for (uint32 z = 0; z < size - 1; z++) {
-      for (uint32 x = 0; x < size - 1; x++) {
-        uint32 offset = z * size + x;
-
-        faceElements.push_back(offset);
-        faceElements.push_back(offset + 1 + size);
-        faceElements.push_back(offset + 1);
-
-        faceElements.push_back(offset);
-        faceElements.push_back(offset + size);
-        faceElements.push_back(offset + 1 + size);
-      }
-    }
-
-    Gm_ComputeNormals(mesh);
-    Gm_ComputeTangents(mesh);
-
-    return mesh;
-  }
-
-  /**
    * Mesh::Model()
    * -------------
    *
@@ -486,6 +439,53 @@ namespace Gamma {
       // buffer the results into a global list, defining
       // a vertex offset for the new set.
       mesh->lods[i].vertexOffset = 0;
+    }
+
+    Gm_ComputeNormals(mesh);
+    Gm_ComputeTangents(mesh);
+
+    return mesh;
+  }
+
+  /**
+   * Mesh::Plane()
+   * -------------
+   *
+   * @todo description
+   */
+  Mesh* Mesh::Plane(uint32 size) {
+    auto* mesh = new Mesh();
+    auto& vertices = mesh->vertices;
+    auto& faceElements = mesh->faceElements;
+
+    // @bug size should represent the total number of
+    // tiles across the plane, not the total vertices
+    for (uint32 x = 0; x < size; x++) {
+      for (uint32 z = 0; z < size; z++) {
+        Vertex vertex;
+
+        float u = (float)x / (float)(size - 1);
+        float v = (float)z / (float)(size - 1);
+
+        vertex.position = Vec3f(u - 0.5f, 0.0f, -v + 0.5f);
+        vertex.uv = Vec2f(u, 1.0f - v);
+
+        vertices.push_back(vertex);
+      }
+    }
+
+    for (uint32 z = 0; z < size - 1; z++) {
+      for (uint32 x = 0; x < size - 1; x++) {
+        uint32 offset = z * size + x;
+
+        faceElements.push_back(offset);
+        faceElements.push_back(offset + 1 + size);
+        faceElements.push_back(offset + 1);
+
+        faceElements.push_back(offset);
+        faceElements.push_back(offset + size);
+        faceElements.push_back(offset + 1 + size);
+      }
     }
 
     Gm_ComputeNormals(mesh);

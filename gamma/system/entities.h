@@ -257,10 +257,10 @@ namespace Gamma {
     ParticleSystem particleSystem;
 
     static Mesh* Cube();
-    static Mesh* Plane(uint32 size);
     static Mesh* Model(const char* path);
     static Mesh* Model(std::initializer_list<const char*> paths);
     static Mesh* Particles(uint16 total);  // @todo
+    static Mesh* Plane(uint32 size);
   };
 
   /**
