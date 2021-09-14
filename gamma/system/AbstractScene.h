@@ -28,6 +28,7 @@ namespace Gamma {
     virtual ~AbstractScene();
 
     const std::vector<Light>& getLights() const;
+    const float getRunningTime();
     const SceneStats getStats() const;
     virtual void updateScene(float dt) final;
 
@@ -37,7 +38,6 @@ namespace Gamma {
     Object& createObjectFrom(std::string meshName);
     void destroyLight(Light& light);
     Object& getObject(std::string name);
-    float getRunningTime();
     Mesh& mesh(std::string meshName);
     void removeMesh(std::string meshName);
     void transform(const Object& object);

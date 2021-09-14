@@ -151,6 +151,7 @@ namespace Gamma {
     shaders.particles.use();
     shaders.particles.setMatrix4f("projection", ctx.projection);
     shaders.particles.setMatrix4f("view", ctx.view);
+    shaders.particles.setFloat("time", AbstractScene::active->getRunningTime());
 
     for (auto& glMesh : glMeshes) {
       if (glMesh->isMeshType(MeshType::PARTICLE_SYSTEM)) {

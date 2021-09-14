@@ -93,7 +93,7 @@ namespace Gamma {
     return *object;
   }
 
-  float AbstractScene::getRunningTime() {
+  const float AbstractScene::getRunningTime() {
     return runningTime;
   }
 
