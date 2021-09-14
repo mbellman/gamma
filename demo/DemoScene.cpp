@@ -26,13 +26,14 @@ void DemoScene::init() {
   mesh("wall").texture = "./demo/assets/images/cat.png";
   mesh("plane").normalMap = "./demo/assets/images/metal-normal-map.png";
   mesh("particles").type = MeshType::PARTICLE_SYSTEM;
-  mesh("particles").particleSystem.spawn = Vec3f(0.0f, 20.0f, 0.0f);
+  mesh("particles").particleSystem.spawn = Vec3f(0.0f, 10.0f, -100.0f);
 
   for (uint32 i = 0; i < 10000; i++) {
     // @todo don't require explicit creation of particle objects
     createObjectFrom("particles");
   }
-  // mesh("plane").type = MeshType::REFLECTIVE;
+
+  mesh("plane").type = MeshType::REFLECTIVE;
   // mesh("daVinci").type = MeshType::REFRACTIVE;
 
   auto& daVinci = createObjectFrom("daVinci");

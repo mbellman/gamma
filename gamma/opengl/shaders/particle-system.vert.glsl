@@ -52,5 +52,5 @@ void main() {
 
   fragUv = vertexUv;
 
-  color = vec3(sin(r * 2.0) * 0.5 + 0.5, sin(time * 2.0) * 0.5 + 0.5, cos(r * 10.0) * 0.5 + 0.5);
+  color = vec3(sin(r * 500.0) * 0.5 + 0.5, sin(time * 2.0) * 0.5 + 0.5, cos(r * 1000.0) * 0.5 + 0.5);
 }

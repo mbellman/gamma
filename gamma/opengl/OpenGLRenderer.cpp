@@ -166,6 +166,7 @@ namespace Gamma {
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
+    glStencilMask(MeshType::EMISSIVE);
 
     renderSkybox();
 
