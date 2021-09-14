@@ -255,44 +255,13 @@ namespace Gamma {
      * Configuration parameters for particle system meshes.
      */
     ParticleSystem particleSystem;
+
+    static Mesh* Cube();
+    static Mesh* Plane(uint32 size);
+    static Mesh* Model(const char* path);
+    static Mesh* Model(std::initializer_list<const char*> paths);
+    static Mesh* Particles(uint16 total);  // @todo
   };
-
-  /**
-   * Gm_ComputeNormals
-   * -----------------
-   */
-  void Gm_ComputeNormals(Mesh* mesh);
-
-  /**
-   * Gm_ComputeTangents
-   * ------------------
-   */
-  void Gm_ComputeTangents(Mesh* mesh);
-
-  /**
-   * Gm_CreateCube
-   * -------------
-   */
-  Mesh* Gm_CreateCube();
-
-  /**
-   * Gm_CreatePlane
-   * --------------
-   */
-  Mesh* Gm_CreatePlane(uint32 size);
-
-  /**
-   * Gm_BufferObjData
-   * ----------------
-   */
-  void Gm_BufferObjData(const ObjLoader& obj, std::vector<Vertex>& vertices, std::vector<uint32>& faceElements);
-
-  /**
-   * Gm_LoadMesh
-   * -----------
-   */
-  Mesh* Gm_LoadMesh(const char* path);
-  Mesh* Gm_LoadMesh(std::initializer_list<const char*> paths);
 
   /**
    * Gm_FreeMesh

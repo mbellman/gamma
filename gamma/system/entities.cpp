@@ -48,6 +48,137 @@ namespace Gamma {
   };
 
   /**
+   * Gm_ComputeNormals
+   * -----------------
+   */
+  static void Gm_ComputeNormals(Mesh* mesh) {
+    auto& vertices = mesh->vertices;
+    auto& faceElements = mesh->faceElements;
+
+    for (uint32 i = 0; i < faceElements.size(); i += 3) {
+      Vertex& v1 = vertices[faceElements[i]];
+      Vertex& v2 = vertices[faceElements[i + 1]];
+      Vertex& v3 = vertices[faceElements[i + 2]];
+
+      Vec3f normal = Vec3f::cross(v2.position - v1.position, v3.position - v1.position).unit();
+
+      v1.normal += normal;
+      v2.normal += normal;
+      v3.normal += normal;
+    }
+  }
+
+  /**
+   * Gm_ComputeTangents
+   * ------------------
+   */
+  static void Gm_ComputeTangents(Mesh* mesh) {
+    auto& vertices = mesh->vertices;
+    auto& faceElements = mesh->faceElements;
+
+    for (uint32 i = 0; i < faceElements.size(); i += 3) {
+      Vertex& v1 = vertices[faceElements[i]];
+      Vertex& v2 = vertices[faceElements[i + 1]];
+      Vertex& v3 = vertices[faceElements[i + 2]];
+
+      Vec3f e1 = v2.position - v1.position;
+      Vec3f e2 = v3.position - v1.position;
+
+      float deltaU1 = v2.uv.x - v1.uv.x;
+      float deltaV1 = v2.uv.y - v1.uv.y;
+      float deltaU2 = v3.uv.x - v1.uv.x;
+      float deltaV2 = v3.uv.y - v1.uv.y;
+
+      float f = 1.0f / (deltaU1 * deltaV2 - deltaU2 * deltaV1);
+
+      Vec3f tangent = {
+        f * (deltaV2 * e1.x - deltaV1 * e2.x),
+        f * (deltaV2 * e1.y - deltaV1 * e2.y),
+        f * (deltaV2 * e1.z - deltaV1 * e2.z)
+      };
+
+      v1.tangent += tangent;
+      v2.tangent += tangent;
+      v3.tangent += tangent;
+    }
+  }
+
+  /**
+   * Gm_BufferObjData
+   * ----------------
+   *
+   * Streams vertex and face element data from an ObjLoader,
+   * defined in a preliminary state, into vertex/face element
+   * buffers defined on Meshes or other global buffers.
+   *
+   * @todo we may not want to add the base vertex offset here;
+   * once this is used to pack multiple (distinct, not merely LOD)
+   * meshes into a common vertex/element buffer, it may be preferable
+   * to associate a baseVertex/firstIndex with each mesh. firstIndex
+   * alone is technically feasible though. reconsider when revisiting
+   * this for glMultiDrawElementsIndirect().
+   */
+  static void Gm_BufferObjData(const ObjLoader& obj, std::vector<Vertex>& vertices, std::vector<uint32>& faceElements) {
+    uint32 baseVertex = vertices.size();
+
+    if (obj.textureCoordinates.size() == 0) {
+      // No texture coordinates defined in the model file,
+      // so we can load the vertices/face elements directly
+      for (uint32 i = 0; i < obj.vertices.size(); i++) {
+        Vertex vertex;
+        vertex.position = obj.vertices[i];
+
+        vertices.push_back(vertex);
+      }
+
+      for (uint32 i = 0; i < obj.faces.size(); i++) {
+        faceElements.push_back(baseVertex + obj.faces[i].v1.vertexIndex);
+        faceElements.push_back(baseVertex + obj.faces[i].v2.vertexIndex);
+        faceElements.push_back(baseVertex + obj.faces[i].v3.vertexIndex);
+      }
+    } else {
+      // Texture coordinates defined, so we need to create
+      // vertices by unique position/uv pairs, and add face
+      // elements based on created vertices
+      typedef std::pair<uint32, uint32> VertexPair;
+
+      std::map<VertexPair, uint32> pairToVertexIndexMap;
+
+      for (const auto& face : obj.faces) {
+        VertexPair pairs[3] = {
+          { face.v1.vertexIndex, face.v1.textureCoordinateIndex },
+          { face.v2.vertexIndex, face.v2.textureCoordinateIndex },
+          { face.v3.vertexIndex, face.v3.textureCoordinateIndex }
+        };
+
+        // Add face elements, creating vertices if necessary
+        for (uint32 p = 0; p < 3; p++) {
+          auto& pair = pairs[p];
+          auto indexRecord = pairToVertexIndexMap.find(pair);
+
+          if (indexRecord != pairToVertexIndexMap.end()) {
+            // Vertex already exists, so we can just add the face element
+            faceElements.push_back(indexRecord->second);
+          } else {
+            // Vertex doesn't exist, so we need to create it
+            Vertex vertex;
+            uint32 index = vertices.size();
+
+            vertex.position = obj.vertices[pair.first];
+            // @todo see if uv.y needs to be inverted
+            vertex.uv = obj.textureCoordinates[pair.second];
+            
+            vertices.push_back(vertex);
+            faceElements.push_back(index);
+
+            pairToVertexIndexMap.emplace(pair, index);
+          }
+        }
+      }
+    }
+  }
+
+  /**
    * ObjectPool
    * ----------
    */
@@ -206,70 +337,14 @@ namespace Gamma {
   }
 
   /**
-   * Gm_ComputeNormals
-   * -----------------
-   */
-  void Gm_ComputeNormals(Mesh* mesh) {
-    auto& vertices = mesh->vertices;
-    auto& faceElements = mesh->faceElements;
-
-    for (uint32 i = 0; i < faceElements.size(); i += 3) {
-      Vertex& v1 = vertices[faceElements[i]];
-      Vertex& v2 = vertices[faceElements[i + 1]];
-      Vertex& v3 = vertices[faceElements[i + 2]];
-
-      Vec3f normal = Vec3f::cross(v2.position - v1.position, v3.position - v1.position).unit();
-
-      v1.normal += normal;
-      v2.normal += normal;
-      v3.normal += normal;
-    }
-  }
-
-  /**
-   * Gm_ComputeTangents
-   * ------------------
-   */
-  void Gm_ComputeTangents(Mesh* mesh) {
-    auto& vertices = mesh->vertices;
-    auto& faceElements = mesh->faceElements;
-
-    for (uint32 i = 0; i < faceElements.size(); i += 3) {
-      Vertex& v1 = vertices[faceElements[i]];
-      Vertex& v2 = vertices[faceElements[i + 1]];
-      Vertex& v3 = vertices[faceElements[i + 2]];
-
-      Vec3f e1 = v2.position - v1.position;
-      Vec3f e2 = v3.position - v1.position;
-
-      float deltaU1 = v2.uv.x - v1.uv.x;
-      float deltaV1 = v2.uv.y - v1.uv.y;
-      float deltaU2 = v3.uv.x - v1.uv.x;
-      float deltaV2 = v3.uv.y - v1.uv.y;
-
-      float f = 1.0f / (deltaU1 * deltaV2 - deltaU2 * deltaV1);
-
-      Vec3f tangent = {
-        f * (deltaV2 * e1.x - deltaV1 * e2.x),
-        f * (deltaV2 * e1.y - deltaV1 * e2.y),
-        f * (deltaV2 * e1.z - deltaV1 * e2.z)
-      };
-
-      v1.tangent += tangent;
-      v2.tangent += tangent;
-      v3.tangent += tangent;
-    }
-  }
-
-  /**
-   * Gm_CreateCube
-   * -------------
-   *
+   * Mesh::Cube()
+   * ------------
+   * 
    * Constructs a cube Mesh using predefined vertex data.
    * None of a Cube's vertices are shared between its sides,
    * ensuring that normals remain constant along them.
    */
-  Mesh* Gm_CreateCube() {
+  Mesh* Mesh::Cube() {
     auto* mesh = new Mesh();
     auto& vertices = mesh->vertices;
     auto& faceElements = mesh->faceElements;
@@ -309,14 +384,18 @@ namespace Gamma {
   }
 
   /**
-   * Gm_CreatePlane
-   * --------------
+   * Mesh::Plane()
+   * -------------
+   *
+   * @todo description
    */
-  Mesh* Gm_CreatePlane(uint32 size) {
+  Mesh* Mesh::Plane(uint32 size) {
     auto* mesh = new Mesh();
     auto& vertices = mesh->vertices;
     auto& faceElements = mesh->faceElements;
 
+    // @bug size should represent the total number of
+    // tiles across the plane, not the total vertices
     for (uint32 x = 0; x < size; x++) {
       for (uint32 z = 0; z < size; z++) {
         Vertex vertex;
@@ -352,87 +431,12 @@ namespace Gamma {
   }
 
   /**
-   * Gm_BufferObjData
-   * ----------------
+   * Mesh::Model()
+   * -------------
    *
-   * Streams vertex and face element data from an ObjLoader,
-   * defined in a preliminary state, into vertex/face element
-   * buffers defined on Meshes or other global buffers.
-   *
-   * @todo we may not want to add the base vertex offset here;
-   * once this is used to pack multiple (distinct, not merely LOD)
-   * meshes into a common vertex/element buffer, it may be preferable
-   * to associate a baseVertex/firstIndex with each mesh. firstIndex
-   * alone is technically feasible though. reconsider when revisiting
-   * this for glMultiDrawElementsIndirect().
+   * Loads an .obj model file into a Mesh.
    */
-  void Gm_BufferObjData(const ObjLoader& obj, std::vector<Vertex>& vertices, std::vector<uint32>& faceElements) {
-    uint32 baseVertex = vertices.size();
-
-    if (obj.textureCoordinates.size() == 0) {
-      // No texture coordinates defined in the model file,
-      // so we can load the vertices/face elements directly
-      for (uint32 i = 0; i < obj.vertices.size(); i++) {
-        Vertex vertex;
-        vertex.position = obj.vertices[i];
-
-        vertices.push_back(vertex);
-      }
-
-      for (uint32 i = 0; i < obj.faces.size(); i++) {
-        faceElements.push_back(baseVertex + obj.faces[i].v1.vertexIndex);
-        faceElements.push_back(baseVertex + obj.faces[i].v2.vertexIndex);
-        faceElements.push_back(baseVertex + obj.faces[i].v3.vertexIndex);
-      }
-    } else {
-      // Texture coordinates defined, so we need to create
-      // vertices by unique position/uv pairs, and add face
-      // elements based on created vertices
-      typedef std::pair<uint32, uint32> VertexPair;
-
-      std::map<VertexPair, uint32> pairToVertexIndexMap;
-
-      for (const auto& face : obj.faces) {
-        VertexPair pairs[3] = {
-          { face.v1.vertexIndex, face.v1.textureCoordinateIndex },
-          { face.v2.vertexIndex, face.v2.textureCoordinateIndex },
-          { face.v3.vertexIndex, face.v3.textureCoordinateIndex }
-        };
-
-        // Add face elements, creating vertices if necessary
-        for (uint32 p = 0; p < 3; p++) {
-          auto& pair = pairs[p];
-          auto indexRecord = pairToVertexIndexMap.find(pair);
-
-          if (indexRecord != pairToVertexIndexMap.end()) {
-            // Vertex already exists, so we can just add the face element
-            faceElements.push_back(indexRecord->second);
-          } else {
-            // Vertex doesn't exist, so we need to create it
-            Vertex vertex;
-            uint32 index = vertices.size();
-
-            vertex.position = obj.vertices[pair.first];
-            // @todo see if uv.y needs to be inverted
-            vertex.uv = obj.textureCoordinates[pair.second];
-            
-            vertices.push_back(vertex);
-            faceElements.push_back(index);
-
-            pairToVertexIndexMap.emplace(pair, index);
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Gm_LoadMesh
-   * -----------
-   *
-   * Loads an .obj file model into a Mesh.
-   */
-  Mesh* Gm_LoadMesh(const char* path) {
+  Mesh* Mesh::Model(const char* path) {
     ObjLoader obj(path);
 
     auto* mesh = new Mesh();
@@ -445,14 +449,14 @@ namespace Gamma {
   }
 
   /**
-   * Gm_LoadMesh
-   * -----------
+   * Mesh::Model()
+   * -------------
    *
-   * Loads a sequence of .obj file models into a Mesh,
+   * Loads a sequence of .obj model files into a Mesh,
    * treating each consecutive model as a lower level
    * of detail.
    */
-  Mesh* Gm_LoadMesh(std::initializer_list<const char*> paths) {
+  Mesh* Mesh::Model(std::initializer_list<const char*> paths) {
     auto* mesh = new Mesh();
 
     mesh->lods.resize(paths.size());

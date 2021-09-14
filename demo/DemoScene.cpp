@@ -10,13 +10,14 @@ void DemoScene::init() {
 
   camera.position.z = -300.0f;
 
-  addMesh("cube", 100, Gm_CreateCube());
-  addMesh("daVinci", 1, Gm_LoadMesh("./demo/assets/models/da-vinci-split.obj"));
-  addMesh("plane", 1, Gm_CreatePlane(10));
-  addMesh("wall", 1, Gm_CreatePlane(10));
-  addMesh("particles", 10000, Gm_CreateCube());
+  addMesh("cube", 100, Mesh::Cube());
+  addMesh("daVinci", 1, Mesh::Model("./demo/assets/models/da-vinci-split.obj"));
+  addMesh("plane", 1, Mesh::Plane(10));
+  addMesh("wall", 1, Mesh::Plane(10));
+  // @todo Mesh::Particles(10000)
+  addMesh("particles", 10000, Mesh::Cube());
 
-  addMesh("rabbit", 10, Gm_LoadMesh({
+  addMesh("rabbit", 10, Mesh::Model({
     "./demo/assets/models/rabbit-lod1.obj",
     "./demo/assets/models/rabbit-lod2.obj"
   }));
