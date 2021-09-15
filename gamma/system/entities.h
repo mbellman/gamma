@@ -52,6 +52,8 @@ namespace Gamma {
   struct ObjectRecord {
     uint16 meshIndex = 0;
     uint16 meshId = 0;
+    // @todo uint32 id with 24 bits for id and 8 for generation,
+    // allowing up to ~16.77 million objects per pool
     uint16 id = 0;
     uint16 generation = 0;
   };
@@ -77,6 +79,8 @@ namespace Gamma {
    *
    * A collection of Objects tied to a given Mesh, designed
    * to facilitate instanced/batched rendering.
+   *
+   * @todo uint16 -> uint32 to support >65K objects per pool
    */
   class ObjectPool {
   public:

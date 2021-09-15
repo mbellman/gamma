@@ -148,7 +148,6 @@ namespace Gamma {
 
     // @todo extract into its own function
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
     glStencilFunc(GL_ALWAYS, 0xFF, 0xFF);
     glStencilMask(MeshType::PARTICLE_SYSTEM);
 
@@ -168,7 +167,6 @@ namespace Gamma {
     }
 
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
     glDisable(GL_BLEND);
     glStencilMask(MeshType::EMISSIVE);
 

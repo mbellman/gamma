@@ -161,6 +161,7 @@ namespace Gamma {
         delete[] commands;
       }
     } else if (mesh.type == MeshType::PARTICLE_SYSTEM) {
+      // @todo description
       glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::VERTEX]);
 
       glDrawArraysInstanced(GL_POINTS, 0, 1, mesh.objects.total());
