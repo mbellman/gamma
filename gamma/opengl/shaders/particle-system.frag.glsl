@@ -7,6 +7,13 @@ layout (location = 0) out vec4 out_color_and_depth;
 layout (location = 1) out vec4 out_normal_and_specularity;
 
 void main() {
-  out_color_and_depth = vec4(color, gl_FragCoord.z);
+  float radius = length(gl_PointCoord - vec2(0.5));
+  float radius_factor = 1.0 - radius / 0.5;
+
+  if (radius > 0.5) {
+    discard;
+  }
+
+  out_color_and_depth = vec4(color * radius_factor, gl_FragCoord.z);
   out_normal_and_specularity = vec4(vec3(0), 1);
 }

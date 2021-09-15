@@ -160,6 +160,10 @@ namespace Gamma {
 
         delete[] commands;
       }
+    } else if (mesh.type == MeshType::PARTICLE_SYSTEM) {
+      glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::VERTEX]);
+
+      glDrawArraysInstanced(GL_POINTS, 0, 1, mesh.objects.total());
     } else {
       // No distinct level of detail meshes defined;
       // draw all mesh instances together

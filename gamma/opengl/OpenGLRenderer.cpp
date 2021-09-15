@@ -70,6 +70,9 @@ namespace Gamma {
     screen.vertex("./gamma/opengl/shaders/quad.vert.glsl");
     screen.fragment("./gamma/opengl/shaders/screen.frag.glsl");
     screen.link();
+
+    // Enable default OpenGL settings
+    glEnable(GL_PROGRAM_POINT_SIZE);
   }
 
   void OpenGLRenderer::destroy() {
@@ -141,10 +144,11 @@ namespace Gamma {
       renderSpotShadowcasters();
     }
 
+    renderSkybox();
+
     // @todo extract into its own function
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    glDisable(GL_BLEND);
     glStencilFunc(GL_ALWAYS, 0xFF, 0xFF);
     glStencilMask(MeshType::PARTICLE_SYSTEM);
 
@@ -165,10 +169,8 @@ namespace Gamma {
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
+    glDisable(GL_BLEND);
     glStencilMask(MeshType::EMISSIVE);
-
-    renderSkybox();
 
     if (ctx.hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
       renderReflections();
@@ -697,6 +699,8 @@ namespace Gamma {
     shaders.skybox.setMatrix4f("inverseView", ctx.inverseView);
 
     OpenGLScreenQuad::render();
+
+    glEnable(GL_BLEND);
   }
 
   /**

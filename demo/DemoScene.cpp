@@ -14,8 +14,7 @@ void DemoScene::init() {
   addMesh("daVinci", 1, Mesh::Model("./demo/assets/models/da-vinci-split.obj"));
   addMesh("plane", 1, Mesh::Plane(10));
   addMesh("wall", 1, Mesh::Plane(10));
-  // @todo Mesh::Particles(10000)
-  addMesh("particles", 10000, Mesh::Cube());
+  addMesh("particles", 10000, Mesh::Particles());
 
   addMesh("rabbit", 10, Mesh::Model({
     "./demo/assets/models/rabbit-lod1.obj",
@@ -25,15 +24,9 @@ void DemoScene::init() {
   mesh("cube").texture = "./demo/assets/images/cat.png";
   mesh("wall").texture = "./demo/assets/images/cat.png";
   mesh("plane").normalMap = "./demo/assets/images/metal-normal-map.png";
-  mesh("particles").type = MeshType::PARTICLE_SYSTEM;
-  mesh("particles").particleSystem.spawn = Vec3f(0.0f, 10.0f, -100.0f);
+  mesh("particles").particleSystem.spawn = Vec3f(0.0f, 20.0f, 0.0f);
 
-  for (uint32 i = 0; i < 10000; i++) {
-    // @todo don't require explicit creation of particle objects
-    createObjectFrom("particles");
-  }
-
-  mesh("plane").type = MeshType::REFLECTIVE;
+  // mesh("plane").type = MeshType::REFLECTIVE;
   // mesh("daVinci").type = MeshType::REFRACTIVE;
 
   auto& daVinci = createObjectFrom("daVinci");

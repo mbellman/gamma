@@ -448,6 +448,22 @@ namespace Gamma {
   }
 
   /**
+   * Mesh::Particles()
+   * -----------------
+   *
+   * @todo description
+   */
+  Mesh* Mesh::Particles() {
+    auto* mesh = new Mesh();
+
+    mesh->type = MeshType::PARTICLE_SYSTEM;
+
+    mesh->vertices.push_back(Vertex());
+
+    return mesh;
+  }
+
+  /**
    * Mesh::Plane()
    * -------------
    *

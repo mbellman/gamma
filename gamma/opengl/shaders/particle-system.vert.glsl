@@ -39,7 +39,7 @@ void main() {
   vec3 basePosition = spawn + getBasePosition();
 
   float r = float(gl_InstanceID) / 10000.0;
-  float scale = 0.1 + 0.1 * sin(time * 3.0 + r * 500.0);
+  float scale = 10.0 + 10.0 * sin(time * 3.0 + r * 500.0);
 
   mat4 model = mat4(
     scale, 0, 0, 0,
@@ -49,6 +49,7 @@ void main() {
   );
 
   gl_Position = projection * view * model * vec4(vertexPosition, 1.0);
+  gl_PointSize = scale;
 
   fragUv = vertexUv;
 

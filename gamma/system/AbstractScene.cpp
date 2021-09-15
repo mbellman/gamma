@@ -29,6 +29,12 @@ namespace Gamma {
     meshMap.emplace(meshName, mesh);
     meshes.push_back(mesh);
 
+    if (mesh->type == MeshType::PARTICLE_SYSTEM) {
+      for (uint16 i = 0; i < maxInstances; i++) {
+        createObjectFrom(meshName);
+      }
+    }
+
     signal("mesh-created", mesh);
   }
 
