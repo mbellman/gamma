@@ -67,11 +67,21 @@ void main() {
 
   vec3 view_refraction_ray = glVec4(view * glVec4(world_refraction_ray)).xyz;
   vec2 refracted_color_coords = getScreenCoordinates(view_refraction_ray, projection);
-  float frag_depth = texture(colorAndDepth, getPixelCoords()).w;
+  float sample_depth = texture(colorAndDepth, getPixelCoords()).w;
 
-  if (frag_depth < 1.0 && isOffScreen(refracted_color_coords)) {
+  if (sample_depth < 1.0 && isOffScreen(refracted_color_coords)) {
     // If the fragment has a depth closer than the far plane,
     // discard any attempts at offscreen color reading
+    discard;
+  }
+
+  if (gl_FragCoord.z > sample_depth) {
+    // Accommodation for alpha-blended particles, which write to the
+    // depth channel of the color and depth texture, but not to the
+    // depth buffer, in order to properly blend against themselves.
+    // Perform a 'manual' depth test to ensure that particles in front
+    // of the refractive geometry aren't overwritten and incorrectly
+    // rendered 'behind' it.
     discard;
   }
 

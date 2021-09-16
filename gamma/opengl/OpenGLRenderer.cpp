@@ -148,6 +148,7 @@ namespace Gamma {
 
     // @todo extract into its own function
     glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
     glStencilFunc(GL_ALWAYS, 0xFF, 0xFF);
     glStencilMask(MeshType::PARTICLE_SYSTEM);
 
@@ -168,6 +169,7 @@ namespace Gamma {
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
     glStencilMask(MeshType::EMISSIVE);
 
     if (ctx.hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
