@@ -420,25 +420,12 @@ namespace Gamma {
       ObjLoader obj(path);
 
       mesh->lods[i].elementOffset = mesh->faceElements.size();
+      mesh->lods[i].vertexOffset = mesh->vertices.size();
 
       Gm_BufferObjData(obj, mesh->vertices, mesh->faceElements);
 
       mesh->lods[i].elementCount = mesh->faceElements.size() - mesh->lods[i].elementOffset;
-
-      // @todo (?) For now, the vertex offset is always 0,
-      // since the offset for each set of LoD vertices is
-      // already added to the element indexes. It may be
-      // necessary to revisit this when more geometry is
-      // packed into global vertex/element buffers. Normals
-      // and tangents are computed for each triplet of face
-      // elements, where those elements refer to vertex
-      // indexes without offsets considered. Eventually we
-      // might want to generate vertices + face elements
-      // locally, use the face elements to compute normals/
-      // tangents for those local vertices, and finally
-      // buffer the results into a global list, defining
-      // a vertex offset for the new set.
-      mesh->lods[i].vertexOffset = 0;
+      mesh->lods[i].vertexCount = mesh->vertices.size() - mesh->lods[i].vertexOffset;
     }
 
     Gm_ComputeNormals(mesh);

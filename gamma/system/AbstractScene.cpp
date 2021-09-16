@@ -107,8 +107,15 @@ namespace Gamma {
     SceneStats stats;
 
     for (auto* mesh : meshes) {
-      stats.verts += mesh->vertices.size() * mesh->objects.total();
-      stats.tris += (mesh->faceElements.size() / 3) * mesh->objects.total();
+      if (mesh->lods.size() > 0) {
+        for (auto& lod : mesh->lods) {
+          stats.verts += lod.vertexCount * lod.instanceCount;
+          stats.tris += (lod.elementCount / 3) * lod.instanceCount;
+        }
+      } else {
+        stats.verts += mesh->vertices.size() * mesh->objects.total();
+        stats.tris += (mesh->faceElements.size() / 3) * mesh->objects.total();
+      }
     }
 
     return stats;

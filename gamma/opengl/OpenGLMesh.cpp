@@ -151,7 +151,10 @@ namespace Gamma {
           command.firstIndex = lod.elementOffset;
           command.instanceCount = lod.instanceCount;
           command.baseInstance = lod.instanceOffset;
-          command.baseVertex = lod.vertexOffset;
+          // @todo base vertexes are already added to elements;
+          // this may need to change if we revise the way mesh
+          // data is stored/use glMultiDraw more broadly
+          command.baseVertex = 0;
         }
 
         Gm_BufferDrawElementsIndirectCommands(commands, 2);

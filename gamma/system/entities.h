@@ -171,6 +171,10 @@ namespace Gamma {
      * Defines the starting vertex in the LOD model.
      */
     uint32 vertexOffset = 0;
+    /**
+     * Defines the number of vertices in the LOD model.
+     */
+    uint32 vertexCount = 0;
   };
 
   /**
