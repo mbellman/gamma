@@ -29,12 +29,12 @@ void DemoScene::init() {
   // mesh("plane").type = MeshType::REFLECTIVE;
   // mesh("daVinci").type = MeshType::REFRACTIVE;
 
-  // auto& daVinci = createObjectFrom("daVinci");
+  auto& daVinci = createObjectFrom("daVinci");
 
-  // daVinci.position = Vec3f(0.0f, 20.0f, 0.0f);
-  // daVinci.scale = 50.0f;
+  daVinci.position = Vec3f(0.0f, 20.0f, 0.0f);
+  daVinci.scale = 50.0f;
 
-  // transform(daVinci);
+  transform(daVinci);
 
   auto& plane = createObjectFrom("plane");
 
