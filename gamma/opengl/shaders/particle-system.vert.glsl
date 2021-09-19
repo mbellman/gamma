@@ -19,31 +19,37 @@ flat out vec3 color;
 float particle_id = float(gl_InstanceID);
 
 // @todo receive params from particle system config
-int total_particles = 10000;
-float particle_spread = 500.0;
-float median_particle_speed = 0.2;
-float particle_speed_variation = 0.1;
-bool is_circuit = false;
+struct ParticleSystem {
+  float total;
+  float spread;
+  float minimum_radius;
+  float median_speed;
+  float speed_variation;
+  float median_size;
+  float size_variation;
+  float deviation;
+  bool is_circuit;
+} particles;
 
-const int total_path_points = 2;
-
-vec3 particle_path[total_path_points] = {
-  vec3(0, 100, 0),
-  vec3(-10, 50, 0)
-};
-
-// const int total_path_points = 8;
+// const int total_path_points = 2;
 
 // vec3 particle_path[total_path_points] = {
-//   vec3(0.0, 20.0, 0.0),
-//   vec3(20.0, -10.0, -40.0),
-//   vec3(50.0, 40.0, 10.0),
-//   vec3(0, 30, 10),
-//   vec3(-20, 40, 35),
-//   vec3(-40, 15, 25),
-//   vec3(-60, 20, -30),
-//   vec3(-5, 20, -5)
+//   vec3(0, 500, 0),
+//   vec3(-10, -500, 0)
 // };
+
+const int total_path_points = 8;
+
+vec3 particle_path[total_path_points] = {
+  vec3(0.0, 20.0, 0.0),
+  vec3(20.0, -10.0, -40.0),
+  vec3(50.0, 40.0, 10.0),
+  vec3(0, 30, 10),
+  vec3(-20, 40, 35),
+  vec3(-40, 15, 25),
+  vec3(-60, 20, -30),
+  vec3(-5, 20, -5)
+};
 
 // @todo improve the degree of randomness here + move to utils
 float random(vec2 seed){
@@ -65,7 +71,7 @@ float random(float low, float high, float seed) {
  *
  * Performs cubic spline interpolation.
  */
-float interpolateCubic(float a, float b, float c, float d, float alpha) {
+float interpolateCubicSpline(float a, float b, float c, float d, float alpha) {
   float m = alpha * alpha;
 
   float a0 = d - c - a + b;
@@ -82,9 +88,9 @@ float interpolateCubic(float a, float b, float c, float d, float alpha) {
  */
 vec3 interpolatePoints(vec3 p1, vec3 p2, vec3 p3, vec3 p4, float alpha) {
   return vec3(
-    interpolateCubic(p1.x, p2.x, p3.x, p4.x, alpha),
-    interpolateCubic(p1.y, p2.y, p3.y, p4.y, alpha),
-    interpolateCubic(p1.z, p2.z, p3.z, p4.z, alpha)
+    interpolateCubicSpline(p1.x, p2.x, p3.x, p4.x, alpha),
+    interpolateCubicSpline(p1.y, p2.y, p3.y, p4.y, alpha),
+    interpolateCubicSpline(p1.z, p2.z, p3.z, p4.z, alpha)
   );
 }
 
@@ -110,7 +116,7 @@ int getWrappedPathIndex(int index) {
  * determined by its ID.
  */
 vec3 getInitialPosition() {
-  float radius = particle_spread * sqrt(0.001 + random(particle_id * 1.255673));
+  float radius = particles.minimum_radius + particles.spread * sqrt(0.001 + random(particle_id * 1.255673));
 
   float x = random(-1, 1, particle_id * 1.1);
   float y = random(-1, 1, particle_id * 1.2);
@@ -123,10 +129,10 @@ vec3 getInitialPosition() {
  * Returns the particle's current position as a function of time.
  */
 vec3 getParticlePosition() {
-  float particle_speed = median_particle_speed + random(-particle_speed_variation, particle_speed_variation, particle_id);
+  float particle_speed = particles.median_speed + random(-particles.speed_variation, particles.speed_variation, particle_id);
   float path_progress = fract(random(0, 1, particle_id * 1.1) + time * (particle_speed / total_path_points));
 
-  float path_position = is_circuit
+  float path_position = particles.is_circuit
     ? path_progress * total_path_points
     : path_progress * (total_path_points - 1);
 
@@ -138,18 +144,39 @@ vec3 getParticlePosition() {
   vec3 p4 = particle_path[getWrappedPathIndex(path_index + 2)];
 
   float interpolation_factor = fract(path_position);
-  vec3 stream_position = interpolatePoints(p1, p2, p3, p4, interpolation_factor);
+  vec3 flow_position = interpolatePoints(p1, p2, p3, p4, interpolation_factor);
 
-  // @todo make oscillation configurable
-  float oscillation = sin(particle_id + time) * 2.0;
-  return spawn + getInitialPosition() + stream_position + oscillation;
+  float deviation_cycle = sin(particle_id + time);
+
+  vec3 deviation = vec3(
+    particles.deviation * random(-1, 1, particle_id * 1.1) * deviation_cycle,
+    particles.deviation * random(-1, 1, particle_id * 1.2) * deviation_cycle,
+    particles.deviation * random(-1, 1, particle_id * 1.3) * deviation_cycle
+  );
+
+  return spawn + getInitialPosition() + flow_position + deviation;
+}
+
+void initParticleSystem() {
+  particles.total = 10000;
+  particles.spread = 10.0;
+  particles.minimum_radius = 0.0;
+  particles.median_speed = 0.1;
+  particles.speed_variation = 0.1;
+  particles.median_size = 10.0;
+  particles.size_variation = 10.0;
+  particles.deviation = 3.0;
+  particles.is_circuit = false;
 }
 
 void main() {
+  initParticleSystem();
+
   vec3 position = getParticlePosition();
 
-  float r = particle_id / float(total_particles);
-  float scale = 10.0 + 10.0 * sin(time * 3.0 + r * 500.0);
+  float r = particle_id / float(particles.total);
+  // @todo make size oscillation rate configurable
+  float scale = particles.median_size + particles.size_variation * sin(time * 3.0 + r * 500.0);
 
   gl_Position = projection * view * glVec4(position);
   gl_PointSize = scale;
