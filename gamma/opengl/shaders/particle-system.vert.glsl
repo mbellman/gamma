@@ -126,9 +126,9 @@ vec3 getInitialPosition() {
 }
 
 /**
- * Returns the particle's current position as a function of time.
+ * @todo description
  */
-vec3 getParticlePosition() {
+vec3 getFlowPosition() {
   float particle_speed = particles.median_speed + random(-particles.speed_variation, particles.speed_variation, particle_id);
   float path_progress = fract(random(0, 1, particle_id * 1.1) + time * (particle_speed / total_path_points));
 
@@ -144,19 +144,31 @@ vec3 getParticlePosition() {
   vec3 p4 = particle_path[getWrappedPathIndex(path_index + 2)];
 
   float interpolation_factor = fract(path_position);
-  vec3 flow_position = interpolatePoints(p1, p2, p3, p4, interpolation_factor);
 
-  float deviation_cycle = sin(particle_id + time);
-
-  vec3 deviation = vec3(
-    particles.deviation * random(-1, 1, particle_id * 1.1) * deviation_cycle,
-    particles.deviation * random(-1, 1, particle_id * 1.2) * deviation_cycle,
-    particles.deviation * random(-1, 1, particle_id * 1.3) * deviation_cycle
-  );
-
-  return spawn + getInitialPosition() + flow_position + deviation;
+  return interpolatePoints(p1, p2, p3, p4, interpolation_factor);
 }
 
+/**
+ * @todo description
+ */
+vec3 getDeviation() {
+  float deviation_factor = particles.deviation * sin(particle_id + time);
+
+  return vec3(
+    deviation_factor * random(-1, 1, particle_id * 1.1),
+    deviation_factor * random(-1, 1, particle_id * 1.2),
+    deviation_factor * random(-1, 1, particle_id * 1.3)
+  );
+}
+
+/**
+ * Returns the particle's current position as a function of time.
+ */
+vec3 getParticlePosition() {
+  return spawn + getInitialPosition() + getFlowPosition() + getDeviation();
+}
+
+// @todo pass these in as uniforms
 void initParticleSystem() {
   particles.total = 10000;
   particles.spread = 10.0;
