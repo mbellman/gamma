@@ -19,22 +19,31 @@ flat out vec3 color;
 float particle_id = float(gl_InstanceID);
 
 // @todo receive params from particle system config
-const int total_path_points = 8;
 int total_particles = 10000;
-float particle_spread = 5.0;
+float particle_spread = 500.0;
 float median_particle_speed = 0.2;
 float particle_speed_variation = 0.1;
+bool is_circuit = false;
+
+const int total_path_points = 2;
 
 vec3 particle_path[total_path_points] = {
-  vec3(0.0, 20.0, 0.0),
-  vec3(20.0, -10.0, -40.0),
-  vec3(50.0, 40.0, 10.0),
-  vec3(0, 30, 10),
-  vec3(-20, 40, 35),
-  vec3(-40, 15, 25),
-  vec3(-60, 20, -30),
-  vec3(-5, 20, -5)
+  vec3(0, 100, 0),
+  vec3(-10, 50, 0)
 };
+
+// const int total_path_points = 8;
+
+// vec3 particle_path[total_path_points] = {
+//   vec3(0.0, 20.0, 0.0),
+//   vec3(20.0, -10.0, -40.0),
+//   vec3(50.0, 40.0, 10.0),
+//   vec3(0, 30, 10),
+//   vec3(-20, 40, 35),
+//   vec3(-40, 15, 25),
+//   vec3(-60, 20, -30),
+//   vec3(-5, 20, -5)
+// };
 
 // @todo improve the degree of randomness here + move to utils
 float random(vec2 seed){
@@ -101,7 +110,7 @@ int getWrappedPathIndex(int index) {
  * determined by its ID.
  */
 vec3 getInitialPosition() {
-  float radius = particle_spread * sqrt(random(particle_id * 1.255673));
+  float radius = particle_spread * sqrt(0.001 + random(particle_id * 1.255673));
 
   float x = random(-1, 1, particle_id * 1.1);
   float y = random(-1, 1, particle_id * 1.2);
@@ -116,14 +125,19 @@ vec3 getInitialPosition() {
 vec3 getParticlePosition() {
   float particle_speed = median_particle_speed + random(-particle_speed_variation, particle_speed_variation, particle_id);
   float path_progress = fract(random(0, 1, particle_id * 1.1) + time * (particle_speed / total_path_points));
-  int path_index = int(floor(path_progress * total_path_points));
+
+  float path_position = is_circuit
+    ? path_progress * total_path_points
+    : path_progress * (total_path_points - 1);
+
+  int path_index = int(floor(path_position));
 
   vec3 p1 = particle_path[getWrappedPathIndex(path_index - 1)];
   vec3 p2 = particle_path[path_index];
   vec3 p3 = particle_path[getWrappedPathIndex(path_index + 1)];
   vec3 p4 = particle_path[getWrappedPathIndex(path_index + 2)];
 
-  float interpolation_factor = fract(path_progress * total_path_points);
+  float interpolation_factor = fract(path_position);
   vec3 stream_position = interpolatePoints(p1, p2, p3, p4, interpolation_factor);
 
   // @todo make oscillation configurable
