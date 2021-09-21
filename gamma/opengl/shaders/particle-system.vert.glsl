@@ -1,9 +1,22 @@
 #version 460 core
 
+struct ParticleSystem {
+  int total;
+  vec3 spawn;
+  float spread;
+  float minimum_radius;
+  float median_speed;
+  float speed_variation;
+  float median_size;
+  float size_variation;
+  float deviation;
+  bool is_circuit;
+};
+
 uniform mat4 projection;
 uniform mat4 view;
-uniform vec3 spawn;
 uniform float time;
+uniform ParticleSystem particles;
 
 layout (location = 0) in vec3 vertexPosition;
 layout (location = 1) in vec3 vertexNormal;
@@ -17,19 +30,6 @@ flat out vec3 color;
 @include('utils/gl.glsl');
 
 float particle_id = float(gl_InstanceID);
-
-// @todo receive params from particle system config
-struct ParticleSystem {
-  float total;
-  float spread;
-  float minimum_radius;
-  float median_speed;
-  float speed_variation;
-  float median_size;
-  float size_variation;
-  float deviation;
-  bool is_circuit;
-} particles;
 
 // const int total_path_points = 2;
 
@@ -165,25 +165,10 @@ vec3 getDeviation() {
  * Returns the particle's current position as a function of time.
  */
 vec3 getParticlePosition() {
-  return spawn + getInitialPosition() + getFlowPosition() + getDeviation();
-}
-
-// @todo pass these in as uniforms
-void initParticleSystem() {
-  particles.total = 10000;
-  particles.spread = 10.0;
-  particles.minimum_radius = 0.0;
-  particles.median_speed = 0.1;
-  particles.speed_variation = 0.1;
-  particles.median_size = 10.0;
-  particles.size_variation = 10.0;
-  particles.deviation = 3.0;
-  particles.is_circuit = false;
+  return particles.spawn + getInitialPosition() + getFlowPosition() + getDeviation();
 }
 
 void main() {
-  initParticleSystem();
-
   vec3 position = getParticlePosition();
 
   float r = particle_id / float(particles.total);

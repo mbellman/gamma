@@ -159,9 +159,18 @@ namespace Gamma {
 
     for (auto& glMesh : glMeshes) {
       if (glMesh->isMeshType(MeshType::PARTICLE_SYSTEM)) {
-        auto& system = glMesh->getSourceMesh()->particleSystem;
+        auto& particles = glMesh->getSourceMesh()->particleSystem;
 
-        shaders.particles.setVec3f("spawn", system.spawn);
+        shaders.particles.setInt("particles.total", glMesh->getObjectCount());
+        shaders.particles.setVec3f("particles.spawn", particles.spawn);
+        shaders.particles.setFloat("particles.spread", particles.spread);
+        shaders.particles.setFloat("particles.minimum_radius", particles.minimumRadius);
+        shaders.particles.setFloat("particles.median_speed", particles.medianSpeed);
+        shaders.particles.setFloat("particles.speed_variation", particles.speedVariation);
+        shaders.particles.setFloat("particles.median_size", particles.medianSize);
+        shaders.particles.setFloat("particles.size_variation", particles.sizeVariation);
+        shaders.particles.setFloat("particles.deviation", particles.deviation);
+        shaders.particles.setBool("particles.is_circuit", particles.isCircuit);
 
         glMesh->render(ctx.primitiveMode);
       }

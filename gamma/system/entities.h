@@ -185,7 +185,14 @@ namespace Gamma {
    */
   struct ParticleSystem {
     Vec3f spawn;
-    // @todo additional configuration params
+    float spread;
+    float minimumRadius;
+    float medianSpeed;
+    float speedVariation;
+    float medianSize;
+    float sizeVariation;
+    float deviation;
+    bool isCircuit;
   };
 
   /**

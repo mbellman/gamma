@@ -24,7 +24,18 @@ void DemoScene::init() {
   mesh("cube").texture = "./demo/assets/images/cat.png";
   mesh("wall").texture = "./demo/assets/images/cat.png";
   mesh("plane").normalMap = "./demo/assets/images/metal-normal-map.png";
-  mesh("particles").particleSystem.spawn = Vec3f(0.0f, 20.0f, 0.0f);
+
+  auto& particles = mesh("particles").particleSystem;
+
+  particles.spawn = Vec3f(0.0f, 20.0f, 0.0f);
+  particles.spread = 10.0f;
+  particles.minimumRadius = 0.0f;
+  particles.medianSpeed = 0.1f;
+  particles.speedVariation = 0.1f;
+  particles.medianSize = 10.0f;
+  particles.sizeVariation = 10.0f;
+  particles.deviation = 3.0f;
+  particles.isCircuit = true;
 
   // mesh("plane").type = MeshType::REFLECTIVE;
   // mesh("daVinci").type = MeshType::REFRACTIVE;
