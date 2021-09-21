@@ -119,6 +119,7 @@ namespace Gamma {
     void renderSpotLights();
     void renderSpotShadowcasters();
     void renderSkybox();
+    void renderParticleSystems();
     void renderReflections();
     void renderRefractiveObjects();
     void renderPostEffects();

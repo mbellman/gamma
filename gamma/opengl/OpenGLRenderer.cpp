@@ -145,41 +145,7 @@ namespace Gamma {
     }
 
     renderSkybox();
-
-    // @todo extract into its own function
-    glEnable(GL_DEPTH_TEST);
-    glDepthMask(GL_FALSE);
-    glStencilFunc(GL_ALWAYS, 0xFF, 0xFF);
-    glStencilMask(MeshType::PARTICLE_SYSTEM);
-
-    shaders.particles.use();
-    shaders.particles.setMatrix4f("projection", ctx.projection);
-    shaders.particles.setMatrix4f("view", ctx.view);
-    shaders.particles.setFloat("time", AbstractScene::active->getRunningTime());
-
-    for (auto& glMesh : glMeshes) {
-      if (glMesh->isMeshType(MeshType::PARTICLE_SYSTEM)) {
-        auto& particles = glMesh->getSourceMesh()->particleSystem;
-
-        shaders.particles.setInt("particles.total", glMesh->getObjectCount());
-        shaders.particles.setVec3f("particles.spawn", particles.spawn);
-        shaders.particles.setFloat("particles.spread", particles.spread);
-        shaders.particles.setFloat("particles.minimum_radius", particles.minimumRadius);
-        shaders.particles.setFloat("particles.median_speed", particles.medianSpeed);
-        shaders.particles.setFloat("particles.speed_variation", particles.speedVariation);
-        shaders.particles.setFloat("particles.median_size", particles.medianSize);
-        shaders.particles.setFloat("particles.size_variation", particles.sizeVariation);
-        shaders.particles.setFloat("particles.deviation", particles.deviation);
-        shaders.particles.setBool("particles.is_circuit", particles.isCircuit);
-
-        glMesh->render(ctx.primitiveMode);
-      }
-    }
-
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
-    glDepthMask(GL_TRUE);
-    glStencilMask(MeshType::EMISSIVE);
+    renderParticleSystems();
 
     if (ctx.hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
       renderReflections();
@@ -710,6 +676,45 @@ namespace Gamma {
     OpenGLScreenQuad::render();
 
     glEnable(GL_BLEND);
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderParticleSystems() {
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    glStencilFunc(GL_ALWAYS, 0xFF, 0xFF);
+    glStencilMask(MeshType::PARTICLE_SYSTEM);
+
+    shaders.particles.use();
+    shaders.particles.setMatrix4f("projection", ctx.projection);
+    shaders.particles.setMatrix4f("view", ctx.view);
+    shaders.particles.setFloat("time", AbstractScene::active->getRunningTime());
+
+    for (auto& glMesh : glMeshes) {
+      if (glMesh->isMeshType(MeshType::PARTICLE_SYSTEM)) {
+        auto& particles = glMesh->getSourceMesh()->particleSystem;
+
+        shaders.particles.setInt("particles.total", glMesh->getObjectCount());
+        shaders.particles.setVec3f("particles.spawn", particles.spawn);
+        shaders.particles.setFloat("particles.spread", particles.spread);
+        shaders.particles.setFloat("particles.minimum_radius", particles.minimumRadius);
+        shaders.particles.setFloat("particles.median_speed", particles.medianSpeed);
+        shaders.particles.setFloat("particles.speed_variation", particles.speedVariation);
+        shaders.particles.setFloat("particles.median_size", particles.medianSize);
+        shaders.particles.setFloat("particles.size_variation", particles.sizeVariation);
+        shaders.particles.setFloat("particles.deviation", particles.deviation);
+        shaders.particles.setBool("particles.is_circuit", particles.isCircuit);
+
+        glMesh->render(ctx.primitiveMode);
+      }
+    }
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
+    glStencilMask(MeshType::EMISSIVE);
   }
 
   /**
