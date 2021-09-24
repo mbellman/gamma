@@ -34,7 +34,7 @@ void main() {
 
     @include('inline/directional-light.glsl');
 
-    accumulatedColor += illuminated_color + hack_ambient_light;
+    accumulatedColor += illuminated_color;
   }
 
   out_colorAndDepth = vec4(accumulatedColor, frag_colorAndDepth.w);

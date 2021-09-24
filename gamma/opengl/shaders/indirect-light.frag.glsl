@@ -1,5 +1,9 @@
 #version 460 core
 
+#define USE_INDIRECT_SKY_LIGHT 1
+#define USE_SCREEN_SPACE_AMBIENT_OCCLUSION 1    // @todo
+#define USE_SCREEN_SPACE_GLOBAL_ILLUMINATION 1  // @todo
+
 uniform sampler2D colorAndDepth;
 uniform sampler2D normalAndSpecularity;
 uniform vec3 cameraPosition;
@@ -42,6 +46,28 @@ vec3 getSkyColor(vec3 direction) {
   );
 }
 
+const vec3 sky_sample_offsets[] = {
+  vec3(0),
+  vec3(1, 0, 0),
+  vec3(-1, 0, 0),
+  vec3(0, 1, 0),
+  vec3(0, -1, 0),
+  vec3(0, 0, 1),
+  vec3(0, 0, -1)
+};
+
+vec3 getSkyContribution(vec3 fragment_color, vec3 fragment_normal) {
+  vec3 contribution = vec3(0);
+
+  for (int i = 0; i < 7; i++) {
+    vec3 direction = normalize(fragment_normal + sky_sample_offsets[i]);
+
+    contribution += fragment_color * getSkyColor(direction) * intensity;
+  }
+
+  return contribution / 7.0;
+}
+
 void main() {
   vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
   vec4 frag_normal_and_specularity = texture(normalAndSpecularity, fragUv);
@@ -52,6 +78,5 @@ void main() {
   vec3 normalized_camera_to_fragment = normalize(position - cameraPosition);
   vec3 reflection = reflect(normalized_camera_to_fragment, normal);
 
-  // @todo sample several sky rays and average them
-  out_color_and_depth = vec4(color * getSkyColor(normal) * intensity, frag_color_and_depth.w);
+  out_color_and_depth = vec4(getSkyContribution(color, normal), frag_color_and_depth.w);
 }

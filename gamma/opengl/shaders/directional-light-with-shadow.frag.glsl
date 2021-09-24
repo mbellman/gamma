@@ -133,5 +133,5 @@ void main() {
 
   float light_intensity = getLightIntensity(cascade, shadow_map_transform);
 
-  out_color_and_depth = vec4(illuminated_color * light_intensity + hack_ambient_light, frag_color_and_depth.w);
+  out_color_and_depth = vec4(illuminated_color * light_intensity, frag_color_and_depth.w);
 }
