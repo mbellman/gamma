@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdio>
 #include <map>
 
@@ -696,6 +697,11 @@ namespace Gamma {
       if (glMesh->isMeshType(MeshType::PARTICLE_SYSTEM)) {
         auto& particles = glMesh->getSourceMesh()->particleSystem;
 
+        // @optimize it would be preferable to use a UBO for particle systems,
+        // and simply set the particle system ID uniform here. we're doing
+        // too many uniform updates as things currently stand.
+
+        // Set particle system parameters
         shaders.particles.setInt("particles.total", glMesh->getObjectCount());
         shaders.particles.setVec3f("particles.spawn", particles.spawn);
         shaders.particles.setFloat("particles.spread", particles.spread);
@@ -705,7 +711,19 @@ namespace Gamma {
         shaders.particles.setFloat("particles.median_size", particles.medianSize);
         shaders.particles.setFloat("particles.size_variation", particles.sizeVariation);
         shaders.particles.setFloat("particles.deviation", particles.deviation);
-        shaders.particles.setBool("particles.is_circuit", particles.isCircuit);
+
+        // Set particle path parameters
+        constexpr static uint32 MAX_PATH_POINTS = 10;
+        uint32 totalPathPoints = std::min((uint32)particles.path.size(), (uint32)10);
+
+        if (totalPathPoints > 0) {
+          for (uint8 i = 0; i < totalPathPoints; i++) {
+            shaders.particles.setVec3f("path.points[" + std::to_string(i) + "]", particles.path[i]);
+          }
+        }
+
+        shaders.particles.setInt("path.total", totalPathPoints);
+        shaders.particles.setBool("path.is_circuit", particles.isCircuit);
 
         glMesh->render(ctx.primitiveMode);
       }

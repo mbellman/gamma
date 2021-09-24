@@ -37,6 +37,17 @@ void DemoScene::init() {
   particles.deviation = 3.0f;
   particles.isCircuit = true;
 
+  particles.path = {
+    Vec3f(0.0f, 20.0f, 0.0f),
+    Vec3f(20.0f, -10.0f, -40.0f),
+    Vec3f(50.0f, 40.0f, 10.0f),
+    Vec3f(0.0f, 30.0f, 10.0f),
+    Vec3f(-20.0f, 40.0f, 35.0f),
+    Vec3f(-40.0f, 15.0f, 25.0f),
+    Vec3f(-60.0f, 20.0f, -30.0f),
+    Vec3f(-5.0f, 20.0f, -5)
+  };
+
   // mesh("plane").type = MeshType::REFLECTIVE;
   // mesh("daVinci").type = MeshType::REFRACTIVE;
 

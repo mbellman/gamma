@@ -1,5 +1,7 @@
 #version 460 core
 
+#define MAX_PATH_POINTS 10
+
 struct ParticleSystem {
   int total;
   vec3 spawn;
@@ -10,6 +12,11 @@ struct ParticleSystem {
   float median_size;
   float size_variation;
   float deviation;
+};
+
+struct ParticlePath {
+  int total;
+  vec3 points[MAX_PATH_POINTS];
   bool is_circuit;
 };
 
@@ -17,6 +24,7 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform float time;
 uniform ParticleSystem particles;
+uniform ParticlePath path;
 
 layout (location = 0) in vec3 vertexPosition;
 layout (location = 1) in vec3 vertexNormal;
@@ -30,26 +38,6 @@ flat out vec3 color;
 @include('utils/gl.glsl');
 
 float particle_id = float(gl_InstanceID);
-
-// const int total_path_points = 2;
-
-// vec3 particle_path[total_path_points] = {
-//   vec3(0, 500, 0),
-//   vec3(-10, -500, 0)
-// };
-
-const int total_path_points = 8;
-
-vec3 particle_path[total_path_points] = {
-  vec3(0.0, 20.0, 0.0),
-  vec3(20.0, -10.0, -40.0),
-  vec3(50.0, 40.0, 10.0),
-  vec3(0, 30, 10),
-  vec3(-20, 40, 35),
-  vec3(-40, 15, 25),
-  vec3(-60, 20, -30),
-  vec3(-5, 20, -5)
-};
 
 // @todo improve the degree of randomness here + move to utils
 float random(vec2 seed){
@@ -95,20 +83,13 @@ vec3 interpolatePoints(vec3 p1, vec3 p2, vec3 p3, vec3 p4, float alpha) {
 }
 
 /**
- * Returns an adjusted path control point index, wrapping
- * around at the beginning and ending indices to avoid
- * out-of-bounds access.
+ * Returns a path control point by index, wrapping around
+ * for out-of-bounds indexes.
  */
-int getWrappedPathIndex(int index) {
-  if (index < 0) {
-    return total_path_points + index;
-  }
-
-  if (index >= total_path_points) {
-    return index - total_path_points;
-  }
-
-  return index;
+vec3 getPathPoint(int index) {
+  int wrapped_index = int(mod(float(index), float(path.total)));
+  
+  return path.points[wrapped_index];
 }
 
 /**
@@ -128,20 +109,24 @@ vec3 getInitialPosition() {
 /**
  * @todo description
  */
-vec3 getFlowPosition() {
-  float particle_speed = particles.median_speed + random(-particles.speed_variation, particles.speed_variation, particle_id);
-  float path_progress = fract(random(0, 1, particle_id * 1.1) + time * (particle_speed / total_path_points));
+vec3 getPathPosition() {
+  if (path.total == 0) {
+    return vec3(0);
+  }
 
-  float path_position = particles.is_circuit
-    ? path_progress * total_path_points
-    : path_progress * (total_path_points - 1);
+  float particle_speed = particles.median_speed + random(-particles.speed_variation, particles.speed_variation, particle_id);
+  float path_progress = fract(random(0, 1, particle_id * 1.1) + time * (particle_speed / path.total));
+
+  float path_position = path.is_circuit
+    ? path_progress * path.total
+    : path_progress * (path.total - 1);
 
   int path_index = int(floor(path_position));
 
-  vec3 p1 = particle_path[getWrappedPathIndex(path_index - 1)];
-  vec3 p2 = particle_path[path_index];
-  vec3 p3 = particle_path[getWrappedPathIndex(path_index + 1)];
-  vec3 p4 = particle_path[getWrappedPathIndex(path_index + 2)];
+  vec3 p1 = getPathPoint(path_index - 1);
+  vec3 p2 = getPathPoint(path_index);
+  vec3 p3 = getPathPoint(path_index + 1);
+  vec3 p4 = getPathPoint(path_index + 2);
 
   float interpolation_factor = fract(path_position);
 
@@ -155,9 +140,9 @@ vec3 getDeviation() {
   float deviation_factor = particles.deviation * sin(particle_id + time);
 
   return vec3(
-    deviation_factor * random(-1, 1, particle_id * 1.1),
-    deviation_factor * random(-1, 1, particle_id * 1.2),
-    deviation_factor * random(-1, 1, particle_id * 1.3)
+    deviation_factor * random(-1, 1, particle_id * 1.4),
+    deviation_factor * random(-1, 1, particle_id * 1.5),
+    deviation_factor * random(-1, 1, particle_id * 1.6)
   );
 }
 
@@ -165,7 +150,7 @@ vec3 getDeviation() {
  * Returns the particle's current position as a function of time.
  */
 vec3 getParticlePosition() {
-  return particles.spawn + getInitialPosition() + getFlowPosition() + getDeviation();
+  return particles.spawn + getInitialPosition() + getPathPosition() + getDeviation();
 }
 
 void main() {

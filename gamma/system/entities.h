@@ -192,6 +192,7 @@ namespace Gamma {
     float medianSize;
     float sizeVariation;
     float deviation;
+    std::vector<Vec3f> path;
     bool isCircuit;
   };
 
