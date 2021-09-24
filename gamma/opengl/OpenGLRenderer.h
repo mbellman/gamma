@@ -23,17 +23,18 @@ namespace Gamma {
   };
 
   struct RendererShaders {
-    OpenGLShader copyFrame;
     OpenGLShader geometry;
     OpenGLShader emissives;
     OpenGLShader particles;
+    OpenGLShader ambientLight;
     OpenGLShader copyDepth;
     OpenGLShader pointLight;
     OpenGLShader directionalLight;
     OpenGLShader spotLight;
+    OpenGLShader skybox;
+    OpenGLShader copyFrame;
     OpenGLShader reflections;
     OpenGLShader reflectionsDenoise;
-    OpenGLShader skybox;
     OpenGLShader refractivePrepass;
     OpenGLShader refractiveGeometry;
 
@@ -111,6 +112,7 @@ namespace Gamma {
     void renderPointShadowMaps();
     void renderSpotShadowMaps();
     void prepareLightingPass();
+    void renderAmbientLight();
     void copyDepthInformationIntoPostBuffer();
     void renderPointLights();
     void renderPointShadowcasters();

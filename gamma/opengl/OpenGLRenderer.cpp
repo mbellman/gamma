@@ -113,13 +113,17 @@ namespace Gamma {
 
     prepareLightingPass();
 
-    if (
-      ctx.directionalLights.size() == 0 &&
-      ctx.directionalShadowcasters.size() == 0 &&
-      (ctx.hasReflectiveObjects || ctx.hasRefractiveObjects)
-    ) {
-      copyDepthInformationIntoPostBuffer();
-    }
+    // @todo make ambient light optional with a flag;
+    // use conditional copy depth shader if flag is off
+    renderAmbientLight();
+
+    // if (
+    //   ctx.directionalLights.size() == 0 &&
+    //   ctx.directionalShadowcasters.size() == 0 &&
+    //   (ctx.hasReflectiveObjects || ctx.hasRefractiveObjects)
+    // ) {
+    //   copyDepthInformationIntoPostBuffer();
+    // }
 
     if (ctx.pointLights.size() > 0) {
       renderPointLights();
@@ -484,6 +488,23 @@ namespace Gamma {
     glEnable(GL_STENCIL_TEST);
     glStencilFunc(GL_LESS, MeshType::PARTICLE_SYSTEM, 0xFF);
     glStencilMask(0x00);
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderAmbientLight() {
+    auto& shader = shaders.ambientLight;
+
+    shader.use();
+    shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+    shader.setInt("colorAndDepth", 0);
+    shader.setInt("normalAndSpecularity", 1);
+    shader.setVec3f("cameraPosition", Camera::active->position);
+    shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
+    shader.setMatrix4f("inverseView", ctx.inverseView);
+
+    OpenGLScreenQuad::render();
   }
 
   /**
