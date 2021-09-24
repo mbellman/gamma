@@ -714,7 +714,7 @@ namespace Gamma {
 
         // Set particle path parameters
         constexpr static uint32 MAX_PATH_POINTS = 10;
-        uint32 totalPathPoints = std::min((uint32)particles.path.size(), (uint32)10);
+        uint32 totalPathPoints = std::min((uint32)particles.path.size(), (uint32)MAX_PATH_POINTS);
 
         if (totalPathPoints > 0) {
           for (uint8 i = 0; i < totalPathPoints; i++) {
