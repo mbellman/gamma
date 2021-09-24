@@ -53,5 +53,5 @@ void main() {
   vec3 reflection = reflect(normalized_camera_to_fragment, normal);
 
   // @todo sample several sky rays and average them
-  out_color_and_depth = vec4(color * getSkyColor(reflection) * intensity, frag_color_and_depth.w);
+  out_color_and_depth = vec4(color * getSkyColor(normal) * intensity, frag_color_and_depth.w);
 }

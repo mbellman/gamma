@@ -42,11 +42,6 @@ namespace Gamma {
     shaders.particles.fragment("./gamma/opengl/shaders/particle-system.frag.glsl");
     shaders.particles.link();
 
-    shaders.ambientLight.init();
-    shaders.ambientLight.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    shaders.ambientLight.fragment("./gamma/opengl/shaders/ambient-light.frag.glsl");
-    shaders.ambientLight.link();
-
     shaders.copyDepth.init();
     shaders.copyDepth.vertex("./gamma/opengl/shaders/quad.vert.glsl");
     shaders.copyDepth.fragment("./gamma/opengl/shaders/copy-depth.frag.glsl");
@@ -97,6 +92,11 @@ namespace Gamma {
     shaders.spotShadowcasterView.vertex("./gamma/opengl/shaders/spot-light-view.vert.glsl");
     shaders.spotShadowcasterView.fragment("./gamma/opengl/shaders/spot-light-view.frag.glsl");
     shaders.spotShadowcasterView.link();
+
+    shaders.indirectLight.init();
+    shaders.indirectLight.vertex("./gamma/opengl/shaders/quad.vert.glsl");
+    shaders.indirectLight.fragment("./gamma/opengl/shaders/indirect-light.frag.glsl");
+    shaders.indirectLight.link();
 
     shaders.skybox.init();
     shaders.skybox.vertex("./gamma/opengl/shaders/quad.vert.glsl");
@@ -150,7 +150,6 @@ namespace Gamma {
     shaders.geometry.destroy();
     shaders.particles.destroy();
     shaders.copyDepth.destroy();
-    shaders.ambientLight.destroy();
     shaders.pointLight.destroy();
     shaders.pointShadowcaster.destroy();
     shaders.pointShadowcasterView.destroy();
@@ -160,6 +159,7 @@ namespace Gamma {
     shaders.spotLight.destroy();
     shaders.spotShadowcaster.destroy();
     shaders.spotShadowcasterView.destroy();
+    shaders.indirectLight.destroy();
     shaders.skybox.destroy();
     shaders.copyFrame.destroy();
     shaders.reflections.destroy();

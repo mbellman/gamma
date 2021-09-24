@@ -113,10 +113,6 @@ namespace Gamma {
 
     prepareLightingPass();
 
-    // @todo make ambient light optional with a flag;
-    // use conditional copy depth shader if flag is off
-    renderAmbientLight();
-
     // if (
     //   ctx.directionalLights.size() == 0 &&
     //   ctx.directionalShadowcasters.size() == 0 &&
@@ -149,6 +145,9 @@ namespace Gamma {
       renderSpotShadowcasters();
     }
 
+    // @todo make indirect light optional with a flag;
+    // use conditional copy depth shader if flag is off
+    renderIndirectLight();
     renderSkybox();
     renderParticleSystems();
 
@@ -491,23 +490,6 @@ namespace Gamma {
   }
 
   /**
-   * @todo description
-   */
-  void OpenGLRenderer::renderAmbientLight() {
-    auto& shader = shaders.ambientLight;
-
-    shader.use();
-    shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-    shader.setInt("colorAndDepth", 0);
-    shader.setInt("normalAndSpecularity", 1);
-    shader.setVec3f("cameraPosition", Camera::active->position);
-    shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
-    shader.setMatrix4f("inverseView", ctx.inverseView);
-
-    OpenGLScreenQuad::render();
-  }
-
-  /**
    * When no directional lights/shadowcasters are available,
    * we perform a screen pass to copy depth information for
    * all on-screen geometry into the post buffer. During the
@@ -678,6 +660,23 @@ namespace Gamma {
       glShadowMap.buffer.read();
       lightDisc.draw(light);
     }
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderIndirectLight() {
+    auto& shader = shaders.indirectLight;
+
+    shader.use();
+    shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+    shader.setInt("colorAndDepth", 0);
+    shader.setInt("normalAndSpecularity", 1);
+    shader.setVec3f("cameraPosition", Camera::active->position);
+    shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
+    shader.setMatrix4f("inverseView", ctx.inverseView);
+
+    OpenGLScreenQuad::render();
   }
 
   /**
