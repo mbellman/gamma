@@ -747,10 +747,8 @@ namespace Gamma {
         constexpr static uint32 MAX_PATH_POINTS = 10;
         uint32 totalPathPoints = std::min((uint32)particles.path.size(), (uint32)MAX_PATH_POINTS);
 
-        if (totalPathPoints > 0) {
-          for (uint8 i = 0; i < totalPathPoints; i++) {
-            shaders.particles.setVec3f("path.points[" + std::to_string(i) + "]", particles.path[i]);
-          }
+        for (uint8 i = 0; i < totalPathPoints; i++) {
+          shaders.particles.setVec3f("path.points[" + std::to_string(i) + "]", particles.path[i]);
         }
 
         shaders.particles.setInt("path.total", totalPathPoints);
