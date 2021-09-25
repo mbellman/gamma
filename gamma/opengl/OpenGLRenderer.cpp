@@ -147,7 +147,18 @@ namespace Gamma {
 
     // @todo make indirect light optional with a flag;
     // use conditional copy depth shader if flag is off
+    //
+    // @todo if we want indirect lighting to include
+    // screen-space global illumination, we'll have to
+    // call writeAccumulatedEffectsBackIntoGBuffer()
+    // to make illuminated colors readable
+    //
+    // @todo see if we can achieve half-size rendering here,
+    // scale up with a denoise/blur pass?
+    // glViewport(0, 0, ctx.internalWidth / 2, ctx.internalHeight / 2);
     renderIndirectLight();
+    // glViewport(0, 0, ctx.internalWidth, ctx.internalHeight);
+
     renderSkybox();
     renderParticleSystems();
 
