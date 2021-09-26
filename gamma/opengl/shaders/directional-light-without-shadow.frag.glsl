@@ -19,7 +19,7 @@ noperspective in vec2 fragUv;
 
 layout (location = 0) out vec4 out_colorAndDepth;
 
-@include('utils/conversion.glsl');
+#include "utils/conversion.glsl";
 
 void main() {
   vec4 frag_colorAndDepth = texture(colorAndDepth, fragUv);
@@ -32,7 +32,7 @@ void main() {
   for (int i = 0; i < MAX_LIGHTS; i++) {
     DirectionalLight light = lights[i];
 
-    @include('inline/directional-light.glsl');
+    #include "inline/directional-light.glsl";
 
     accumulatedColor += illuminated_color;
   }

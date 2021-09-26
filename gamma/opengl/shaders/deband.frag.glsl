@@ -6,7 +6,7 @@ in vec2 fragUv;
 
 layout (location = 0) out vec3 out_color;
 
-@include('utils/random.glsl');
+#include "utils/random.glsl";
 
 /**
  * Applies a noise filter to colors to reduce banding

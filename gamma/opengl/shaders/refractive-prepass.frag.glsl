@@ -5,7 +5,7 @@ uniform sampler2D color_and_depth;
 
 layout (location = 2) out vec4 out_color_and_depth;
 
-@include('utils/conversion.glsl');
+#include "utils/conversion.glsl";
 
 vec2 getPixelCoords() {
   return gl_FragCoord.xy / vec2(1920.0, 1080.0);

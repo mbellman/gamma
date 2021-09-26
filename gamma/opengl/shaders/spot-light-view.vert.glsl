@@ -11,7 +11,7 @@ layout (location = 4) in mat4 modelMatrix;
 // @todo when adding support for transparent textures
 // out vec2 fragUv;
 
-@include('utils/gl.glsl');
+#include "utils/gl.glsl";
 
 void main() {
   gl_Position = lightMatrix * glMat4(modelMatrix) * vec4(vertexPosition, 1.0);

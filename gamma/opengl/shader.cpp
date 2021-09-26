@@ -11,8 +11,8 @@
 #include "SDL.h"
 
 namespace Gamma {
-  const static std::string INCLUDE_START = "@include('";
-  const static std::string INCLUDE_END = "');";
+  const static std::string INCLUDE_START = "#include \"";
+  const static std::string INCLUDE_END = "\";";
   const static std::string INCLUDE_ROOT_PATH = "./gamma/opengl/shaders/";
 
   /**
@@ -38,7 +38,7 @@ namespace Gamma {
     uint32 nextInclude;
 
     while ((nextInclude = source.find(INCLUDE_START)) != std::string::npos) {
-      // Capture and include code from files specified by @include('...') directives
+      // Capture and include code from files specified by #include "..." directives
       uint32 pathStart = nextInclude + INCLUDE_START.size();
       uint32 pathEnd = source.find(INCLUDE_END, pathStart);
       // @todo store include paths in shader record;

@@ -33,9 +33,9 @@ const float contact_ray_step_size = 1.0;
 const int TOTAL_MARCH_STEPS = 16;
 const int TOTAL_REFINEMENT_STEPS = 6;
 
-@include('utils/gl.glsl');
-@include('utils/conversion.glsl');
-@include('utils/random.glsl');
+#include "utils/gl.glsl";
+#include "utils/conversion.glsl";
+#include "utils/random.glsl";
 
 // @todo allow shader imports; import this function
 // from skybox helpers or similar. track shader dependencies

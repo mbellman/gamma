@@ -27,9 +27,9 @@ flat in Light light;
 
 layout (location = 0) out vec4 out_color_and_depth;
 
-@include('utils/gl.glsl');
-@include('utils/conversion.glsl');
-@include('utils/random.glsl');
+#include "utils/gl.glsl";
+#include "utils/conversion.glsl";
+#include "utils/random.glsl";
 
 vec2 rotatedVogelDisc(int samples, int index) {
   float rotation = noise(1.0) * 3.141592;
@@ -73,7 +73,7 @@ float getLightFactor(vec3 position, float incidence, float light_distance) {
 }
 
 void main() {
-  @include('inline/spot-light.glsl');
+  #include "inline/spot-light.glsl";
 
   float light_factor = getLightFactor(position, incidence, light_distance);
 

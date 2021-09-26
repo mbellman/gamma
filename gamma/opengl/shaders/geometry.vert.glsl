@@ -14,7 +14,7 @@ out vec3 fragTangent;
 out vec3 fragBitangent;
 out vec2 fragUv;
 
-@include('utils/gl.glsl');
+#include "utils/gl.glsl";
 
 /**
  * Returns a bitangent from potentially non-orthonormal

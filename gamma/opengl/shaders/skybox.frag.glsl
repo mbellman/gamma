@@ -8,7 +8,7 @@ noperspective in vec2 fragUv;
 
 layout (location = 0) out vec4 out_colorAndDepth;
 
-@include('utils/conversion.glsl');
+#include "utils/conversion.glsl";
 
 vec3 getSkyColor(vec3 direction) {
   // @todo receive parameters as uniforms

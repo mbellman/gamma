@@ -32,9 +32,9 @@ layout (location = 0) out vec4 out_color_and_depth;
 const float cascade_depth_1 = 200.0;
 const float cascade_depth_2 = 600.0;
 
-@include('utils/gl.glsl');
-@include('utils/conversion.glsl');
-@include('utils/random.glsl');
+#include "utils/gl.glsl";
+#include "utils/conversion.glsl";
+#include "utils/random.glsl";
 
 Cascade getCascadeByDepth(float linearized_depth) {
   if (linearized_depth < cascade_depth_1) {
@@ -122,7 +122,7 @@ void main() {
   vec3 normal = frag_normal_and_specularity.xyz;
   vec3 color = frag_color_and_depth.rgb;
 
-  @include('inline/directional-light.glsl');
+  #include "inline/directional-light.glsl";
 
   Cascade cascade = getCascadeByDepth(getLinearizedDepth(frag_color_and_depth.w));
   vec4 shadow_map_transform = lightMatrices[cascade.index] * glVec4(position);

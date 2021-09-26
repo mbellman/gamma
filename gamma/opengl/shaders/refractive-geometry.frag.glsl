@@ -14,8 +14,8 @@ in vec2 fragUv;
 
 layout (location = 0) out vec4 out_color_and_depth;
 
-@include('utils/gl.glsl');
-@include('utils/conversion.glsl');
+#include "utils/gl.glsl";
+#include "utils/conversion.glsl";
 
 vec2 getPixelCoords() {
   return gl_FragCoord.xy / vec2(1920.0, 1080.0);

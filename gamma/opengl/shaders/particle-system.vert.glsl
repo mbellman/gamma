@@ -35,7 +35,7 @@ layout (location = 4) in mat4 modelMatrix;
 out vec2 fragUv;
 flat out vec3 color;
 
-@include('utils/gl.glsl');
+#include "utils/gl.glsl";
 
 float particle_id = float(gl_InstanceID);
 

@@ -17,8 +17,8 @@ layout (location = 0) out vec4 out_color_and_depth;
 // @todo pass in as a uniform
 const float indirect_sky_light_intensity = 0.15;
 
-@include('utils/conversion.glsl');
-@include('utils/random.glsl');
+#include "utils/conversion.glsl";
+#include "utils/random.glsl";
 
 // @todo allow shader imports; import this function
 // from skybox helpers or similar. track shader dependencies

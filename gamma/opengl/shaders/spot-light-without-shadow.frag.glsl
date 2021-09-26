@@ -23,10 +23,10 @@ flat in Light light;
 
 layout (location = 0) out vec4 out_color_and_depth;
 
-@include('utils/conversion.glsl');
+#include "utils/conversion.glsl";
 
 void main() {
-  @include('inline/spot-light.glsl');
+  #include "inline/spot-light.glsl";
 
   out_color_and_depth = vec4(illuminated_color, frag_color_and_depth.w);
 }

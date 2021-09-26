@@ -11,7 +11,7 @@ uniform mat4 lightView;
 // @todo once mesh textures are checked for alpha
 // out vec2 fragUv;
 
-@include('utils/gl.glsl');
+#include "utils/gl.glsl";
 
 void main() {
   gl_Position = lightView * glMat4(modelMatrix) * vec4(vertexPosition, 1.0);
