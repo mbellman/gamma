@@ -18,6 +18,7 @@
 namespace Gamma {
   struct RendererBuffers {
     OpenGLFrameBuffer gBuffer;
+    OpenGLFrameBuffer indirectLight;
     OpenGLFrameBuffer reflections;
     OpenGLFrameBuffer post;
   };
@@ -31,6 +32,7 @@ namespace Gamma {
     OpenGLShader directionalLight;
     OpenGLShader spotLight;
     OpenGLShader indirectLight;
+    OpenGLShader indirectLightDenoise;
     OpenGLShader skybox;
     OpenGLShader copyFrame;
     OpenGLShader reflections;

@@ -152,13 +152,7 @@ namespace Gamma {
     // screen-space global illumination, we'll have to
     // call writeAccumulatedEffectsBackIntoGBuffer()
     // to make illuminated colors readable
-    //
-    // @todo see if we can achieve half-size rendering here,
-    // scale up with a denoise/blur pass?
-    // glViewport(0, 0, ctx.internalWidth / 2, ctx.internalHeight / 2);
     renderIndirectLight();
-    // glViewport(0, 0, ctx.internalWidth, ctx.internalHeight);
-
     renderSkybox();
     renderParticleSystems();
 
@@ -677,15 +671,27 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderIndirectLight() {
-    auto& shader = shaders.indirectLight;
+    buffers.indirectLight.write();
+    // buffers.gBuffer.shareDepthStencilAttachment(buffers.indirectLight);
 
-    shader.use();
-    shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-    shader.setInt("colorAndDepth", 0);
-    shader.setInt("normalAndSpecularity", 1);
-    shader.setVec3f("cameraPosition", Camera::active->position);
-    shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
-    shader.setMatrix4f("inverseView", ctx.inverseView);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    shaders.indirectLight.use();
+    shaders.indirectLight.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+    shaders.indirectLight.setInt("colorAndDepth", 0);
+    shaders.indirectLight.setInt("normalAndSpecularity", 1);
+    shaders.indirectLight.setVec3f("cameraPosition", Camera::active->position);
+    shaders.indirectLight.setMatrix4f("inverseProjection", ctx.inverseProjection);
+    shaders.indirectLight.setMatrix4f("inverseView", ctx.inverseView);
+
+    OpenGLScreenQuad::render();
+
+    buffers.indirectLight.read();
+    buffers.post.write();
+
+    shaders.indirectLightDenoise.use();
+    shaders.indirectLightDenoise.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+    shaders.indirectLightDenoise.setInt("color", 0);
 
     OpenGLScreenQuad::render();
   }
@@ -816,7 +822,6 @@ namespace Gamma {
     //
     // @todo allow controllable reflection parameters
     glStencilFunc(GL_EQUAL, MeshType::REFLECTIVE, 0xFF);
-    // glViewport(0, 0, ctx.internalWidth / 2, ctx.internalHeight / 2);
 
     shaders.reflections.use();
     shaders.reflections.setVec4f("transform", FULL_SCREEN_TRANSFORM);
@@ -829,7 +834,6 @@ namespace Gamma {
     shaders.reflections.setMatrix4f("inverseProjection", ctx.inverseProjection);
 
     OpenGLScreenQuad::render();
-    // glViewport(0, 0, ctx.internalWidth, ctx.internalHeight);
 
     buffers.reflections.read();
     buffers.post.write();

@@ -19,6 +19,12 @@ namespace Gamma {
     buffers.gBuffer.shareDepthStencilAttachment(buffers.post);
     buffers.post.bindColorAttachments();
 
+    buffers.indirectLight.init();
+    // @todo make half-size rendering optional
+    buffers.indirectLight.setSize({ internalResolution.width / 2, internalResolution.height / 2 });
+    buffers.indirectLight.addColorAttachment(ColorFormat::RGB);  // (RGB) Color
+    buffers.indirectLight.bindColorAttachments();
+
     buffers.reflections.init();
     buffers.reflections.setSize(internalResolution);
     buffers.reflections.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
@@ -98,6 +104,11 @@ namespace Gamma {
     shaders.indirectLight.fragment("./gamma/opengl/shaders/indirect-light.frag.glsl");
     shaders.indirectLight.link();
 
+    shaders.indirectLightDenoise.init();
+    shaders.indirectLightDenoise.vertex("./gamma/opengl/shaders/quad.vert.glsl");
+    shaders.indirectLightDenoise.fragment("./gamma/opengl/shaders/indirect-light-denoise.frag.glsl");
+    shaders.indirectLightDenoise.link();
+
     shaders.skybox.init();
     shaders.skybox.vertex("./gamma/opengl/shaders/quad.vert.glsl");
     shaders.skybox.fragment("./gamma/opengl/shaders/skybox.frag.glsl");
@@ -144,6 +155,7 @@ namespace Gamma {
 
   void Gm_DestroyRendererResources(RendererBuffers& buffers, RendererShaders& shaders) {
     buffers.gBuffer.destroy();
+    buffers.indirectLight.destroy();
     buffers.reflections.destroy();
     buffers.post.destroy();
 
@@ -160,6 +172,7 @@ namespace Gamma {
     shaders.spotShadowcaster.destroy();
     shaders.spotShadowcasterView.destroy();
     shaders.indirectLight.destroy();
+    shaders.indirectLightDenoise.destroy();
     shaders.skybox.destroy();
     shaders.copyFrame.destroy();
     shaders.reflections.destroy();
