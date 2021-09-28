@@ -17,7 +17,8 @@ namespace Gamma {
     RENDER_REFRACTIVE_OBJECTS = 1 << 5,
     RENDER_REFRACTIVE_OBJECTS_WITHIN_REFLECTIONS = 1 << 6,
     RENDER_SHADOWS = 1 << 7,
-    SHOW_DEV_BUFFERS = 1 << 8
+    RENDER_INDIRECT_LIGHT = 1 << 8,
+    RENDER_DEV_BUFFERS = 1 << 9
   };
 
   void Gm_DisableFlags(GammaFlags flags);

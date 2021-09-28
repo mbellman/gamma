@@ -6,7 +6,8 @@ namespace Gamma {
     GammaFlags::RENDER_REFLECTIONS |
     GammaFlags::RENDER_REFRACTIVE_OBJECTS |
     GammaFlags::RENDER_SHADOWS |
-    GammaFlags::SHOW_DEV_BUFFERS;
+    GammaFlags::RENDER_INDIRECT_LIGHT |
+    GammaFlags::RENDER_DEV_BUFFERS;
 
   void Gm_DisableFlags(GammaFlags flags) {
     internalFlags &= ~flags;

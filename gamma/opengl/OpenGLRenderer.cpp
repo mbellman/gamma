@@ -113,13 +113,14 @@ namespace Gamma {
 
     prepareLightingPass();
 
-    // if (
-    //   ctx.directionalLights.size() == 0 &&
-    //   ctx.directionalShadowcasters.size() == 0 &&
-    //   (ctx.hasReflectiveObjects || ctx.hasRefractiveObjects)
-    // ) {
-    //   copyDepthInformationIntoPostBuffer();
-    // }
+    if (
+      ctx.directionalLights.size() == 0 &&
+      ctx.directionalShadowcasters.size() == 0 &&
+      (ctx.hasReflectiveObjects || ctx.hasRefractiveObjects) &&
+      !Gm_IsFlagEnabled(GammaFlags::RENDER_INDIRECT_LIGHT)
+    ) {
+      copyDepthInformationIntoPostBuffer();
+    }
 
     if (ctx.pointLights.size() > 0) {
       renderPointLights();
@@ -145,14 +146,14 @@ namespace Gamma {
       renderSpotShadowcasters();
     }
 
-    // @todo make indirect light optional with a flag;
-    // use conditional copy depth shader if flag is off
-    //
     // @todo if we want indirect lighting to include
     // screen-space global illumination, we'll have to
     // call writeAccumulatedEffectsBackIntoGBuffer()
     // to make illuminated colors readable
-    renderIndirectLight();
+    if (Gm_IsFlagEnabled(GammaFlags::RENDER_INDIRECT_LIGHT)) {
+      renderIndirectLight();
+    }
+
     renderSkybox();
     renderParticleSystems();
 
@@ -167,7 +168,7 @@ namespace Gamma {
     renderPostEffects();
 
     #if GAMMA_DEVELOPER_MODE
-      if (Gm_IsFlagEnabled(GammaFlags::SHOW_DEV_BUFFERS)) {
+      if (Gm_IsFlagEnabled(GammaFlags::RENDER_DEV_BUFFERS)) {
         renderDevBuffers();
       }
     #endif
@@ -672,7 +673,6 @@ namespace Gamma {
    */
   void OpenGLRenderer::renderIndirectLight() {
     buffers.indirectLight.write();
-    // buffers.gBuffer.shareDepthStencilAttachment(buffers.indirectLight);
 
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -686,14 +686,21 @@ namespace Gamma {
 
     OpenGLScreenQuad::render();
 
+    buffers.gBuffer.read();
     buffers.indirectLight.read();
     buffers.post.write();
 
-    shaders.indirectLightDenoise.use();
-    shaders.indirectLightDenoise.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-    shaders.indirectLightDenoise.setInt("color", 0);
+    shaders.indirectLightComposite.use();
+    shaders.indirectLightComposite.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+    shaders.indirectLightComposite.setInt("colorAndDepth", 0);
+    shaders.indirectLightComposite.setInt("normalAndSpecularity", 1);
+    shaders.indirectLightComposite.setInt("indirectLight", 2);
+
+    glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ZERO, GL_ONE);
 
     OpenGLScreenQuad::render();
+
+    glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
   }
 
   /**

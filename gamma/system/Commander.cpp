@@ -14,7 +14,8 @@ namespace Gamma {
     { "refract", "Refractive objects", GammaFlags::RENDER_REFRACTIVE_OBJECTS },
     { "shadow", "Shadows", GammaFlags::RENDER_SHADOWS },
     { "rro", "Reflections of refractive objects", GammaFlags::RENDER_REFRACTIVE_OBJECTS_WITHIN_REFLECTIONS },
-    { "dev buffers", "Dev buffers", GammaFlags::SHOW_DEV_BUFFERS },
+    { "ao", "Indirect lighting", GammaFlags::RENDER_INDIRECT_LIGHT },
+    { "dev buffers", "Dev buffers", GammaFlags::RENDER_DEV_BUFFERS },
     { "wireframe", "Wireframe mode", GammaFlags::WIREFRAME_MODE }
   };
 

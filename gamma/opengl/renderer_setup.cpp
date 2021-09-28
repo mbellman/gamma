@@ -22,7 +22,7 @@ namespace Gamma {
     buffers.indirectLight.init();
     // @todo make half-size rendering optional
     buffers.indirectLight.setSize({ internalResolution.width / 2, internalResolution.height / 2 });
-    buffers.indirectLight.addColorAttachment(ColorFormat::RGB);  // (RGB) Color
+    buffers.indirectLight.addColorAttachment(ColorFormat::RGB, 2);  // (RGB) Color
     buffers.indirectLight.bindColorAttachments();
 
     buffers.reflections.init();
@@ -104,10 +104,10 @@ namespace Gamma {
     shaders.indirectLight.fragment("./gamma/opengl/shaders/indirect-light.frag.glsl");
     shaders.indirectLight.link();
 
-    shaders.indirectLightDenoise.init();
-    shaders.indirectLightDenoise.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    shaders.indirectLightDenoise.fragment("./gamma/opengl/shaders/indirect-light-denoise.frag.glsl");
-    shaders.indirectLightDenoise.link();
+    shaders.indirectLightComposite.init();
+    shaders.indirectLightComposite.vertex("./gamma/opengl/shaders/quad.vert.glsl");
+    shaders.indirectLightComposite.fragment("./gamma/opengl/shaders/indirect-light-composite.frag.glsl");
+    shaders.indirectLightComposite.link();
 
     shaders.skybox.init();
     shaders.skybox.vertex("./gamma/opengl/shaders/quad.vert.glsl");
@@ -172,7 +172,7 @@ namespace Gamma {
     shaders.spotShadowcaster.destroy();
     shaders.spotShadowcasterView.destroy();
     shaders.indirectLight.destroy();
-    shaders.indirectLightDenoise.destroy();
+    shaders.indirectLightComposite.destroy();
     shaders.skybox.destroy();
     shaders.copyFrame.destroy();
     shaders.reflections.destroy();

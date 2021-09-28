@@ -32,7 +32,7 @@ namespace Gamma {
     OpenGLShader directionalLight;
     OpenGLShader spotLight;
     OpenGLShader indirectLight;
-    OpenGLShader indirectLightDenoise;
+    OpenGLShader indirectLightComposite;
     OpenGLShader skybox;
     OpenGLShader copyFrame;
     OpenGLShader reflections;
