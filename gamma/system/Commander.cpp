@@ -14,7 +14,9 @@ namespace Gamma {
     { "refract", "Refractive objects", GammaFlags::RENDER_REFRACTIVE_OBJECTS },
     { "shadow", "Shadows", GammaFlags::RENDER_SHADOWS },
     { "rro", "Reflections of refractive objects", GammaFlags::RENDER_REFRACTIVE_OBJECTS_WITHIN_REFLECTIONS },
-    { "ao", "Indirect lighting", GammaFlags::RENDER_INDIRECT_LIGHT },
+    { "ao", "Ambient occlusion", GammaFlags::RENDER_AMBIENT_OCCLUSION },
+    { "gi", "Global illumination", GammaFlags::RENDER_GLOBAL_ILLUMINATION },
+    { "skylight", "Indirect sky light", GammaFlags::RENDER_INDIRECT_SKY_LIGHT },
     { "dev buffers", "Dev buffers", GammaFlags::RENDER_DEV_BUFFERS },
     { "wireframe", "Wireframe mode", GammaFlags::WIREFRAME_MODE }
   };

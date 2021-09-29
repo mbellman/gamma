@@ -6,8 +6,12 @@ namespace Gamma {
     GammaFlags::RENDER_REFLECTIONS |
     GammaFlags::RENDER_REFRACTIVE_OBJECTS |
     GammaFlags::RENDER_SHADOWS |
-    GammaFlags::RENDER_INDIRECT_LIGHT |
+    GammaFlags::RENDER_AMBIENT_OCCLUSION |
+    GammaFlags::RENDER_INDIRECT_SKY_LIGHT |
+    // @todo GammaFlags::RENDER_GLOBAL_ILLUMINATION |
     GammaFlags::RENDER_DEV_BUFFERS;
+
+  static uint32 previousFlags = internalFlags;
 
   void Gm_DisableFlags(GammaFlags flags) {
     internalFlags &= ~flags;
@@ -17,11 +21,23 @@ namespace Gamma {
     internalFlags |= flags;    
   }
 
+  bool Gm_FlagWasDisabled(GammaFlags flag) {
+    return (previousFlags & flag) && !(internalFlags & flag);
+  }
+
+  bool Gm_FlagWasEnabled(GammaFlags flag) {
+    return !(previousFlags & flag) && (internalFlags & flag);
+  }
+
   uint32 Gm_GetFlags() {
     return internalFlags;
   }
 
   bool Gm_IsFlagEnabled(GammaFlags flag) {
     return internalFlags & flag;
+  }
+
+  void Gm_SavePreviousFlags() {
+    previousFlags = internalFlags;
   }
 }

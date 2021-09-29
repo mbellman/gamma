@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -17,16 +18,12 @@ namespace Gamma {
     std::filesystem::file_time_type lastWriteTime;
   };
 
-  GLShaderRecord Gm_CompileShader(GLenum shaderType, const char* path);
-  GLShaderRecord Gm_CompileFragmentShader(const char* path);
-  GLShaderRecord Gm_CompileGeometryShader(const char* path);
-  GLShaderRecord Gm_CompileVertexShader(const char* path);
-
   class OpenGLShader : public Initable, public Destroyable {
   public:
     virtual void init() override;
     virtual void destroy() override;
     void attachShader(const GLShaderRecord& record);
+    void define(const std::map<std::string, std::string>& variables);
     void fragment(const char* path);
     void geometry(const char* path);
     void link();

@@ -66,13 +66,11 @@ vec3 getIndirectSkyLightContribution(vec3 fragment_color, vec3 fragment_normal) 
 }
 
 void main() {
-  vec2 texel_size = 1.0 / vec2(1920.0, 1080.0);
-  vec3 color = texture(colorAndDepth, fragUv).rgb;
-  vec3 normal = texture(normalAndSpecularity, fragUv).xyz;
-
   vec3 average_indirect_light = vec3(0);
+  vec3 indirect_sky_light = vec3(0);
 
   #if USE_AVERAGE_INDIRECT_LIGHT == 1
+    vec2 texel_size = 1.0 / vec2(1920.0, 1080.0);
     int total_samples = 0;
 
     for (int i = -4; i <= 4; i += 4) {
@@ -90,7 +88,12 @@ void main() {
     average_indirect_light /= float(total_samples);
   #endif
 
-  vec3 indirect_sky_light_contribution = getIndirectSkyLightContribution(color, normal);
+  #if USE_INDIRECT_SKY_LIGHT == 1
+    vec3 color = texture(colorAndDepth, fragUv).rgb;
+    vec3 normal = texture(normalAndSpecularity, fragUv).xyz;
 
-  out_color_and_depth = vec4(average_indirect_light + indirect_sky_light_contribution, 0);
+    indirect_sky_light = getIndirectSkyLightContribution(color, normal);
+  #endif
+
+  out_color_and_depth = vec4(average_indirect_light + indirect_sky_light, 0);
 }

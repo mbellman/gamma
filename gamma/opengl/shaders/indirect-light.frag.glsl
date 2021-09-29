@@ -91,5 +91,9 @@ void main() {
     // @todo (?) reduce AO contribution at grazing angles to prevent excessive darkening
   #endif
 
+  #if USE_SCREEN_SPACE_GLOBAL_ILLUMINATION == 1
+    // @todo
+  #endif
+
   out_color_and_depth = vec4(indirect_light, frag_color_and_depth.w);
 }

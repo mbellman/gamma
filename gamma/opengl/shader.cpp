@@ -14,6 +14,7 @@ namespace Gamma {
   const static std::string INCLUDE_START = "#include \"";
   const static std::string INCLUDE_END = "\";";
   const static std::string INCLUDE_ROOT_PATH = "./gamma/opengl/shaders/";
+  const static std::map<std::string, std::string> emptyMap;
 
   /**
    * Gm_VectorContains
@@ -27,25 +28,23 @@ namespace Gamma {
   /**
    * Gm_CompileShader
    * ----------------
-   *
-   * @todo allow #define constants to be controlled + shader recompiled on change
    */
-  GLShaderRecord Gm_CompileShader(GLenum shaderType, const char* path) {
+  static GLShaderRecord Gm_CompileShader(GLenum shaderType, const char* path, const std::map<std::string, std::string>& defineOverrides = emptyMap) {
     GLuint shader = glCreateShader(shaderType);
 
     std::string source = Gm_LoadFileContents(path);
     std::vector<std::string> includes;
-    uint32 nextInclude;
+    uint32 currentInclude;
 
-    while ((nextInclude = source.find(INCLUDE_START)) != std::string::npos) {
-      // Capture and include code from files specified by #include "..." directives
-      uint32 pathStart = nextInclude + INCLUDE_START.size();
+    // Handle #include directives
+    while ((currentInclude = source.find(INCLUDE_START)) != std::string::npos) {
+      uint32 pathStart = currentInclude + INCLUDE_START.size();
       uint32 pathEnd = source.find(INCLUDE_END, pathStart);
       // @todo store include paths in shader record;
       // check all included files when hot reloading
       std::string includePath = INCLUDE_ROOT_PATH + source.substr(pathStart, pathEnd - pathStart);
-      uint32 replaceStart = nextInclude;
-      uint32 replaceLength = (pathEnd + INCLUDE_END.size()) - nextInclude;
+      uint32 replaceStart = currentInclude;
+      uint32 replaceLength = (pathEnd + INCLUDE_END.size()) - currentInclude;
 
       if (Gm_VectorContains(includes, includePath)) {
         // File already included; simply remove the directive
@@ -56,6 +55,19 @@ namespace Gamma {
 
         source.replace(replaceStart, replaceLength, includeSource);
         includes.push_back(includePath);
+      }
+    }
+
+    // Handle #define variable overrides
+    for (auto& [ name, value ] : defineOverrides) {
+      std::string defineDirective = "#define " + name + " ";
+      uint32 directiveStart = source.find(defineDirective);
+
+      if (directiveStart != std::string::npos) {
+        uint32 valueStart = directiveStart + defineDirective.size();
+        uint32 valueEnd = source.find("\n", valueStart);
+
+        source.replace(valueStart, valueEnd - valueStart, value);
       }
     }
 
@@ -90,7 +102,7 @@ namespace Gamma {
    * Gm_CompileFragmentShader
    * ------------------------
    */
-  GLShaderRecord Gm_CompileFragmentShader(const char* path) {
+  static GLShaderRecord Gm_CompileFragmentShader(const char* path) {
     return Gm_CompileShader(GL_FRAGMENT_SHADER, path);
   }
 
@@ -98,7 +110,7 @@ namespace Gamma {
    * Gm_CompileGeometryShader
    * ------------------------
    */
-  GLShaderRecord Gm_CompileGeometryShader(const char* path) {
+  static GLShaderRecord Gm_CompileGeometryShader(const char* path) {
     return Gm_CompileShader(GL_GEOMETRY_SHADER, path);
   }
 
@@ -106,7 +118,7 @@ namespace Gamma {
    * Gm_CompileVertexShader
    * ----------------------
    */
-  GLShaderRecord Gm_CompileVertexShader(const char* path) {
+  static GLShaderRecord Gm_CompileVertexShader(const char* path) {
     return Gm_CompileShader(GL_VERTEX_SHADER, path);
   }
 
@@ -155,6 +167,23 @@ namespace Gamma {
 
       lastShaderFileCheckTime = SDL_GetTicks();
     }
+  }
+
+  // @todo merge defineOverrides into an internal map of active
+  // overrides to avoid resetting unspecified variables
+  void OpenGLShader::define(const std::map<std::string, std::string>& defineOverrides) {
+    for (auto& record : glShaderRecords) {
+      glDetachShader(program, record.shader);
+      glDeleteShader(record.shader);
+
+      GLShaderRecord& updatedRecord = Gm_CompileShader(record.shaderType, record.path.c_str(), defineOverrides);
+
+      glAttachShader(program, updatedRecord.shader);
+
+      record = updatedRecord;
+    }
+
+    glLinkProgram(program);
   }
 
   void OpenGLShader::fragment(const char* path) {

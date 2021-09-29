@@ -94,7 +94,7 @@ namespace Gamma {
 
     initializeRendererContext();
     initializeLightArrays();
-    handleVsyncChanges();
+    handleSettingsChanges();
     renderSceneToGBuffer();
 
     if (Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
@@ -117,7 +117,8 @@ namespace Gamma {
       ctx.directionalLights.size() == 0 &&
       ctx.directionalShadowcasters.size() == 0 &&
       (ctx.hasReflectiveObjects || ctx.hasRefractiveObjects) &&
-      !Gm_IsFlagEnabled(GammaFlags::RENDER_INDIRECT_LIGHT)
+      !Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION) &&
+      !Gm_IsFlagEnabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)
     ) {
       copyDepthInformationIntoPostBuffer();
     }
@@ -146,11 +147,16 @@ namespace Gamma {
       renderSpotShadowcasters();
     }
 
-    // @todo if we want indirect lighting to include
-    // screen-space global illumination, we'll have to
-    // call writeAccumulatedEffectsBackIntoGBuffer()
-    // to make illuminated colors readable
-    if (Gm_IsFlagEnabled(GammaFlags::RENDER_INDIRECT_LIGHT)) {
+    if (
+      Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION) ||
+      Gm_IsFlagEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION) ||
+      Gm_IsFlagEnabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)
+    ) {
+      // @todo if we want indirect lighting to include
+      // screen-space global illumination, we'll have to
+      // call writeAccumulatedEffectsBackIntoGBuffer()
+      // to make illuminated colors readable - use swappable
+      // accumulation buffers instead?
       renderIndirectLight();
     }
 
@@ -266,19 +272,51 @@ namespace Gamma {
   /**
    * @todo description
    */
-  void OpenGLRenderer::handleVsyncChanges() {
-    if (Gm_IsFlagEnabled(GammaFlags::VSYNC) && SDL_GL_GetSwapInterval() == 0) {
+  void OpenGLRenderer::handleSettingsChanges() {
+    if (Gm_FlagWasEnabled(GammaFlags::VSYNC)) {
       SDL_GL_SetSwapInterval(1);
 
       #if GAMMA_DEVELOPER_MODE
         Console::log("[Gamma] V-Sync enabled");
       #endif
-    } else if (!Gm_IsFlagEnabled(GammaFlags::VSYNC) && SDL_GL_GetSwapInterval() == 1) {
+    } else if (Gm_FlagWasDisabled(GammaFlags::VSYNC)) {
       SDL_GL_SetSwapInterval(0);
 
       #if GAMMA_DEVELOPER_MODE
         Console::log("[Gamma] V-Sync disabled");
       #endif
+    }
+
+    if (Gm_FlagWasEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)) {
+      shaders.indirectLight.define({
+        { "USE_SCREEN_SPACE_AMBIENT_OCCLUSION", "1" }
+      });
+
+      shaders.indirectLightComposite.define({
+        { "USE_AVERAGE_INDIRECT_LIGHT", "1" }
+      });
+    } else if (Gm_FlagWasDisabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)) {
+      shaders.indirectLight.define({
+        { "USE_SCREEN_SPACE_AMBIENT_OCCLUSION", "0" }
+      });
+
+      if (!Gm_IsFlagEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)) {
+        shaders.indirectLightComposite.define({
+          { "USE_AVERAGE_INDIRECT_LIGHT", "0" }
+        });
+      }
+    }
+
+    if (Gm_FlagWasEnabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)) {
+      // @bug this resets "USE_AVERAGE_INDIRECT_LIGHT" to "1";
+      // fix this in OpenGLShader::define() by saving active overrides
+      shaders.indirectLightComposite.define({
+        { "USE_INDIRECT_SKY_LIGHT", "1" }
+      });
+    } else if (Gm_FlagWasDisabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)) {
+      shaders.indirectLightComposite.define({
+        { "USE_INDIRECT_SKY_LIGHT", "0" }
+      });
     }
   }
 
@@ -672,23 +710,28 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderIndirectLight() {
-    buffers.indirectLight.write();
+    if (
+      Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION) ||
+      Gm_IsFlagEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)
+    ) {
+      buffers.indirectLight.write();
 
-    glClear(GL_COLOR_BUFFER_BIT);
+      glClear(GL_COLOR_BUFFER_BIT);
 
-    shaders.indirectLight.use();
-    shaders.indirectLight.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-    shaders.indirectLight.setInt("colorAndDepth", 0);
-    shaders.indirectLight.setInt("normalAndSpecularity", 1);
-    shaders.indirectLight.setVec3f("cameraPosition", Camera::active->position);
-    shaders.indirectLight.setMatrix4f("inverseProjection", ctx.inverseProjection);
-    shaders.indirectLight.setMatrix4f("inverseView", ctx.inverseView);
+      shaders.indirectLight.use();
+      shaders.indirectLight.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+      shaders.indirectLight.setInt("colorAndDepth", 0);
+      shaders.indirectLight.setInt("normalAndSpecularity", 1);
+      shaders.indirectLight.setVec3f("cameraPosition", Camera::active->position);
+      shaders.indirectLight.setMatrix4f("inverseProjection", ctx.inverseProjection);
+      shaders.indirectLight.setMatrix4f("inverseView", ctx.inverseView);
 
-    OpenGLScreenQuad::render();
+      OpenGLScreenQuad::render();
 
-    buffers.gBuffer.read();
-    buffers.indirectLight.read();
-    buffers.post.write();
+      buffers.gBuffer.read();
+      buffers.indirectLight.read();
+      buffers.post.write();
+    }
 
     shaders.indirectLightComposite.use();
     shaders.indirectLightComposite.setVec4f("transform", FULL_SCREEN_TRANSFORM);

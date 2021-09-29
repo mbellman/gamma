@@ -180,6 +180,8 @@ namespace Gamma {
           frameTimeAverager.add(microseconds);
         }
       }
+
+      Gm_SavePreviousFlags();
     }
 
     // Post-quit cleanup

@@ -17,12 +17,17 @@ namespace Gamma {
     RENDER_REFRACTIVE_OBJECTS = 1 << 5,
     RENDER_REFRACTIVE_OBJECTS_WITHIN_REFLECTIONS = 1 << 6,
     RENDER_SHADOWS = 1 << 7,
-    RENDER_INDIRECT_LIGHT = 1 << 8,
-    RENDER_DEV_BUFFERS = 1 << 9
+    RENDER_AMBIENT_OCCLUSION = 1 << 8,
+    RENDER_GLOBAL_ILLUMINATION = 1 << 9,  // @todo
+    RENDER_INDIRECT_SKY_LIGHT = 1 << 10,
+    RENDER_DEV_BUFFERS = 1 << 11
   };
 
   void Gm_DisableFlags(GammaFlags flags);
   void Gm_EnableFlags(GammaFlags flags);
+  bool Gm_FlagWasDisabled(GammaFlags flag);
+  bool Gm_FlagWasEnabled(GammaFlags flag);
   uint32 Gm_GetFlags();
   bool Gm_IsFlagEnabled(GammaFlags flag);
+  void Gm_SavePreviousFlags();
 }

@@ -108,7 +108,7 @@ namespace Gamma {
 
     void initializeRendererContext();
     void initializeLightArrays();
-    void handleVsyncChanges();
+    void handleSettingsChanges();
     void renderSceneToGBuffer();
     void renderDirectionalShadowMaps();
     void renderPointShadowMaps();
