@@ -20,7 +20,8 @@ namespace Gamma {
     OpenGLFrameBuffer gBuffer;
     OpenGLFrameBuffer indirectLight;
     OpenGLFrameBuffer reflections;
-    OpenGLFrameBuffer post;
+    OpenGLFrameBuffer accumulation1;
+    OpenGLFrameBuffer accumulation2;
   };
 
   struct RendererShaders {
@@ -69,6 +70,8 @@ namespace Gamma {
     Matrix4f inverseProjection;
     Matrix4f view;
     Matrix4f inverseView;
+    OpenGLFrameBuffer* accumulationSource = nullptr;
+    OpenGLFrameBuffer* accumulationTarget = nullptr;
     // @todo target (fbo)
   };
 
@@ -114,7 +117,7 @@ namespace Gamma {
     void renderPointShadowMaps();
     void renderSpotShadowMaps();
     void prepareLightingPass();
-    void copyDepthInformationIntoPostBuffer();
+    void copyDepthIntoAccumulationBuffer();
     void renderPointLights();
     void renderPointShadowcasters();
     void renderDirectionalLights();
@@ -129,7 +132,8 @@ namespace Gamma {
     void renderPostEffects();
     void renderDevBuffers();
 
+    void copyAccumulatedEffects();
+    void swapAccumulationBuffers();
     void renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background);
-    void writeAccumulatedEffectsBackIntoGBuffer();
   };
 }

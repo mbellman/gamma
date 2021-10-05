@@ -63,7 +63,6 @@ vec3 getScreenSpaceAmbientOcclusionContribution(float fragment_depth) {
     vec2 offset = texel_size * radius * rotatedVogelDisc(10, i);
     float compared_depth = getLinearizedDepth(texture(colorAndDepth, fragUv + offset).w);
 
-    // @todo use a distance or normal check to avoid face self-occlusion
     if (compared_depth < linearized_fragment_depth - 0.2) {
       float occluder_distance = linearized_fragment_depth - compared_depth;
 
@@ -87,8 +86,6 @@ void main() {
 
   #if USE_SCREEN_SPACE_AMBIENT_OCCLUSION == 1
     indirect_light += getScreenSpaceAmbientOcclusionContribution(frag_color_and_depth.w);
-
-    // @todo (?) reduce AO contribution at grazing angles to prevent excessive darkening
   #endif
 
   #if USE_SCREEN_SPACE_GLOBAL_ILLUMINATION == 1

@@ -120,7 +120,7 @@ namespace Gamma {
       !Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION) &&
       !Gm_IsFlagEnabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)
     ) {
-      copyDepthInformationIntoPostBuffer();
+      copyDepthIntoAccumulationBuffer();
     }
 
     if (ctx.pointLights.size() > 0) {
@@ -152,23 +152,23 @@ namespace Gamma {
       Gm_IsFlagEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION) ||
       Gm_IsFlagEnabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)
     ) {
-      // @todo if we want indirect lighting to include
-      // screen-space global illumination, we'll have to
-      // call writeAccumulatedEffectsBackIntoGBuffer()
-      // to make illuminated colors readable - use swappable
-      // accumulation buffers instead?
       renderIndirectLight();
     }
 
+    glDisable(GL_BLEND);
+
     renderSkybox();
+
+    // @todo if (ctx.hasParticleSystems)
     renderParticleSystems();
 
+    // @todo make sure reflections/refractions are working again
     if (ctx.hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
-      renderReflections();
+      // renderReflections();
     }
 
     if (ctx.hasRefractiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS)) {
-      renderRefractiveObjects();
+      // renderRefractiveObjects();
     }
 
     renderPostEffects();
@@ -187,6 +187,10 @@ namespace Gamma {
    */
   void OpenGLRenderer::initializeRendererContext() {
     auto& camera = *Camera::active;
+
+    // Accumulation buffers
+    ctx.accumulationSource = &buffers.accumulation1;
+    ctx.accumulationTarget = &buffers.accumulation2;
 
     // Render dimensions/primitive type
     ctx.internalWidth = internalResolution.width;
@@ -520,7 +524,7 @@ namespace Gamma {
    */
   void OpenGLRenderer::prepareLightingPass() {
     buffers.gBuffer.read();
-    buffers.post.write();
+    ctx.accumulationTarget->write();
 
     glViewport(0, 0, ctx.internalWidth, ctx.internalHeight);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -536,16 +540,12 @@ namespace Gamma {
   /**
    * When no directional lights/shadowcasters are available,
    * we perform a screen pass to copy depth information for
-   * all on-screen geometry into the post buffer. During the
-   * reflection and refractive geometry passes, we copy the
-   * post buffer back into G-Buffer attachment 2 so that
-   * accumulated effects and normals can continue to be read
-   * when writing to the post buffer again. If we don't do
-   * this, reflections and refractions will miss any surfaces
-   * which aren't directly illuminated, i.e. otherwise written
-   * to the post buffer in the directional lighting passes.
+   * all on-screen geometry into the target accumulation buffer.
+   * If we don't do this, reflections and refractions will miss
+   * any surfaces which aren't directly illuminated, i.e. otherwise
+   * written to the accumulation buffer in the lighting passes.
    */
-  void OpenGLRenderer::copyDepthInformationIntoPostBuffer() {
+  void OpenGLRenderer::copyDepthIntoAccumulationBuffer() {
     auto& shader = shaders.copyDepth;
 
     shader.use();
@@ -714,6 +714,8 @@ namespace Gamma {
       Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION) ||
       Gm_IsFlagEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)
     ) {
+      buffers.gBuffer.read();
+      ctx.accumulationTarget->read();
       buffers.indirectLight.write();
 
       glClear(GL_COLOR_BUFFER_BIT);
@@ -727,11 +729,11 @@ namespace Gamma {
       shaders.indirectLight.setMatrix4f("inverseView", ctx.inverseView);
 
       OpenGLScreenQuad::render();
-
-      buffers.gBuffer.read();
-      buffers.indirectLight.read();
-      buffers.post.write();
     }
+
+    buffers.gBuffer.read();
+    buffers.indirectLight.read();
+    ctx.accumulationTarget->write();
 
     shaders.indirectLightComposite.use();
     shaders.indirectLightComposite.setVec4f("transform", FULL_SCREEN_TRANSFORM);
@@ -750,10 +752,9 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderSkybox() {
-    auto& camera = *Camera::active;
-
-    glDisable(GL_BLEND);
     glStencilFunc(GL_EQUAL, MeshType::EMISSIVE, 0xFF);
+
+    auto& camera = *Camera::active;
 
     shaders.skybox.use();
     shaders.skybox.setVec4f("transform", FULL_SCREEN_TRANSFORM);
@@ -762,14 +763,13 @@ namespace Gamma {
     shaders.skybox.setMatrix4f("inverseView", ctx.inverseView);
 
     OpenGLScreenQuad::render();
-
-    glEnable(GL_BLEND);
   }
 
   /**
    * @todo description
    */
   void OpenGLRenderer::renderParticleSystems() {
+    glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
     glStencilFunc(GL_ALWAYS, 0xFF, 0xFF);
@@ -834,7 +834,8 @@ namespace Gamma {
     // emissive geometry can still be reflected
     glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
 
-    writeAccumulatedEffectsBackIntoGBuffer();
+    // copyAccumulatedEffects();
+    // ctx.accumulationSource->read();
 
     if (
       ctx.hasRefractiveObjects &&
@@ -886,7 +887,7 @@ namespace Gamma {
     OpenGLScreenQuad::render();
 
     buffers.reflections.read();
-    buffers.post.write();
+    ctx.accumulationTarget->write();
 
     shaders.reflectionsDenoise.use();
     shaders.reflectionsDenoise.setVec4f("transform", FULL_SCREEN_TRANSFORM);
@@ -918,19 +919,20 @@ namespace Gamma {
       glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
     }
 
-    writeAccumulatedEffectsBackIntoGBuffer();
+    copyAccumulatedEffects();
 
     auto& camera = *Camera::active;
 
-    buffers.gBuffer.read();
-    buffers.post.write();
+    // buffers.gBuffer.read();
+    ctx.accumulationSource->read();
+    ctx.accumulationTarget->write();
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_STENCIL_TEST);
 
     shaders.refractiveGeometry.use();
-    shaders.refractiveGeometry.setInt("colorAndDepth", 2);
+    shaders.refractiveGeometry.setInt("colorAndDepth", 1);
     shaders.refractiveGeometry.setMatrix4f("projection", ctx.projection);
     shaders.refractiveGeometry.setMatrix4f("inverseProjection", ctx.inverseProjection);
     shaders.refractiveGeometry.setMatrix4f("view", ctx.view);
@@ -951,7 +953,9 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderPostEffects() {
-    buffers.post.read();
+    swapAccumulationBuffers();
+
+    ctx.accumulationSource->read();
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
     glViewport(0, 0, Window::size.width, Window::size.height);
@@ -1054,6 +1058,13 @@ namespace Gamma {
     SDL_GL_SwapWindow(sdl_window);
   }
 
+  void OpenGLRenderer::swapAccumulationBuffers() {
+    OpenGLFrameBuffer* source = ctx.accumulationSource;
+
+    ctx.accumulationSource = ctx.accumulationTarget;
+    ctx.accumulationTarget = source;
+  }
+
   void OpenGLRenderer::renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background) {
     float offsetX = -1.0f + (2 * x + surface->w) / (float)Window::size.width;
     float offsetY = 1.0f - (2 * y + surface->h) / (float)Window::size.height;
@@ -1087,19 +1098,13 @@ namespace Gamma {
   }
 
   /**
-   * Copies the accumulated results of the current frame
-   * back into the G-Buffer, color attachment 2. Certain
-   * effects require normal/specularity information from
-   * the G-Buffer, as well as more up-to-date color information
-   * from lighting and other secondary effects, before the final
-   * post-processing stage. Color attachment 2 is designated
-   * as an alternate color buffer containing more than just the
-   * raw geometry albedo, which does not represent the final
-   * on-screen image.
+   * @todo description
    */
-  void OpenGLRenderer::writeAccumulatedEffectsBackIntoGBuffer() {
-    buffers.post.read();
-    buffers.gBuffer.write();
+  void OpenGLRenderer::copyAccumulatedEffects() {
+    swapAccumulationBuffers();
+
+    ctx.accumulationSource->read();
+    ctx.accumulationTarget->write();
 
     shaders.copyFrame.use();
     shaders.copyFrame.setVec4f("transform", FULL_SCREEN_TRANSFORM);

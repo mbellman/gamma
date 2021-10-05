@@ -1,5 +1,6 @@
 #version 460 core
 
+// @todo use better names to differentiate these
 #define USE_AVERAGE_INDIRECT_LIGHT 1
 #define USE_INDIRECT_SKY_LIGHT 1
 
@@ -53,13 +54,13 @@ vec3 getSkyColor(vec3 direction) {
   );
 }
 
-vec3 getIndirectSkyLightContribution(vec3 fragment_color, vec3 fragment_normal) {
+vec3 getIndirectSkyLightContribution(vec3 fragment_normal) {
   vec3 contribution = vec3(0);
 
   for (int i = 0; i < 7; i++) {
     vec3 direction = normalize(1.1 * fragment_normal + sky_sample_offsets[i]);
 
-    contribution += fragment_color * getSkyColor(direction) * indirect_sky_light_intensity;
+    contribution += getSkyColor(direction) * indirect_sky_light_intensity;
   }
 
   return contribution / 7.0;
@@ -92,8 +93,10 @@ void main() {
     vec3 color = texture(colorAndDepth, fragUv).rgb;
     vec3 normal = texture(normalAndSpecularity, fragUv).xyz;
 
-    indirect_sky_light = getIndirectSkyLightContribution(color, normal);
+    indirect_sky_light = color * getIndirectSkyLightContribution(normal);
   #endif
 
-  out_color_and_depth = vec4(average_indirect_light + indirect_sky_light, 0);
+  vec3 composite_color = average_indirect_light + indirect_sky_light;
+
+  out_color_and_depth = vec4(composite_color, 0);
 }

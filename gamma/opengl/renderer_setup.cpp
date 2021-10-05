@@ -9,15 +9,8 @@ namespace Gamma {
     buffers.gBuffer.addColorAttachment(ColorFormat::RGBA);    // (RGB) Albedo, (A) Depth
     // @todo specularity -> material? meshId + UBO/SSBO for materials?
     buffers.gBuffer.addColorAttachment(ColorFormat::RGBA16);  // (RGB) Normal, (A) Specularity
-    buffers.gBuffer.addColorAttachment(ColorFormat::RGBA);    // (RGB) Accumulated effects color, (A) Depth
     buffers.gBuffer.addDepthStencilAttachment();
     buffers.gBuffer.bindColorAttachments();
-
-    buffers.post.init();
-    buffers.post.setSize(internalResolution);
-    buffers.post.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
-    buffers.gBuffer.shareDepthStencilAttachment(buffers.post);
-    buffers.post.bindColorAttachments();
 
     buffers.indirectLight.init();
     // @todo make half-size rendering optional
@@ -36,6 +29,18 @@ namespace Gamma {
     // buffers.reflections.setSize({ internalResolution.width / 2, internalResolution.height /2 });
     // buffers.reflections.addColorAttachment(ColorFormat::RGBA);
     // buffers.reflections.bindColorAttachments();
+
+    buffers.accumulation1.init();
+    buffers.accumulation1.setSize(internalResolution);
+    buffers.accumulation1.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
+    buffers.gBuffer.shareDepthStencilAttachment(buffers.accumulation1);
+    buffers.accumulation1.bindColorAttachments();
+
+    buffers.accumulation2.init();
+    buffers.accumulation2.setSize(internalResolution);
+    buffers.accumulation2.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
+    buffers.gBuffer.shareDepthStencilAttachment(buffers.accumulation2);
+    buffers.accumulation2.bindColorAttachments();
 
     // Initialize shaders
     shaders.geometry.init();
@@ -157,7 +162,8 @@ namespace Gamma {
     buffers.gBuffer.destroy();
     buffers.indirectLight.destroy();
     buffers.reflections.destroy();
-    buffers.post.destroy();
+    buffers.accumulation1.destroy();
+    buffers.accumulation2.destroy();
 
     shaders.geometry.destroy();
     shaders.particles.destroy();
