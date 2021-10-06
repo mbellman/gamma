@@ -162,13 +162,12 @@ namespace Gamma {
     // @todo if (ctx.hasParticleSystems)
     renderParticleSystems();
 
-    // @todo make sure reflections/refractions are working again
     if (ctx.hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
-      // renderReflections();
+      renderReflections();
     }
 
     if (ctx.hasRefractiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS)) {
-      // renderRefractiveObjects();
+      renderRefractiveObjects();
     }
 
     renderPostEffects();
@@ -824,25 +823,12 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderReflections() {
-    // Copy the rendered frame back into the color accumulation
-    // channel of the G-Buffer, since reflections rely on both
-    // accumulated color/depth and surface normals. We exclude
-    // skybox pixels since we recompute skybox color in the
-    // reflection shader for any skybound reflection rays.
-    //
-    // @todo distinguish between skybox and emissive pixels so
-    // emissive geometry can still be reflected
-    glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
-
-    // copyAccumulatedEffects();
-    // ctx.accumulationSource->read();
-
     if (
       ctx.hasRefractiveObjects &&
       Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS) &&
       Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS_WITHIN_REFLECTIONS)
     ) {
-      // @todo explain this
+      // @todo fix + explain this
       glEnable(GL_DEPTH_TEST);
       glEnable(GL_CULL_FACE);
 
@@ -867,6 +853,7 @@ namespace Gamma {
     auto& camera = *Camera::active;
 
     buffers.gBuffer.read();
+    ctx.accumulationTarget->read();
     buffers.reflections.write();
 
     // Render reflections (screen-space + skybox)
@@ -876,8 +863,8 @@ namespace Gamma {
 
     shaders.reflections.use();
     shaders.reflections.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+    shaders.reflections.setInt("colorAndDepth", 0);
     shaders.reflections.setInt("normalAndSpecularity", 1);
-    shaders.reflections.setInt("colorAndDepth", 2);
     shaders.reflections.setVec3f("cameraPosition", camera.position);
     shaders.reflections.setMatrix4f("view", ctx.view);
     shaders.reflections.setMatrix4f("inverseView", ctx.inverseView);
@@ -900,30 +887,12 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderRefractiveObjects() {
-    // Copy the rendered frame back into the color accumulation channel
-    // of the G-Buffer so we can accurately render refractive geometry,
-    // which relies on both accumulated color/depth and surface normals.
-    if (ctx.hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
-      // Only reflective surfaces need to be copied now, since we copied
-      // all non-skybox pixels into the color accumulation buffer before
-      // rendering reflections.
-      glStencilFunc(GL_EQUAL, MeshType::REFLECTIVE, 0xFF);
-    } else {
-      // If no reflections were rendered, we need to copy all non-skybox
-      // pixels back into the color accumulation channel here. The skybox
-      // color will be recomputed in the refractive geometry shader for
-      // any skybound refraction rays.
-      //
-      // @todo distinguish between skybox and emissive pixels so
-      // emissive geometry can still be refracted
-      glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
-    }
+    glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
 
     copyAccumulatedEffects();
 
     auto& camera = *Camera::active;
 
-    // buffers.gBuffer.read();
     ctx.accumulationSource->read();
     ctx.accumulationTarget->write();
 
@@ -932,7 +901,7 @@ namespace Gamma {
     glDisable(GL_STENCIL_TEST);
 
     shaders.refractiveGeometry.use();
-    shaders.refractiveGeometry.setInt("colorAndDepth", 1);
+    shaders.refractiveGeometry.setInt("colorAndDepth", 0);
     shaders.refractiveGeometry.setMatrix4f("projection", ctx.projection);
     shaders.refractiveGeometry.setMatrix4f("inverseProjection", ctx.inverseProjection);
     shaders.refractiveGeometry.setMatrix4f("view", ctx.view);
@@ -1106,10 +1075,14 @@ namespace Gamma {
     ctx.accumulationSource->read();
     ctx.accumulationTarget->write();
 
+    glClear(GL_COLOR_BUFFER_BIT);
+
     shaders.copyFrame.use();
     shaders.copyFrame.setVec4f("transform", FULL_SCREEN_TRANSFORM);
     shaders.copyFrame.setInt("colorAndDepth", 0);
 
     OpenGLScreenQuad::render();
+
+    swapAccumulationBuffers();
   }
 }
