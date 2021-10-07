@@ -887,18 +887,26 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderRefractiveObjects() {
-    glStencilFunc(GL_NOTEQUAL, MeshType::EMISSIVE, 0xFF);
-
-    copyAccumulatedEffects();
-
     auto& camera = *Camera::active;
 
+    // Swap buffers so we can temporarily render the
+    // refracted geometry to the second accumulation
+    // buffer while reading from the first
+    swapAccumulationBuffers();
+
+    // At this point, the accumulation source buffer
+    // will contain all effects/shading rendered up
+    // to this point, which we can read from when
+    // rendering refractions. Write to the second
+    // accumulation buffer so we can copy that back
+    // into the first afterward.
     ctx.accumulationSource->read();
     ctx.accumulationTarget->write();
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
-    glDisable(GL_STENCIL_TEST);
+    glStencilFunc(GL_ALWAYS, MeshType::REFRACTIVE, 0xFF);
+    glStencilMask(0xFF);
 
     shaders.refractiveGeometry.use();
     shaders.refractiveGeometry.setInt("colorAndDepth", 0);
@@ -916,6 +924,25 @@ namespace Gamma {
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
+
+    // Now that the current target accumulation buffer contains
+    // the rendered refractive geometry, swap the buffers so we
+    // can write refractions back into the original target
+    // accumulation buffer
+    swapAccumulationBuffers();
+
+    ctx.accumulationSource->read();
+    ctx.accumulationTarget->write();
+
+    glStencilFunc(GL_EQUAL, MeshType::REFRACTIVE, 0xFF);
+
+    shaders.copyFrame.use();
+    shaders.copyFrame.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+    shaders.copyFrame.setInt("colorAndDepth", 0);
+
+    OpenGLScreenQuad::render();
+
+    glDisable(GL_STENCIL_TEST);
   }
 
   /**
@@ -1064,25 +1091,5 @@ namespace Gamma {
     renderSurfaceToScreen(text, x, y, color, background);
 
     SDL_FreeSurface(text);
-  }
-
-  /**
-   * @todo description
-   */
-  void OpenGLRenderer::copyAccumulatedEffects() {
-    swapAccumulationBuffers();
-
-    ctx.accumulationSource->read();
-    ctx.accumulationTarget->write();
-
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    shaders.copyFrame.use();
-    shaders.copyFrame.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-    shaders.copyFrame.setInt("colorAndDepth", 0);
-
-    OpenGLScreenQuad::render();
-
-    swapAccumulationBuffers();
   }
 }

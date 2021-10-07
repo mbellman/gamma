@@ -132,7 +132,6 @@ namespace Gamma {
     void renderPostEffects();
     void renderDevBuffers();
 
-    void copyAccumulatedEffects();
     void swapAccumulationBuffers();
     void renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background);
   };
