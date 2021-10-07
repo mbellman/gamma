@@ -11,9 +11,9 @@ namespace Gamma {
 
   static Command commands[] = {
     { "reflect", "Reflections", GammaFlags::RENDER_REFLECTIONS },
-    { "refract", "Refractive objects", GammaFlags::RENDER_REFRACTIVE_OBJECTS },
+    { "refract", "Refractive geometry", GammaFlags::RENDER_REFRACTIVE_GEOMETRY },
     { "shadow", "Shadows", GammaFlags::RENDER_SHADOWS },
-    { "rro", "Reflections of refractive objects", GammaFlags::RENDER_REFRACTIVE_OBJECTS_WITHIN_REFLECTIONS },
+    { "rro", "Reflections of refractive geometry", GammaFlags::RENDER_REFRACTIVE_GEOMETRY_WITHIN_REFLECTIONS },
     { "ao", "Ambient occlusion", GammaFlags::RENDER_AMBIENT_OCCLUSION },
     { "gi", "Global illumination", GammaFlags::RENDER_GLOBAL_ILLUMINATION },
     { "skylight", "Indirect sky light", GammaFlags::RENDER_INDIRECT_SKY_LIGHT },

@@ -166,8 +166,8 @@ namespace Gamma {
       renderReflections();
     }
 
-    if (ctx.hasRefractiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS)) {
-      renderRefractiveObjects();
+    if (ctx.hasRefractiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_GEOMETRY)) {
+      renderRefractiveGeometry();
     }
 
     renderPostEffects();
@@ -825,8 +825,8 @@ namespace Gamma {
   void OpenGLRenderer::renderReflections() {
     if (
       ctx.hasRefractiveObjects &&
-      Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS) &&
-      Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_OBJECTS_WITHIN_REFLECTIONS)
+      Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_GEOMETRY) &&
+      Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_GEOMETRY_WITHIN_REFLECTIONS)
     ) {
       // @todo fix + explain this
       glEnable(GL_DEPTH_TEST);
@@ -886,7 +886,7 @@ namespace Gamma {
   /**
    * @todo description
    */
-  void OpenGLRenderer::renderRefractiveObjects() {
+  void OpenGLRenderer::renderRefractiveGeometry() {
     auto& camera = *Camera::active;
 
     // Swap buffers so we can temporarily render the
@@ -941,8 +941,6 @@ namespace Gamma {
     shaders.copyFrame.setInt("colorAndDepth", 0);
 
     OpenGLScreenQuad::render();
-
-    glDisable(GL_STENCIL_TEST);
   }
 
   /**

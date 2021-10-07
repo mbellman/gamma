@@ -4,7 +4,7 @@
 namespace Gamma {
   static uint32 internalFlags =
     GammaFlags::RENDER_REFLECTIONS |
-    GammaFlags::RENDER_REFRACTIVE_OBJECTS |
+    GammaFlags::RENDER_REFRACTIVE_GEOMETRY |
     GammaFlags::RENDER_SHADOWS |
     GammaFlags::RENDER_AMBIENT_OCCLUSION |
     GammaFlags::RENDER_INDIRECT_SKY_LIGHT |
