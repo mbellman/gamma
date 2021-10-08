@@ -200,8 +200,9 @@ namespace Gamma {
     object._record.id = id;
     object._record.generation++;
 
-    // Reset object matrix
+    // Reset object matrix/color
     matrices[index] = Matrix4f::identity();
+    colors[index] = pVec4(255, 255, 255);
 
     // Enable object lookup by ID -> index
     indices[id] = index;
@@ -228,8 +229,13 @@ namespace Gamma {
       delete[] matrices;
     }
 
+    if (colors != nullptr) {
+      delete[] colors;
+    }
+
     objects = nullptr;
     matrices = nullptr;
+    colors = nullptr;
   }
 
   Object* ObjectPool::getById(uint16 objectId) const {
@@ -246,6 +252,10 @@ namespace Gamma {
     }
 
     return object;
+  }
+
+  pVec4* ObjectPool::getColors() const {
+    return colors;
   }
 
   Matrix4f* ObjectPool::getMatrices() const {
@@ -296,9 +306,10 @@ namespace Gamma {
 
     uint16 lastIndex = totalActiveObjects;
 
-    // Swap last object/matrix into removed index
+    // Move last object/matrix/color into removed index
     objects[index] = objects[lastIndex];
     matrices[index] = matrices[lastIndex];
+    colors[index] = colors[lastIndex];
 
     // Update ID -> index lookup table
     indices[objects[index]._record.id] = index;
@@ -312,17 +323,21 @@ namespace Gamma {
     totalActiveObjects = 0;
     objects = new Object[size];
     matrices = new Matrix4f[size];
+    colors = new pVec4[size];
   }
 
   void ObjectPool::swapObjects(uint16 indexA, uint16 indexB) {
     Object objectA = objects[indexA];
     Matrix4f matrixA = matrices[indexA];
+    pVec4 colorA = colors[indexA];
 
     objects[indexA] = objects[indexB];
     matrices[indexA] = matrices[indexB];
+    colors[indexA] = colors[indexB];
 
     objects[indexB] = objectA;
     matrices[indexB] = matrixA;
+    colors[indexB] = colorA;
 
     indices[objects[indexA]._record.id] = indexA;
     indices[objects[indexB]._record.id] = indexB;

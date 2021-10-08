@@ -63,6 +63,7 @@ vec3 getScreenSpaceAmbientOcclusionContribution(float fragment_depth) {
     vec2 offset = texel_size * radius * rotatedVogelDisc(10, i);
     float compared_depth = getLinearizedDepth(texture(colorAndDepth, fragUv + offset).w);
 
+    // @bug the 0.2 bias term is shifting AO along the negative Z axis
     if (compared_depth < linearized_fragment_depth - 0.2) {
       float occluder_distance = linearized_fragment_depth - compared_depth;
 
@@ -71,7 +72,7 @@ vec3 getScreenSpaceAmbientOcclusionContribution(float fragment_depth) {
   }
 
   float average_occlusion = occlusion / 10.0;
-  
+
   return vec3(-average_occlusion) * 0.1;
 }
 

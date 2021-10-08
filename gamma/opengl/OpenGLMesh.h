@@ -28,13 +28,14 @@ namespace Gamma {
      *
      * [0] Vertex
      * [1] Matrix
+     * [1] Color
      */
-    GLuint buffers[2];
+    GLuint buffers[3];
     GLuint ebo;
     OpenGLTexture* glTexture = nullptr;
     OpenGLTexture* glNormalMap = nullptr;
     OpenGLTexture* glSpecularityMap = nullptr;
-    bool isMatrixBufferCreated = false;
+    bool hasCreatedInstanceBuffers = false;
 
     void checkAndLoadTexture(std::string path, OpenGLTexture*& texture, GLenum unit);
   };

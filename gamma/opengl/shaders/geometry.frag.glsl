@@ -5,6 +5,7 @@ uniform bool hasNormalMap = false;
 uniform sampler2D meshTexture;
 uniform sampler2D meshNormalMap;
 
+// @todo in vec3 fragColor;
 in vec3 fragNormal;
 in vec3 fragTangent;
 in vec3 fragBitangent;
@@ -32,6 +33,7 @@ vec3 getNormal() {
 }
 
 void main() {
+  // @todo use fragColor if !hasTexture
   vec3 color = hasTexture ? texture(meshTexture, fragUv).rgb : vec3(1.0);
 
   out_color_and_depth = vec4(color, gl_FragCoord.z);

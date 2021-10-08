@@ -7,6 +7,7 @@
 #include "math/matrix.h"
 #include "math/vector.h"
 #include "system/ObjLoader.h"
+#include "system/packed_data.h"
 #include "system/type_aliases.h"
 
 #define UNUSED_LIGHT_INDEX -1
@@ -71,6 +72,7 @@ namespace Gamma {
     Vec3f position;
     Vec3f scale;
     Vec3f rotation;
+    pVec4 color;
   };
 
   /**
@@ -90,6 +92,7 @@ namespace Gamma {
     void free();
     Object* getById(uint16 objectId) const;
     Object* getByRecord(const ObjectRecord& record) const;
+    pVec4* getColors() const;
     Matrix4f* getMatrices() const;
     uint16 max() const;
     uint16 partitionByDistance(uint16 start, float distance, const Vec3f& cameraPosition);
@@ -101,6 +104,7 @@ namespace Gamma {
   private:
     Object* objects = nullptr;
     Matrix4f* matrices = nullptr;
+    pVec4* colors = nullptr;
     // @todo if we cycle through indices to find unoccupied slots
     // when creating new objects, we needn't preallocate the entire
     // indices array up to USHRT_MAX

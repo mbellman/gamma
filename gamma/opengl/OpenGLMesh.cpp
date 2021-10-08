@@ -8,8 +8,8 @@
 namespace Gamma {
   const enum GLBuffer {
     VERTEX,
-    MATRIX,
-    COLOR
+    COLOR,
+    MATRIX
   };
 
   const enum GLAttribute {
@@ -17,6 +17,7 @@ namespace Gamma {
     VERTEX_NORMAL,
     VERTEX_TANGENT,
     VERTEX_UV,
+    MODEL_COLOR,
     MODEL_MATRIX
   };
 
@@ -24,7 +25,7 @@ namespace Gamma {
     sourceMesh = mesh;
 
     glGenVertexArrays(1, &vao);
-    glGenBuffers(2, &buffers[0]);
+    glGenBuffers(3, &buffers[0]);
     glGenBuffers(1, &ebo);
     glBindVertexArray(vao);
 
@@ -53,6 +54,12 @@ namespace Gamma {
 
     glEnableVertexAttribArray(GLAttribute::VERTEX_UV);
     glVertexAttribPointer(GLAttribute::VERTEX_UV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+
+    // Define color attributes
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::COLOR]);
+    glEnableVertexAttribArray(GLAttribute::MODEL_COLOR);
+    glVertexAttribIPointer(GLAttribute::MODEL_COLOR, 1, GL_UNSIGNED_INT, sizeof(pVec4), (void*)0);
+    glVertexAttribDivisor(GLAttribute::MODEL_COLOR, 1);
 
     // Define matrix attributes
     glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::MATRIX]);
@@ -106,6 +113,10 @@ namespace Gamma {
   void OpenGLMesh::render(GLenum primitiveMode, bool useLowestLevelOfDetail) {
     auto& mesh = *sourceMesh;
 
+    if (mesh.objects.total() == 0) {
+      return;
+    }
+
     if (mesh.type != MeshType::REFRACTIVE) {
       // Don't bind textures for refractive objects, since in
       // the refractive geometry frag shader we need to read
@@ -118,12 +129,15 @@ namespace Gamma {
       checkAndLoadTexture(mesh.specularityMap, glSpecularityMap, GL_TEXTURE2);
     }
 
-    // Buffer instance matrices
-    if (!isMatrixBufferCreated || mesh.type != MeshType::PARTICLE_SYSTEM) {
+    if (!hasCreatedInstanceBuffers || mesh.type != MeshType::PARTICLE_SYSTEM) {
+      // Buffer instance colors/matrices
+      glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::COLOR]);
+      glBufferData(GL_ARRAY_BUFFER, mesh.objects.total() * sizeof(pVec4), mesh.objects.getColors(), GL_DYNAMIC_DRAW);
+
       glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::MATRIX]);
       glBufferData(GL_ARRAY_BUFFER, mesh.objects.total() * sizeof(Matrix4f), mesh.objects.getMatrices(), GL_DYNAMIC_DRAW);
 
-      isMatrixBufferCreated = true;
+      hasCreatedInstanceBuffers = true;
     }
 
     // Bind VAO/EBO and draw instances
