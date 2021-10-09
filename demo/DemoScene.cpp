@@ -70,7 +70,7 @@ void DemoScene::init() {
   auto& wall = createObjectFrom("wall");
 
   wall.scale = Vec3f(400.0f, 400.0f, 400.0f);
-  wall.position = Vec3f(0.0f, 100.0f, 210.0f);
+  wall.position = Vec3f(0.0f, 100.0f, 150.0f);
   wall.rotation.x = M_PI * 0.5f;
   wall.color = pVec4(255, 0, 0);
 
@@ -126,7 +126,8 @@ void DemoScene::init() {
   auto& sunlight = createLight(LightType::DIRECTIONAL_SHADOWCASTER);
 
   sunlight.direction = Vec3f(-0.3f, -0.5f, 1.0f);
-  sunlight.color = Vec3f(1.0f, 0.3f, 0.1f);
+  // sunlight.color = Vec3f(1.0f, 0.3f, 0.1f);
+  sunlight.color = Vec3f(1.0f);
 
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < 10; j++) {
@@ -188,10 +189,9 @@ void DemoScene::destroy() {}
 void DemoScene::update(float dt) {
   useLodByDistance(mesh("rabbit"), 100.0f);
 
-  // for (auto& cube : getMeshObjects("cube")) {
-  //   cube.rotation.y += dt;
-  //   cube.position.y = sinf(0.5f * (float)cube._record.id + getRunningTime() * 3.0f) * 20.0f;
+  auto& wall = *mesh("wall").objects.begin();
 
-  //   commit(cube);
-  // }
+  wall.position.z = 0.0f + (1.0f + sinf(getRunningTime() * 0.2f)) * 0.5f * 200.0f;
+
+  commit(wall);
 }

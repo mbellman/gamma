@@ -8,7 +8,7 @@ namespace Gamma {
     GammaFlags::RENDER_SHADOWS |
     GammaFlags::RENDER_AMBIENT_OCCLUSION |
     GammaFlags::RENDER_INDIRECT_SKY_LIGHT |
-    // @todo GammaFlags::RENDER_GLOBAL_ILLUMINATION |
+    GammaFlags::RENDER_GLOBAL_ILLUMINATION |
     GammaFlags::RENDER_DEV_BUFFERS;
 
   static uint32 previousFlags = internalFlags;

@@ -310,6 +310,26 @@ namespace Gamma {
       }
     }
 
+    if (Gm_FlagWasEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)) {
+      shaders.indirectLight.define({
+        { "USE_SCREEN_SPACE_GLOBAL_ILLUMINATION", "1" }
+      });
+
+      shaders.indirectLightComposite.define({
+        { "USE_AVERAGE_INDIRECT_LIGHT", "1" }
+      });
+    } else if (Gm_FlagWasDisabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)) {
+      shaders.indirectLight.define({
+        { "USE_SCREEN_SPACE_GLOBAL_ILLUMINATION", "0" }
+      });
+
+      if (!Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)) {
+        shaders.indirectLightComposite.define({
+          { "USE_AVERAGE_INDIRECT_LIGHT", "0" }
+        });
+      }
+    }
+
     if (Gm_FlagWasEnabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)) {
       // @bug this resets "USE_AVERAGE_INDIRECT_LIGHT" to "1";
       // fix this in OpenGLShader::define() by saving active overrides
@@ -724,8 +744,11 @@ namespace Gamma {
       shaders.indirectLight.setInt("colorAndDepth", 0);
       shaders.indirectLight.setInt("normalAndSpecularity", 1);
       shaders.indirectLight.setVec3f("cameraPosition", Camera::active->position);
+      shaders.indirectLight.setMatrix4f("projection", ctx.projection);
+      shaders.indirectLight.setMatrix4f("view", ctx.view);
       shaders.indirectLight.setMatrix4f("inverseProjection", ctx.inverseProjection);
       shaders.indirectLight.setMatrix4f("inverseView", ctx.inverseView);
+      shaders.indirectLight.setFloat("time", AbstractScene::active->getRunningTime());
 
       OpenGLScreenQuad::render();
     }

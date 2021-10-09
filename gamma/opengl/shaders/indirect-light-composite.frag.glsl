@@ -34,7 +34,7 @@ vec3 getSkyColor(vec3 direction) {
   vec3 sunDirection = normalize(vec3(0.3, 0.5, -1.0));
   vec3 sunColor = vec3(1.0, 0.3, 0.1);
   float sunBrightness = 10;
-  float altitude = 0.6;
+  float altitude = -0.5;
 
   float y = direction.y + altitude;
   float z = direction.z;
@@ -71,11 +71,14 @@ void main() {
   vec3 indirect_sky_light = vec3(0);
 
   #if USE_AVERAGE_INDIRECT_LIGHT == 1
+    const int range = 4;
     vec2 texel_size = 1.0 / vec2(1920.0, 1080.0);
     int total_samples = 0;
 
-    for (int i = -4; i <= 4; i += 4) {
-      for (int j = -4; j <= 4; j += 4) {
+    // average_indirect_light = texture(indirectLight, fragUv).rgb;
+
+    for (int i = -range; i <= range; i += range) {
+      for (int j = -range; j <= range; j += range) {
         vec2 coords = fragUv + texel_size * vec2(i, j);
 
         // Avoid sampling outside of the screen edges

@@ -169,7 +169,7 @@ namespace Gamma {
     }
   }
 
-  // @todo merge defineOverrides into an internal map of active
+  // @todo @bug merge defineOverrides into an internal map of active
   // overrides to avoid resetting unspecified variables
   void OpenGLShader::define(const std::map<std::string, std::string>& defineOverrides) {
     for (auto& record : glShaderRecords) {
