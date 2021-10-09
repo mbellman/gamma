@@ -7,6 +7,7 @@ uniform mat4 inverseProjection;
 uniform mat4 inverseView;
 uniform vec3 cameraPosition;
 
+flat in vec3 fragColor;
 in vec3 fragNormal;
 in vec3 fragTangent;
 in vec3 fragBitangent;
@@ -54,16 +55,12 @@ bool isOffScreen(vec2 uv) {
 
 void main() {
   const float REFRACTION_INTENSITY = 3.0;
-  // @todo use model color
-  const vec3 GEOMETRY_COLOR = vec3(1, 0, 1);
 
   vec3 position = getWorldPosition(gl_FragCoord.z, getPixelCoords(), inverseProjection, inverseView);
   vec3 color = vec3(1.0);
   vec3 normal = normalize(fragNormal);
 
-  // @todo The refraction ray should be either Snell's Law-based
-  // or some approximation using angle of incidence vs. normal/
-  // index of refraction - mix(normalized_fragment_to_camera, normal, ratio)
+  // @todo use refract()
   vec3 world_refraction_ray = position - normal * REFRACTION_INTENSITY;
 
   vec3 view_refraction_ray = glVec4(view * glVec4(world_refraction_ray)).xyz;
@@ -95,7 +92,8 @@ void main() {
     refracted_color_and_depth.rgb = getSkyColor(direction);
   }
 
-  refracted_color_and_depth.rgb *= GEOMETRY_COLOR;
+  // @todo darken color at grazing angles
+  refracted_color_and_depth.rgb *= fragColor;
 
   out_color_and_depth = vec4(refracted_color_and_depth.rgb, gl_FragCoord.z);
 }

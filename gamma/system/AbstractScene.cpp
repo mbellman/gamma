@@ -38,6 +38,20 @@ namespace Gamma {
     signal("mesh-created", mesh);
   }
 
+  void AbstractScene::commit(const Object& object) {
+    auto& record = object._record;
+    auto* mesh = meshes[record.meshIndex];
+
+    // @todo (?) dispatch transform commands to separate buckets for multithreading
+    mesh->objects.transformById(record.id, Matrix4f::transformation(
+      object.position,
+      object.scale,
+      object.rotation
+    ).transpose());
+
+    mesh->objects.setColorById(record.id, object.color);
+  }
+
   Light& AbstractScene::createLight(LightType type) {
     // @todo recycle removed/deactivated Lights
     // @todo new Light()
@@ -170,18 +184,6 @@ namespace Gamma {
 
   void AbstractScene::storeObject(std::string name, Object& object) {
     objectStore.emplace(name, object._record);
-  }
-
-  void AbstractScene::transform(const Object& object) {
-    auto& record = object._record;
-    auto* mesh = meshes[record.meshIndex];
-
-    // @todo (?) dispatch transform commands to separate buckets for multithreading
-    mesh->objects.transformById(record.id, Matrix4f::transformation(
-      object.position,
-      object.scale,
-      object.rotation
-    ).transpose());
   }
 
   void AbstractScene::updateScene(float dt) {

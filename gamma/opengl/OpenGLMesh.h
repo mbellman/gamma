@@ -12,7 +12,7 @@ namespace Gamma {
     OpenGLMesh(const Mesh* mesh);
     ~OpenGLMesh();
 
-    uint32 getId() const;
+    uint16 getId() const;
     uint16 getObjectCount() const;
     const Mesh* getSourceMesh() const;
     bool hasNormalMap() const;
@@ -27,8 +27,8 @@ namespace Gamma {
      * Buffers for instanced object attributes.
      *
      * [0] Vertex
-     * [1] Matrix
      * [1] Color
+     * [2] Matrix
      */
     GLuint buffers[3];
     GLuint ebo;

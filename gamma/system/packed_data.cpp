@@ -8,14 +8,14 @@ namespace Gamma {
    * pVec4
    * -----
    */
-  pVec4::pVec4(Vec3f value) {
+  pVec4::pVec4(const Vec3f& value) {
     r = uint8(CLAMP(value.x) * 255.0f);
     g = uint8(CLAMP(value.y) * 255.0f);
     b = uint8(CLAMP(value.z) * 255.0f);
     a = 255;
   }
 
-  pVec4::pVec4(Vec4f value) {
+  pVec4::pVec4(const Vec4f& value) {
     r = uint8(CLAMP(value.x) * 255.0f);
     g = uint8(CLAMP(value.y) * 255.0f);
     b = uint8(CLAMP(value.z) * 255.0f);

@@ -34,13 +34,13 @@ namespace Gamma {
 
   protected:
     void addMesh(std::string meshName, uint16 maxInstances, Mesh* mesh);
+    void commit(const Object& object);
     Light& createLight(LightType type);
     Object& createObjectFrom(std::string meshName);
     void destroyLight(Light& light);
     Object& getObject(std::string name);
     Mesh& mesh(std::string meshName);
     void removeMesh(std::string meshName);
-    void transform(const Object& object);
     void storeObject(std::string, Object& object);
     virtual void update(float dt) {};
     void useLodByDistance(Mesh& mesh, float distance);

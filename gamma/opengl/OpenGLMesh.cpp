@@ -86,7 +86,7 @@ namespace Gamma {
     }
   }
 
-  uint32 OpenGLMesh::getId() const {
+  uint16 OpenGLMesh::getId() const {
     return sourceMesh->id;
   }
 

@@ -19,7 +19,7 @@ namespace Gamma {
     pVec4() {};
     pVec4(uint8 r, uint8 g, uint8 b) : r(r), g(g), b(b), a(255) {};
     pVec4(uint8 r, uint8 g, uint8 b, uint8 a) : r(r), g(g), b(b), a(a) {};
-    pVec4(Vec3f value);
-    pVec4(Vec4f value);
+    pVec4(const Vec3f& value);
+    pVec4(const Vec4f& value);
   };
 }

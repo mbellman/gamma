@@ -343,6 +343,10 @@ namespace Gamma {
     indices[objects[indexB]._record.id] = indexB;
   }
 
+  void ObjectPool::setColorById(uint16 objectId, const pVec4& color) {
+    colors[indices[objectId]] = color;
+  }
+
   uint16 ObjectPool::total() const {
     return totalActiveObjects;
   }

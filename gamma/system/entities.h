@@ -98,6 +98,7 @@ namespace Gamma {
     uint16 partitionByDistance(uint16 start, float distance, const Vec3f& cameraPosition);
     void removeById(uint16 objectId);
     void reserve(uint16 size);
+    void setColorById(uint16 objectId, const pVec4& color);
     uint16 total() const;
     void transformById(uint16 objectId, const Matrix4f& matrix);
 

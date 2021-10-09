@@ -51,19 +51,21 @@ void DemoScene::init() {
   // mesh("plane").type = MeshType::REFLECTIVE;
   // mesh("daVinci").type = MeshType::REFRACTIVE;
 
+  mesh("rabbit").type = MeshType::REFRACTIVE;
+
   auto& daVinci = createObjectFrom("daVinci");
 
   daVinci.position = Vec3f(0.0f, 20.0f, 0.0f);
   daVinci.scale = 50.0f;
 
-  transform(daVinci);
+  commit(daVinci);
 
   auto& plane = createObjectFrom("plane");
 
   plane.scale = Vec3f(400.0f, 1.0f, 400.0f);
   plane.position.y = -20.0f;
 
-  transform(plane);
+  commit(plane);
 
   auto& wall = createObjectFrom("wall");
 
@@ -71,7 +73,7 @@ void DemoScene::init() {
   wall.position = Vec3f(0.0f, 100.0f, 220.0f);
   wall.rotation.x = M_PI * 0.5f;
 
-  transform(wall);
+  commit(wall);
 
   for (uint32 i = 0; i < 10; i++) {
     auto& rabbit = createObjectFrom("rabbit");
@@ -85,7 +87,9 @@ void DemoScene::init() {
       cosf(r) * 60.0f
     );
 
-    transform(rabbit);
+    rabbit.color = pVec4(255, 0, 255);
+
+    commit(rabbit);
   }
 
   // auto& daVinciLight = createLight(LightType::POINT_SHADOWCASTER);
@@ -142,7 +146,7 @@ void DemoScene::init() {
       // cubeLight.radius = 25.0f;
       // cubeLight.position = cubePosition + Vec3f(0.0f, 10.0f, 0.0f);
 
-      transform(cube);
+      commit(cube);
     }
   }
 
@@ -187,6 +191,6 @@ void DemoScene::update(float dt) {
   //   cube.rotation.y += dt;
   //   cube.position.y = sinf(0.5f * (float)cube._record.id + getRunningTime() * 3.0f) * 20.0f;
 
-  //   transform(cube);
+  //   commit(cube);
   // }
 }
