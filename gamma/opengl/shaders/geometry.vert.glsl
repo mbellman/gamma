@@ -36,11 +36,11 @@ vec3 getFragBitangent(vec3 normal, vec3 tangent) {
 
 // @todo move to utils
 vec3 unpack(uint color) {
-  float x = float(color & 0x000000FF) / 255.0;
-  float y = float((color & 0x0000FF00) >> 8) / 255.0;
-  float z = float((color & 0x00FF0000) >> 16) / 255.0;
+  float r = float(color & 0x0000FF) / 255.0;
+  float g = float((color & 0x00FF00) >> 8) / 255.0;
+  float b = float((color & 0xFF0000) >> 16) / 255.0;
 
-  return vec3(x, y, z);
+  return vec3(r, g, b);
 }
 
 void main() {

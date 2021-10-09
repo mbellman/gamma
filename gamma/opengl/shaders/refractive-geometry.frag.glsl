@@ -54,15 +54,14 @@ bool isOffScreen(vec2 uv) {
 }
 
 void main() {
-  const float REFRACTION_INTENSITY = 3.0;
+  const float REFRACTION_INTENSITY = 4.0;
 
   vec3 position = getWorldPosition(gl_FragCoord.z, getPixelCoords(), inverseProjection, inverseView);
   vec3 color = vec3(1.0);
   vec3 normal = normalize(fragNormal);
+  vec3 normalized_fragment_to_camera = normalize(cameraPosition - position);
 
-  // @todo use refract()
-  vec3 world_refraction_ray = position - normal * REFRACTION_INTENSITY;
-
+  vec3 world_refraction_ray = position + refract(normalized_fragment_to_camera, normal, 0.7) * REFRACTION_INTENSITY;
   vec3 view_refraction_ray = glVec4(view * glVec4(world_refraction_ray)).xyz;
   vec2 refracted_color_coords = getScreenCoordinates(view_refraction_ray, projection);
   float sample_depth = texture(colorAndDepth, getPixelCoords()).w;
@@ -92,8 +91,11 @@ void main() {
     refracted_color_and_depth.rgb = getSkyColor(direction);
   }
 
-  // @todo darken color at grazing angles
+  float grazing_factor = 1.0 - max(0, dot(normal, normalized_fragment_to_camera));
+
   refracted_color_and_depth.rgb *= fragColor;
+  // Make geometry edges at grazing angles subtly brighter
+  refracted_color_and_depth.rgb += fragColor * grazing_factor * 0.05;
 
   out_color_and_depth = vec4(refracted_color_and_depth.rgb, gl_FragCoord.z);
 }
