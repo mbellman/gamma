@@ -22,7 +22,7 @@ void DemoScene::init() {
   }));
 
   mesh("cube").texture = "./demo/assets/images/cat.png";
-  mesh("wall").texture = "./demo/assets/images/cat.png";
+  // mesh("wall").texture = "./demo/assets/images/cat.png";
   mesh("plane").normalMap = "./demo/assets/images/metal-normal-map.png";
 
   auto& particles = mesh("particles").particleSystem;
@@ -70,8 +70,9 @@ void DemoScene::init() {
   auto& wall = createObjectFrom("wall");
 
   wall.scale = Vec3f(400.0f, 400.0f, 400.0f);
-  wall.position = Vec3f(0.0f, 100.0f, 220.0f);
+  wall.position = Vec3f(0.0f, 100.0f, 210.0f);
   wall.rotation.x = M_PI * 0.5f;
+  wall.color = pVec4(255, 0, 0);
 
   commit(wall);
 
