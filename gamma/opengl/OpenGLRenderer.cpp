@@ -729,13 +729,21 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderIndirectLight() {
+    #define WRAP(index) (index) < 0 ? 3 + (index) : index
+
+    auto& currentIndirectLightBuffer = buffers.indirectLight[frame % 3];
+    auto& indirectLightBufferT1 = buffers.indirectLight[WRAP(int(frame) % 3 - 1)];
+    auto& indirectLightBufferT2 = buffers.indirectLight[WRAP(int(frame) % 3 - 2)];
+
     if (
       Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION) ||
       Gm_IsFlagEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)
     ) {
       buffers.gBuffer.read();
       ctx.accumulationTarget->read();
-      buffers.indirectLight.write();
+      indirectLightBufferT1.read();
+      indirectLightBufferT2.read(1);
+      currentIndirectLightBuffer.write();
 
       glClear(GL_COLOR_BUFFER_BIT);
 
@@ -743,6 +751,8 @@ namespace Gamma {
       shaders.indirectLight.setVec4f("transform", FULL_SCREEN_TRANSFORM);
       shaders.indirectLight.setInt("colorAndDepth", 0);
       shaders.indirectLight.setInt("normalAndSpecularity", 1);
+      shaders.indirectLight.setInt("indirectLightT1", 2);
+      shaders.indirectLight.setInt("indirectLightT2", 3);
       shaders.indirectLight.setVec3f("cameraPosition", Camera::active->position);
       shaders.indirectLight.setMatrix4f("projection", ctx.projection);
       shaders.indirectLight.setMatrix4f("view", ctx.view);
@@ -754,7 +764,7 @@ namespace Gamma {
     }
 
     buffers.gBuffer.read();
-    buffers.indirectLight.read();
+    currentIndirectLightBuffer.read();
     ctx.accumulationTarget->write();
 
     shaders.indirectLightComposite.use();

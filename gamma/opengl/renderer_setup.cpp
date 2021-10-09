@@ -12,11 +12,20 @@ namespace Gamma {
     buffers.gBuffer.addDepthStencilAttachment();
     buffers.gBuffer.bindColorAttachments();
 
-    buffers.indirectLight.init();
-    // @todo make half-size rendering optional
-    buffers.indirectLight.setSize({ internalResolution.width / 2, internalResolution.height / 2 });
-    buffers.indirectLight.addColorAttachment(ColorFormat::RGB, 2);  // (RGB) Color
-    buffers.indirectLight.bindColorAttachments();
+    buffers.indirectLight[0].init();
+    buffers.indirectLight[0].setSize({ internalResolution.width / 2, internalResolution.height / 2 });
+    buffers.indirectLight[0].addColorAttachment(ColorFormat::RGB, 2);  // (RGB) Color
+    buffers.indirectLight[0].bindColorAttachments();
+
+    buffers.indirectLight[1].init();
+    buffers.indirectLight[1].setSize({ internalResolution.width / 2, internalResolution.height / 2 });
+    buffers.indirectLight[1].addColorAttachment(ColorFormat::RGB, 2);  // (RGB) Color
+    buffers.indirectLight[1].bindColorAttachments();
+
+    buffers.indirectLight[2].init();
+    buffers.indirectLight[2].setSize({ internalResolution.width / 2, internalResolution.height / 2 });
+    buffers.indirectLight[2].addColorAttachment(ColorFormat::RGB, 2);  // (RGB) Color
+    buffers.indirectLight[2].bindColorAttachments();
 
     buffers.reflections.init();
     buffers.reflections.setSize(internalResolution);
@@ -160,7 +169,9 @@ namespace Gamma {
 
   void Gm_DestroyRendererResources(RendererBuffers& buffers, RendererShaders& shaders) {
     buffers.gBuffer.destroy();
-    buffers.indirectLight.destroy();
+    buffers.indirectLight[0].destroy();
+    buffers.indirectLight[1].destroy();
+    buffers.indirectLight[2].destroy();
     buffers.reflections.destroy();
     buffers.accumulation1.destroy();
     buffers.accumulation2.destroy();

@@ -109,9 +109,9 @@ namespace Gamma {
     delete[] attachments;
   }
 
-  void OpenGLFrameBuffer::read() {
+  void OpenGLFrameBuffer::read(uint32 offset) {
     for (uint32 i = 0; i < colorAttachments.size(); i++) {
-      glActiveTexture(GL_TEXTURE0 + colorAttachments[i].textureUnit);
+      glActiveTexture(GL_TEXTURE0 + colorAttachments[i].textureUnit + offset);
       glBindTexture(GL_TEXTURE_2D, colorAttachments[i].textureId);
     }
 

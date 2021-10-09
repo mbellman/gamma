@@ -34,7 +34,7 @@ namespace Gamma {
     void addDepthAttachment();
     void addDepthStencilAttachment();
     void bindColorAttachments();
-    void read();
+    void read(uint32 offset = 0);
     void setSize(const Area<uint32>& size);
     void shareDepthStencilAttachment(const OpenGLFrameBuffer& target);
     void write();

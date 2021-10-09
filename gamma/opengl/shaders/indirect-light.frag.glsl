@@ -5,6 +5,8 @@
 
 uniform sampler2D colorAndDepth;
 uniform sampler2D normalAndSpecularity;
+uniform sampler2D indirectLightT1;
+uniform sampler2D indirectLightT2;
 uniform vec3 cameraPosition;
 uniform mat4 view;
 uniform mat4 inverseView;
@@ -74,8 +76,8 @@ void main() {
     // @todo fix denoising
     // @todo fix surfaces improperly receiving light
     const int TOTAL_SAMPLES = 10;
-    const float max_sample_radius = 200.0;
-    const float min_sample_radius = 50.0;
+    const float max_sample_radius = 250.0;
+    const float min_sample_radius = 20.0;
     const float max_illumination_distance = 100.0;
 
     vec2 texel_size = 1.0 / vec2(1920.0, 1080.0);
@@ -96,6 +98,7 @@ void main() {
         continue;
       }
 
+      // @todo prevent surface self-illumination
       vec4 color_and_depth = texture(colorAndDepth, fragUv + offset);
       float compared_depth = getLinearizedDepth(color_and_depth.w);
 
@@ -109,5 +112,11 @@ void main() {
     indirect_light += global_illumination;
   #endif
 
-  out_color_and_depth = vec4(indirect_light, frag_color_and_depth.w);
+  // @todo sample from temporally reprojected screen coordinates to fix ghosting
+  vec3 indirect_light_color_t1 = texture(indirectLightT1, fragUv).rgb;
+  vec3 indirect_light_color_t2 = texture(indirectLightT2, fragUv).rgb;
+
+  vec3 final_indirect_light = (indirect_light + indirect_light_color_t1 + indirect_light_color_t2) / 3.0;
+
+  out_color_and_depth = vec4(final_indirect_light, frag_color_and_depth.w);
 }

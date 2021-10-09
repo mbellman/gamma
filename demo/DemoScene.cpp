@@ -88,7 +88,7 @@ void DemoScene::init() {
       cosf(r) * 60.0f
     );
 
-    rabbit.color = pVec4(255, 0, 255);
+    rabbit.color = pVec4(255, 200, 255);
 
     commit(rabbit);
   }
@@ -191,6 +191,10 @@ void DemoScene::update(float dt) {
 
   auto& wall = *mesh("wall").objects.begin();
 
+  uint8 g = uint8((0.5f * sinf(getRunningTime()) + 0.5f) * 128.0f);
+  uint8 b = uint8((0.5f * cosf(getRunningTime()) + 0.5f) * 128.0f);
+
+  wall.color = pVec4(255, g, b);
   wall.position.z = 0.0f + (1.0f + sinf(getRunningTime() * 0.2f)) * 0.5f * 200.0f;
 
   commit(wall);
