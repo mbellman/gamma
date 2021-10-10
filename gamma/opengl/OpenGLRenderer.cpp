@@ -116,9 +116,7 @@ namespace Gamma {
     if (
       ctx.directionalLights.size() == 0 &&
       ctx.directionalShadowcasters.size() == 0 &&
-      (ctx.hasReflectiveObjects || ctx.hasRefractiveObjects) &&
-      !Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION) &&
-      !Gm_IsFlagEnabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)
+      (ctx.hasReflectiveObjects || ctx.hasRefractiveObjects)
     ) {
       copyDepthIntoAccumulationBuffer();
     }

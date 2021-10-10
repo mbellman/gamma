@@ -73,15 +73,15 @@ void main() {
   #endif
 
   #if USE_SCREEN_SPACE_GLOBAL_ILLUMINATION == 1
-    // @todo fix denoising
-    // @todo fix surfaces improperly receiving light
     const int TOTAL_SAMPLES = 10;
     const float max_sample_radius = 250.0;
-    const float min_sample_radius = 20.0;
+    const float min_sample_radius = 50.0;
     const float max_illumination_distance = 100.0;
 
     vec2 texel_size = 1.0 / vec2(1920.0, 1080.0);
     vec3 global_illumination = vec3(0);
+    vec3 fragment_position = getWorldPosition(frag_color_and_depth.w, fragUv, inverseProjection, inverseView);
+    vec3 fragment_normal = texture(normalAndSpecularity, fragUv).xyz;
     float linearized_fragment_depth = getLinearizedDepth(frag_color_and_depth.w);
 
     float radius = clamp(
@@ -98,13 +98,21 @@ void main() {
         continue;
       }
 
-      // @todo prevent surface self-illumination
       vec4 color_and_depth = texture(colorAndDepth, fragUv + offset);
+
+      // Diminish illumination where the sample emits
+      // less incident bounce light onto the fragment
+      vec3 world_position = getWorldPosition(color_and_depth.w, fragUv + offset, inverseProjection, inverseView);
+      vec3 fragment_to_sample = normalize(world_position - fragment_position);
+      float incidence_factor = 0.25 + 0.75 * max(dot(fragment_normal, fragment_to_sample), 0);
+
+      // Diminish illumination with distance, approximated
+      // by the difference between fragment and sample depth
       float compared_depth = getLinearizedDepth(color_and_depth.w);
-
       float occluder_distance = abs(compared_depth - linearized_fragment_depth);
+      float distance_factor = saturate(mix(1.0, 0.0, occluder_distance / max_illumination_distance));
 
-      global_illumination += color_and_depth.rgb * saturate(mix(1.0, 0.0, occluder_distance / max_illumination_distance));
+      global_illumination += color_and_depth.rgb * incidence_factor * distance_factor;
     }
 
     global_illumination /= float(TOTAL_SAMPLES);
@@ -113,6 +121,7 @@ void main() {
   #endif
 
   // @todo sample from temporally reprojected screen coordinates to fix ghosting
+  // @todo we may need one more pass to reduce noise further in extreme cases
   vec3 indirect_light_color_t1 = texture(indirectLightT1, fragUv).rgb;
   vec3 indirect_light_color_t2 = texture(indirectLightT2, fragUv).rgb;
 

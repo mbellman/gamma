@@ -70,7 +70,7 @@ void DemoScene::init() {
   auto& wall = createObjectFrom("wall");
 
   wall.scale = Vec3f(400.0f, 400.0f, 400.0f);
-  wall.position = Vec3f(0.0f, 100.0f, 150.0f);
+  wall.position = Vec3f(0.0f, 100.0f, 200.0f);
   wall.rotation.x = M_PI * 0.5f;
   wall.color = pVec4(255, 0, 0);
 
@@ -95,8 +95,8 @@ void DemoScene::init() {
 
   // auto& daVinciLight = createLight(LightType::POINT_SHADOWCASTER);
 
-  // daVinciLight.position = Vec3f(0.0f, 20.0f, 20.0f);
-  // daVinciLight.color = Vec3f(1.0f, 0.0f, 0.0f);
+  // daVinciLight.position = Vec3f(0.0f, 20.0f, 60.0f);
+  // daVinciLight.color = Vec3f(1.0f, 1.0f, 1.0f);
   // daVinciLight.radius = 1000.0f;
   // daVinciLight.power = 2.0f;
   // daVinciLight.direction = Vec3f(0.0f, -1.0f, 0.5f);
@@ -105,7 +105,7 @@ void DemoScene::init() {
 
   // auto& daVinciLight2 = createLight(LightType::POINT_SHADOWCASTER);
 
-  // daVinciLight2.position = Vec3f(-10.0f, 20.0f, -10.0f);
+  // daVinciLight2.position = Vec3f(-50.0f, 20.0f, -50.0f);
   // daVinciLight2.color = Vec3f(0.0f, 1.0f, 0.0f);
   // daVinciLight2.radius = 1000.0f;
   // daVinciLight2.power = 2.0f;
@@ -115,7 +115,7 @@ void DemoScene::init() {
 
   // auto& daVinciLight3 = createLight(LightType::POINT_SHADOWCASTER);
 
-  // daVinciLight3.position = Vec3f(10.0f, 20.0f, -10.0f);
+  // daVinciLight3.position = Vec3f(50.0f, 20.0f, -50.0f);
   // daVinciLight3.color = Vec3f(0.0f, 0.0f, 1.0f);
   // daVinciLight3.radius = 1000.0f;
   // daVinciLight3.power = 2.0f;
