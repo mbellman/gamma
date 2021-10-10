@@ -289,55 +289,31 @@ namespace Gamma {
     }
 
     if (Gm_FlagWasEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)) {
-      shaders.indirectLight.define({
-        { "USE_SCREEN_SPACE_AMBIENT_OCCLUSION", "1" }
-      });
-
-      shaders.indirectLightComposite.define({
-        { "USE_AVERAGE_INDIRECT_LIGHT", "1" }
-      });
+      shaders.indirectLight.define("USE_SCREEN_SPACE_AMBIENT_OCCLUSION", "1");
+      shaders.indirectLightComposite.define("USE_AVERAGE_INDIRECT_LIGHT", "1");
     } else if (Gm_FlagWasDisabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)) {
-      shaders.indirectLight.define({
-        { "USE_SCREEN_SPACE_AMBIENT_OCCLUSION", "0" }
-      });
+      shaders.indirectLight.define("USE_SCREEN_SPACE_AMBIENT_OCCLUSION", "0");
 
       if (!Gm_IsFlagEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)) {
-        shaders.indirectLightComposite.define({
-          { "USE_AVERAGE_INDIRECT_LIGHT", "0" }
-        });
+        shaders.indirectLightComposite.define("USE_AVERAGE_INDIRECT_LIGHT", "0");
       }
     }
 
     if (Gm_FlagWasEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)) {
-      shaders.indirectLight.define({
-        { "USE_SCREEN_SPACE_GLOBAL_ILLUMINATION", "1" }
-      });
-
-      shaders.indirectLightComposite.define({
-        { "USE_AVERAGE_INDIRECT_LIGHT", "1" }
-      });
+      shaders.indirectLight.define("USE_SCREEN_SPACE_GLOBAL_ILLUMINATION", "1");
+      shaders.indirectLightComposite.define("USE_AVERAGE_INDIRECT_LIGHT", "1");
     } else if (Gm_FlagWasDisabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)) {
-      shaders.indirectLight.define({
-        { "USE_SCREEN_SPACE_GLOBAL_ILLUMINATION", "0" }
-      });
+      shaders.indirectLight.define("USE_SCREEN_SPACE_GLOBAL_ILLUMINATION", "0");
 
       if (!Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)) {
-        shaders.indirectLightComposite.define({
-          { "USE_AVERAGE_INDIRECT_LIGHT", "0" }
-        });
+        shaders.indirectLightComposite.define("USE_AVERAGE_INDIRECT_LIGHT", "0");
       }
     }
 
     if (Gm_FlagWasEnabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)) {
-      // @bug this resets "USE_AVERAGE_INDIRECT_LIGHT" to "1";
-      // fix this in OpenGLShader::define() by saving active overrides
-      shaders.indirectLightComposite.define({
-        { "USE_INDIRECT_SKY_LIGHT", "1" }
-      });
+      shaders.indirectLightComposite.define("USE_INDIRECT_SKY_LIGHT", "1");
     } else if (Gm_FlagWasDisabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)) {
-      shaders.indirectLightComposite.define({
-        { "USE_INDIRECT_SKY_LIGHT", "0" }
-      });
+      shaders.indirectLightComposite.define("USE_INDIRECT_SKY_LIGHT", "0");
     }
   }
 

@@ -152,7 +152,7 @@ namespace Gamma {
           glDetachShader(program, record.shader);
           glDeleteShader(record.shader);
 
-          GLShaderRecord& updatedRecord = Gm_CompileShader(record.shaderType, record.path.c_str());
+          GLShaderRecord& updatedRecord = Gm_CompileShader(record.shaderType, record.path.c_str(), defineVariables);
 
           glAttachShader(program, updatedRecord.shader);
           glLinkProgram(program);
@@ -169,14 +169,20 @@ namespace Gamma {
     }
   }
 
-  // @todo @bug merge defineOverrides into an internal map of active
-  // overrides to avoid resetting unspecified variables
+  void OpenGLShader::define(const std::string& name, const std::string& value) {
+    define({ { name, value } });
+  }
+
   void OpenGLShader::define(const std::map<std::string, std::string>& defineOverrides) {
+    for (auto& [ name, value ] : defineOverrides) {
+      defineVariables[name] = value;
+    }
+
     for (auto& record : glShaderRecords) {
       glDetachShader(program, record.shader);
       glDeleteShader(record.shader);
 
-      GLShaderRecord& updatedRecord = Gm_CompileShader(record.shaderType, record.path.c_str(), defineOverrides);
+      GLShaderRecord& updatedRecord = Gm_CompileShader(record.shaderType, record.path.c_str(), defineVariables);
 
       glAttachShader(program, updatedRecord.shader);
 

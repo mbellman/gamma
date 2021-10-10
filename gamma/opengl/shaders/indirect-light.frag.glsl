@@ -41,8 +41,7 @@ vec3 getScreenSpaceAmbientOcclusionContribution(float fragment_depth) {
     vec2 offset = texel_size * radius * rotatedVogelDisc(10, i);
     float compared_depth = getLinearizedDepth(texture(colorAndDepth, fragUv + offset).w);
 
-    // @bug the 0.2 bias term is shifting AO along the negative Z axis
-    if (compared_depth < linearized_fragment_depth - 0.2) {
+    if (compared_depth < linearized_fragment_depth) {
       float occluder_distance = linearized_fragment_depth - compared_depth;
 
       occlusion += saturate(mix(1.0, 0.0, occluder_distance / 30.0));
@@ -65,6 +64,8 @@ void main() {
     discard;
   }
 
+  vec3 fragment_position = getWorldPosition(frag_color_and_depth.w, fragUv, inverseProjection, inverseView);
+  vec3 fragment_normal = texture(normalAndSpecularity, fragUv).xyz;
   vec3 indirect_light = vec3(0);
 
   #if USE_SCREEN_SPACE_AMBIENT_OCCLUSION == 1
@@ -80,8 +81,6 @@ void main() {
 
     vec2 texel_size = 1.0 / vec2(1920.0, 1080.0);
     vec3 global_illumination = vec3(0);
-    vec3 fragment_position = getWorldPosition(frag_color_and_depth.w, fragUv, inverseProjection, inverseView);
-    vec3 fragment_normal = texture(normalAndSpecularity, fragUv).xyz;
     float linearized_fragment_depth = getLinearizedDepth(frag_color_and_depth.w);
 
     float radius = clamp(
