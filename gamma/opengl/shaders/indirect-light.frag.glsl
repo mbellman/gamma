@@ -85,12 +85,9 @@ void main() {
 
     vec2 texel_size = 1.0 / vec2(1920.0, 1080.0);
     float linearized_fragment_depth = getLinearizedDepth(frag_color_and_depth.w);
-
-    float radius = clamp(
-      mix(max_sample_radius, min_sample_radius, linearized_fragment_depth / 500.0),
-      min_sample_radius,
-      max_sample_radius
-    );
+    // @todo define and use easeOut()
+    float radius_distance_factor = sqrt(sqrt(linearized_fragment_depth / 500.0));
+    float radius = mix(max_sample_radius, min_sample_radius, saturate(radius_distance_factor));
 
     for (int i = 0; i < TOTAL_SAMPLES; i++) {
       vec2 offset = texel_size * radius * rotatedVogelDisc(TOTAL_SAMPLES, i);

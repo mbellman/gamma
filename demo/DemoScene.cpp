@@ -48,10 +48,10 @@ void DemoScene::init() {
     Vec3f(-5.0f, 20.0f, -5)
   };
 
-  // mesh("plane").type = MeshType::REFLECTIVE;
+  mesh("plane").type = MeshType::REFLECTIVE;
   // mesh("daVinci").type = MeshType::REFRACTIVE;
 
-  // mesh("rabbit").type = MeshType::REFRACTIVE;
+  mesh("rabbit").type = MeshType::REFRACTIVE;
 
   auto& daVinci = createObjectFrom("daVinci");
 

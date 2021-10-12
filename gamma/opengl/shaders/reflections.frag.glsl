@@ -22,7 +22,7 @@ struct Reflection {
 const float z_near = 1.0;
 const float z_far = 10000.0;
 const float min_ray_step_size = 2.0;
-const float max_ray_step_size = 20.0;
+const float max_ray_step_size = 10.0;
 const float jitter = 1.0;
 const float reflection_factor = 0.5;
 const float thickness_threshold = 5.0;
@@ -30,7 +30,7 @@ const float slowdown_distance_threshold = 30.0;
 const float distant_reflection_test_size = 4.0;
 const float contact_ray_step_size = 1.0;
 
-const int TOTAL_MARCH_STEPS = 16;
+const int TOTAL_MARCH_STEPS = 24;
 const int TOTAL_REFINEMENT_STEPS = 6;
 
 #include "utils/gl.glsl";

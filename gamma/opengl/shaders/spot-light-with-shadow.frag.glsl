@@ -58,7 +58,6 @@ float getLightFactor(vec3 position, float incidence, float light_distance) {
     float spread = 3.0;
   #endif
 
-
   float bias = mix(0.001, 0.0002, saturate(light_distance / 100.0));
   float factor = 0.0;
 

@@ -49,7 +49,7 @@ namespace Gamma {
     lightId = light->id;
 
     buffer.init();
-    buffer.setSize({ 1024, 1024  });
+    buffer.setSize({ 1024, 1024 });
     buffer.addColorAttachment(ColorFormat::R, 3);  // Depth (GL_TEXTURE3)
     buffer.addDepthAttachment();
     buffer.bindColorAttachments();
