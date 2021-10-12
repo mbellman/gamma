@@ -18,6 +18,7 @@ uniform vec3 cameraPosition;
 uniform mat4 inverseProjection;
 uniform mat4 inverseView;
 uniform mat4 lightMatrix;
+uniform float time;
 
 // @todo pass in as a uniform
 const float indirect_light_factor = 0.01;
@@ -30,9 +31,10 @@ layout (location = 0) out vec4 out_color_and_depth;
 #include "utils/gl.glsl";
 #include "utils/conversion.glsl";
 #include "utils/random.glsl";
+#include "utils/helpers.glsl";
 
 vec2 rotatedVogelDisc(int samples, int index) {
-  float rotation = noise(1.0) * 3.141592;
+  float rotation = noise(fract(1.0 + time)) * 3.141592;
   float theta = 2.4 * index + rotation;
   float radius = sqrt(float(index) + 0.5) / sqrt(float(samples));
 
@@ -50,19 +52,20 @@ float getLightFactor(vec3 position, float incidence, float light_distance) {
 
   #if USE_VARIABLE_PENUMBRA_SIZE == 1
     // @todo max_spread based on light.radius
-    float max_spread = 500.0;
+    float max_spread = 200.0;
     float spread = 1.0 + pow(light_distance / light.radius, 2) * max_spread;
   #else
     float spread = 3.0;
   #endif
 
+
+  float bias = mix(0.001, 0.0002, saturate(light_distance / 100.0));
   float factor = 0.0;
 
   for (int i = 0; i < 12; i++) {
     vec2 texel_offset = spread * rotatedVogelDisc(12, i) * shadow_map_texel_size;
     vec2 texel_coords = transform.xy + texel_offset;
     float occluder_distance = texture(shadowMap, texel_coords).r;
-    float bias = max(0.00075 + (1.0 - incidence) * 0.001 - (light_distance / light.radius) * 0.01, 0.0);
 
     if (occluder_distance > transform.z - bias) {
       factor += 1.0;

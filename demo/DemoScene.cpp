@@ -21,7 +21,7 @@ void DemoScene::init() {
     "./demo/assets/models/rabbit-lod2.obj"
   }));
 
-  mesh("cube").texture = "./demo/assets/images/cat.png";
+  // mesh("cube").texture = "./demo/assets/images/cat.png";
   // mesh("wall").texture = "./demo/assets/images/cat.png";
   mesh("plane").normalMap = "./demo/assets/images/metal-normal-map.png";
 
@@ -51,12 +51,13 @@ void DemoScene::init() {
   // mesh("plane").type = MeshType::REFLECTIVE;
   // mesh("daVinci").type = MeshType::REFRACTIVE;
 
-  mesh("rabbit").type = MeshType::REFRACTIVE;
+  // mesh("rabbit").type = MeshType::REFRACTIVE;
 
   auto& daVinci = createObjectFrom("daVinci");
 
   daVinci.position = Vec3f(0.0f, 20.0f, 0.0f);
   daVinci.scale = 50.0f;
+  daVinci.color = pVec4(10, 20, 255);
 
   commit(daVinci);
 
@@ -88,7 +89,15 @@ void DemoScene::init() {
       cosf(r) * 60.0f
     );
 
-    rabbit.color = pVec4(255, 200, 255);
+      rabbit.color = pVec4(
+        Vec3f(
+          i / 10.0f,
+          sinf(i / 10.0f * 3.141592f),
+          1.0f - i / 10.0f
+        )
+      );
+
+    // rabbit.color = pVec4(255, 200, 255);
 
     commit(rabbit);
   }
@@ -123,11 +132,22 @@ void DemoScene::init() {
   // daVinciLight3.fov = 80.0f;
   // daVinciLight3.isStatic = true;
 
-  auto& sunlight = createLight(LightType::DIRECTIONAL_SHADOWCASTER);
+  // auto& sunlight = createLight(LightType::DIRECTIONAL_SHADOWCASTER);
 
-  sunlight.direction = Vec3f(-0.3f, -0.5f, 1.0f);
-  // sunlight.color = Vec3f(1.0f, 0.3f, 0.1f);
-  sunlight.color = Vec3f(1.0f);
+  // sunlight.direction = Vec3f(-0.3f, -0.5f, 1.0f);
+  // // sunlight.color = Vec3f(1.0f, 0.3f, 0.1f);
+  // sunlight.color = Vec3f(1.0f);
+
+  auto& cameraLight = createLight(LightType::SPOT_SHADOWCASTER);
+
+  cameraLight.color = Vec3f(1.0f, 1.0f, 1.0f);
+  cameraLight.fov = 90.0f;
+  cameraLight.radius = 500.0f;
+  cameraLight.position = Vec3f(0.0f, 25.0f, 0.0f);
+  cameraLight.direction = Vec3f(0.0f, 0.0f, 1.0f);
+  cameraLight.power = 3.0f;
+
+  clight = &cameraLight;
 
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < 10; j++) {
@@ -141,6 +161,14 @@ void DemoScene::init() {
 
       cube.position = cubePosition;
       cube.scale = 8.0f;
+
+      cube.color = pVec4(
+        Vec3f(
+          i / 10.0f,
+          sinf(i / 10.0f * 3.141592f) * sinf(j / 10.0f * 3.141592f),
+          1.0f - j / 10.0f
+        )
+      );
 
       // auto& cubeLight = createLight(LightType::POINT);
 
@@ -189,13 +217,16 @@ void DemoScene::destroy() {}
 void DemoScene::update(float dt) {
   useLodByDistance(mesh("rabbit"), 100.0f);
 
-  auto& wall = *mesh("wall").objects.begin();
+  // auto& wall = *mesh("wall").objects.begin();
 
-  uint8 g = uint8((0.5f * sinf(getRunningTime()) + 0.5f) * 128.0f);
-  uint8 b = uint8((0.5f * cosf(getRunningTime()) + 0.5f) * 128.0f);
+  // uint8 g = uint8((0.5f * sinf(getRunningTime()) + 0.5f) * 128.0f);
+  // uint8 b = uint8((0.5f * cosf(getRunningTime()) + 0.5f) * 128.0f);
 
-  wall.color = pVec4(255, g, b);
-  wall.position.z = 0.0f + (1.0f + sinf(getRunningTime() * 0.2f)) * 0.5f * 200.0f;
+  // wall.color = pVec4(255, g, b);
+  // wall.position.z = 0.0f + (1.0f + sinf(getRunningTime() * 0.2f)) * 0.5f * 200.0f;
 
-  commit(wall);
+  // commit(wall);
+
+  clight->direction = camera.orientation.getDirection();
+  clight->position = camera.position + camera.orientation.getDirection() * 20.0f + camera.orientation.getUpDirection() * -5.0f;
 }

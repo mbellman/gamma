@@ -61,7 +61,8 @@ void main() {
   vec3 normal = normalize(fragNormal);
   vec3 normalized_fragment_to_camera = normalize(cameraPosition - position);
 
-  vec3 world_refraction_ray = position + refract(normalized_fragment_to_camera, normal, 0.7) * REFRACTION_INTENSITY;
+  vec3 refraction_ray = refract(normalized_fragment_to_camera, normal, 0.7);
+  vec3 world_refraction_ray = position + refraction_ray * REFRACTION_INTENSITY;
   vec3 view_refraction_ray = glVec4(view * glVec4(world_refraction_ray)).xyz;
   vec2 refracted_color_coords = getScreenCoordinates(view_refraction_ray, projection);
   float sample_depth = texture(colorAndDepth, getPixelCoords()).w;

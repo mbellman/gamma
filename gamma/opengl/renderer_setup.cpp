@@ -1,6 +1,8 @@
 #include "opengl/renderer_setup.h"
 #include "system/flags.h"
 
+#include "glew.h"
+
 namespace Gamma {
   void Gm_InitRendererResources(RendererBuffers& buffers, RendererShaders& shaders, const Area<uint32>& internalResolution) {
     // Initialize buffers
@@ -12,19 +14,20 @@ namespace Gamma {
     buffers.gBuffer.addDepthStencilAttachment();
     buffers.gBuffer.bindColorAttachments();
 
+    // @todo loop
     buffers.indirectLight[0].init();
     buffers.indirectLight[0].setSize({ internalResolution.width / 2, internalResolution.height / 2 });
-    buffers.indirectLight[0].addColorAttachment(ColorFormat::RGB, 2);  // (RGB) Color
+    buffers.indirectLight[0].addColorAttachment(ColorFormat::RGBA16, 2);  // (RGB) Color
     buffers.indirectLight[0].bindColorAttachments();
 
     buffers.indirectLight[1].init();
     buffers.indirectLight[1].setSize({ internalResolution.width / 2, internalResolution.height / 2 });
-    buffers.indirectLight[1].addColorAttachment(ColorFormat::RGB, 2);  // (RGB) Color
+    buffers.indirectLight[1].addColorAttachment(ColorFormat::RGBA16, 2);  // (RGB) Color
     buffers.indirectLight[1].bindColorAttachments();
 
     buffers.indirectLight[2].init();
     buffers.indirectLight[2].setSize({ internalResolution.width / 2, internalResolution.height / 2 });
-    buffers.indirectLight[2].addColorAttachment(ColorFormat::RGB, 2);  // (RGB) Color
+    buffers.indirectLight[2].addColorAttachment(ColorFormat::RGBA16, 2);  // (RGB) Color
     buffers.indirectLight[2].bindColorAttachments();
 
     buffers.reflections.init();
@@ -42,12 +45,20 @@ namespace Gamma {
     buffers.accumulation1.init();
     buffers.accumulation1.setSize(internalResolution);
     buffers.accumulation1.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
     buffers.gBuffer.shareDepthStencilAttachment(buffers.accumulation1);
     buffers.accumulation1.bindColorAttachments();
 
     buffers.accumulation2.init();
     buffers.accumulation2.setSize(internalResolution);
     buffers.accumulation2.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
     buffers.gBuffer.shareDepthStencilAttachment(buffers.accumulation2);
     buffers.accumulation2.bindColorAttachments();
 
@@ -169,6 +180,7 @@ namespace Gamma {
 
   void Gm_DestroyRendererResources(RendererBuffers& buffers, RendererShaders& shaders) {
     buffers.gBuffer.destroy();
+    // @todo loop
     buffers.indirectLight[0].destroy();
     buffers.indirectLight[1].destroy();
     buffers.indirectLight[2].destroy();

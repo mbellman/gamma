@@ -71,7 +71,7 @@ void main() {
   vec3 indirect_sky_light = vec3(0);
 
   #if USE_AVERAGE_INDIRECT_LIGHT == 1
-    const int range = 4;
+    const int range = 2;
     vec2 texel_size = 1.0 / vec2(1920.0, 1080.0);
     int total_samples = 0;
 
@@ -90,6 +90,10 @@ void main() {
     }
 
     average_indirect_light /= float(total_samples);
+
+    if (fragUv.x >= 0.001 && fragUv.x <= 0.999 && fragUv.y >= 0.001 && fragUv.y <= 0.999) {
+      average_indirect_light += texture(indirectLight, fragUv).w;
+    }
   #endif
 
   #if USE_INDIRECT_SKY_LIGHT == 1

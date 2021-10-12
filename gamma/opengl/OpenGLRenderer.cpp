@@ -116,7 +116,12 @@ namespace Gamma {
     if (
       ctx.directionalLights.size() == 0 &&
       ctx.directionalShadowcasters.size() == 0 &&
-      (ctx.hasReflectiveObjects || ctx.hasRefractiveObjects)
+      (
+        ctx.hasReflectiveObjects ||
+        ctx.hasRefractiveObjects ||
+        Gm_IsFlagEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION) ||
+        Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)
+      )
     ) {
       copyDepthIntoAccumulationBuffer();
     }
@@ -683,6 +688,7 @@ namespace Gamma {
     shader.setVec3f("cameraPosition", camera.position);
     shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
     shader.setMatrix4f("inverseView", ctx.inverseView);
+    shader.setFloat("time", AbstractScene::active->getRunningTime());
 
     for (uint32 i = 0; i < ctx.spotShadowcasters.size(); i++) {
       auto& glShadowMap = *glSpotShadowMaps[i];
@@ -715,6 +721,11 @@ namespace Gamma {
     ) {
       buffers.gBuffer.read();
       ctx.accumulationTarget->read();
+
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 3);
+      glGenerateMipmap(GL_TEXTURE_2D);
+
       indirectLightBufferT1.read();
       indirectLightBufferT2.read(1);
       currentIndirectLightBuffer.write();
@@ -735,6 +746,9 @@ namespace Gamma {
       shaders.indirectLight.setFloat("time", AbstractScene::active->getRunningTime());
 
       OpenGLScreenQuad::render();
+
+      ctx.accumulationTarget->read();
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     }
 
     buffers.gBuffer.read();

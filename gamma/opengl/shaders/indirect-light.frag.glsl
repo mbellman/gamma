@@ -16,7 +16,7 @@ uniform float time;
 
 noperspective in vec2 fragUv;
 
-layout (location = 0) out vec4 out_color_and_depth;
+layout (location = 0) out vec4 out_gi_and_ao;
 
 #include "utils/conversion.glsl";
 #include "utils/random.glsl";
@@ -30,12 +30,15 @@ vec2 rotatedVogelDisc(int samples, int index) {
   return radius * vec2(cos(theta), sin(theta));
 }
 
-vec3 getScreenSpaceAmbientOcclusionContribution(float fragment_depth) {
+// @todo revise to use a sphere or normal-aligned hemisphere with precalculated sample points
+// @todo distance-dependent sampling radius
+// @todo @bug fix self-occluding surfaces
+float getScreenSpaceAmbientOcclusionContribution(float fragment_depth) {
+  const float radius = 15.0;
   vec3 contribution = vec3(0);
   vec2 texel_size = 1.0 / vec2(1920.0, 1080.0);
   float linearized_fragment_depth = getLinearizedDepth(fragment_depth);
   float occlusion = 0.0;
-  const float radius = 15.0;
 
   for (int i = 0; i < 10; i++) {
     vec2 offset = texel_size * radius * rotatedVogelDisc(10, i);
@@ -50,7 +53,7 @@ vec3 getScreenSpaceAmbientOcclusionContribution(float fragment_depth) {
 
   float average_occlusion = occlusion / 10.0;
 
-  return vec3(-average_occlusion) * 0.1;
+  return -average_occlusion * 0.1;
 }
 
 bool isOffScreen(vec2 uv) {
@@ -66,21 +69,21 @@ void main() {
 
   vec3 fragment_position = getWorldPosition(frag_color_and_depth.w, fragUv, inverseProjection, inverseView);
   vec3 fragment_normal = texture(normalAndSpecularity, fragUv).xyz;
-  vec3 indirect_light = vec3(0);
+  vec3 global_illumination = vec3(0.0);
+  float ambient_occlusion = 0.0;
 
   #if USE_SCREEN_SPACE_AMBIENT_OCCLUSION == 1
-    // @todo improve SSAO quality and fix issues with insufficient darkening
-    indirect_light += getScreenSpaceAmbientOcclusionContribution(frag_color_and_depth.w);
+    ambient_occlusion = getScreenSpaceAmbientOcclusionContribution(frag_color_and_depth.w);
   #endif
 
   #if USE_SCREEN_SPACE_GLOBAL_ILLUMINATION == 1
-    const int TOTAL_SAMPLES = 10;
+    // @todo move to its own function
+    const int TOTAL_SAMPLES = 20;
     const float max_sample_radius = 250.0;
     const float min_sample_radius = 50.0;
     const float max_illumination_distance = 100.0;
 
     vec2 texel_size = 1.0 / vec2(1920.0, 1080.0);
-    vec3 global_illumination = vec3(0);
     float linearized_fragment_depth = getLinearizedDepth(frag_color_and_depth.w);
 
     float radius = clamp(
@@ -97,34 +100,36 @@ void main() {
         continue;
       }
 
-      vec4 color_and_depth = texture(colorAndDepth, fragUv + offset);
+      vec4 sample_color_and_depth = textureLod(colorAndDepth, fragUv + offset, 3);
 
       // Diminish illumination where the sample emits
       // less incident bounce light onto the fragment
-      vec3 world_position = getWorldPosition(color_and_depth.w, fragUv + offset, inverseProjection, inverseView);
-      vec3 fragment_to_sample = normalize(world_position - fragment_position);
-      float incidence_factor = 0.25 + 0.75 * max(dot(fragment_normal, fragment_to_sample), 0);
+      vec3 sample_position = getWorldPosition(sample_color_and_depth.w, fragUv + offset, inverseProjection, inverseView);
+      vec3 fragment_to_sample = normalize(sample_position - fragment_position);
+      float incidence_factor = 0.25 + 0.75 * max(0.0, dot(fragment_normal, fragment_to_sample));
 
       // Diminish illumination with distance, approximated
       // by the difference between fragment and sample depth
-      float compared_depth = getLinearizedDepth(color_and_depth.w);
+      float compared_depth = getLinearizedDepth(sample_color_and_depth.w);
       float occluder_distance = abs(compared_depth - linearized_fragment_depth);
       float distance_factor = saturate(mix(1.0, 0.0, occluder_distance / max_illumination_distance));
 
-      global_illumination += color_and_depth.rgb * incidence_factor * distance_factor;
+      global_illumination += sample_color_and_depth.rgb * incidence_factor * distance_factor;
     }
 
     global_illumination /= float(TOTAL_SAMPLES);
-
-    indirect_light += global_illumination;
   #endif
 
   // @todo sample from temporally reprojected screen coordinates to fix ghosting
   // @todo we may need one more pass to reduce noise further in extreme cases
-  vec3 indirect_light_color_t1 = texture(indirectLightT1, fragUv).rgb;
-  vec3 indirect_light_color_t2 = texture(indirectLightT2, fragUv).rgb;
+  vec3 global_illumination_t1 = texture(indirectLightT1, fragUv).rgb;
+  vec3 global_illumination_t2 = texture(indirectLightT2, fragUv).rgb;
 
-  vec3 final_indirect_light = (indirect_light + indirect_light_color_t1 + indirect_light_color_t2) / 3.0;
+  vec3 final_global_illumination = (
+    global_illumination +
+    global_illumination_t1 +
+    global_illumination_t2
+  ) / 3.0;
 
-  out_color_and_depth = vec4(final_indirect_light, frag_color_and_depth.w);
+  out_gi_and_ao = vec4(final_global_illumination, ambient_occlusion);
 }

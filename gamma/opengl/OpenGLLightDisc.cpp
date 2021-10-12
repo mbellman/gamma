@@ -107,7 +107,7 @@ namespace Gamma {
 
     disc.light = light;
 
-    if (localLightPosition.z > 0.0f) {
+    if (localLightPosition.z > 0.1f) {
       // Light source in front of the camera
       Vec3f screenLightPosition = (projection * localLightPosition).toVec3f() / localLightPosition.z;
 
