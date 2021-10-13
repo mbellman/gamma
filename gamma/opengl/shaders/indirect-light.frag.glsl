@@ -34,24 +34,25 @@ vec2 rotatedVogelDisc(int samples, int index) {
 // @todo distance-dependent sampling radius
 // @todo @bug fix self-occluding surfaces
 float getScreenSpaceAmbientOcclusionContribution(float fragment_depth) {
+  const int TOTAL_SAMPLES = 10;
   const float radius = 15.0;
   vec3 contribution = vec3(0);
   vec2 texel_size = 1.0 / vec2(1920.0, 1080.0);
   float linearized_fragment_depth = getLinearizedDepth(fragment_depth);
   float occlusion = 0.0;
 
-  for (int i = 0; i < 10; i++) {
-    vec2 offset = texel_size * radius * rotatedVogelDisc(10, i);
+  for (int i = 0; i < TOTAL_SAMPLES; i++) {
+    vec2 offset = texel_size * radius * rotatedVogelDisc(TOTAL_SAMPLES, i);
     float compared_depth = getLinearizedDepth(texture(colorAndDepth, fragUv + offset).w);
 
     if (compared_depth < linearized_fragment_depth) {
       float occluder_distance = linearized_fragment_depth - compared_depth;
 
-      occlusion += saturate(mix(1.0, 0.0, occluder_distance / 30.0));
+      occlusion += mix(1.0, 0.0, saturate(occluder_distance / 30.0));
     }
   }
 
-  float average_occlusion = occlusion / 10.0;
+  float average_occlusion = occlusion / float(TOTAL_SAMPLES);
 
   return -average_occlusion * 0.1;
 }
@@ -103,7 +104,7 @@ void main() {
       // less incident bounce light onto the fragment
       vec3 sample_position = getWorldPosition(sample_color_and_depth.w, fragUv + offset, inverseProjection, inverseView);
       vec3 fragment_to_sample = normalize(sample_position - fragment_position);
-      float incidence_factor = 0.25 + 0.75 * max(0.0, dot(fragment_normal, fragment_to_sample));
+      float incidence_factor = max(0.0, dot(fragment_normal, fragment_to_sample));
 
       // Diminish illumination with distance, approximated
       // by the difference between fragment and sample depth
@@ -120,14 +121,9 @@ void main() {
 
   // @todo sample from temporally reprojected screen coordinates to fix ghosting
   // @todo we may need one more pass to reduce noise further in extreme cases
-  vec3 global_illumination_t1 = texture(indirectLightT1, fragUv).rgb;
-  vec3 global_illumination_t2 = texture(indirectLightT2, fragUv).rgb;
-
-  vec3 final_global_illumination = (
-    global_illumination +
-    global_illumination_t1 +
-    global_illumination_t2
+  out_gi_and_ao = (
+    vec4(global_illumination, ambient_occlusion) +
+    texture(indirectLightT1, fragUv) +
+    texture(indirectLightT2, fragUv)
   ) / 3.0;
-
-  out_gi_and_ao = vec4(final_global_illumination, ambient_occlusion);
 }

@@ -23,7 +23,16 @@ void DemoScene::init() {
 
   // mesh("cube").texture = "./demo/assets/images/cat.png";
   // mesh("wall").texture = "./demo/assets/images/cat.png";
+  mesh("cube").texture = "./demo/assets/images/marble.png";
+  mesh("cube").normalMap = "./demo/assets/images/marble-normal-map.png";
+  mesh("plane").texture = "./demo/assets/images/marble.png";
+  mesh("plane").normalMap = "./demo/assets/images/marble-normal-map.png";
   mesh("plane").normalMap = "./demo/assets/images/metal-normal-map.png";
+
+  // mesh("plane").type = MeshType::REFLECTIVE;
+  // mesh("daVinci").type = MeshType::REFRACTIVE;
+  mesh("rabbit").type = MeshType::EMISSIVE;
+  // mesh("cube").type = MeshType::EMISSIVE;
 
   auto& particles = mesh("particles").particleSystem;
 
@@ -48,17 +57,11 @@ void DemoScene::init() {
     Vec3f(-5.0f, 20.0f, -5)
   };
 
-  // mesh("plane").type = MeshType::REFLECTIVE;
-  // mesh("daVinci").type = MeshType::REFRACTIVE;
-
-  mesh("rabbit").type = MeshType::EMISSIVE;
-  mesh("cube").type = MeshType::EMISSIVE;
-
   auto& daVinci = createObjectFrom("daVinci");
 
   daVinci.position = Vec3f(0.0f, 20.0f, 0.0f);
   daVinci.scale = 50.0f;
-  daVinci.color = pVec4(10, 20, 255);
+  daVinci.color = pVec4(100, 175, 255);
 
   commit(daVinci);
 

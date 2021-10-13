@@ -33,7 +33,7 @@ vec3 getNormal() {
 }
 
 void main() {
-  vec3 color = hasTexture ? texture(meshTexture, fragUv).rgb : fragColor;
+  vec3 color = hasTexture ? texture(meshTexture, fragUv).rgb * fragColor : fragColor;
 
   out_color_and_depth = vec4(color, gl_FragCoord.z);
   out_normal_and_specularity = vec4(getNormal(), 1.0);

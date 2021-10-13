@@ -830,8 +830,8 @@ namespace Gamma {
     glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
-    glStencilFunc(GL_ALWAYS, 0xFF, 0xFF);
-    glStencilMask(MeshType::PARTICLE_SYSTEM);
+    glStencilFunc(GL_ALWAYS, MeshType::PARTICLE_SYSTEM, 0xFF);
+    glStencilMask(0xFF);
 
     shaders.particles.use();
     shaders.particles.setMatrix4f("projection", ctx.projection);
