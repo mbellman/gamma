@@ -69,21 +69,33 @@ vec3 getIndirectSkyLightContribution(vec3 fragment_normal) {
 void main() {
   vec3 average_indirect_light = vec3(0);
   vec3 indirect_sky_light = vec3(0);
+  vec3 fragment_normal = texture(normalAndSpecularity, fragUv).xyz;
 
   #if USE_AVERAGE_INDIRECT_LIGHT == 1
-    const int range = 2;
+    const int range = 4;
     vec2 texel_size = 1.0 / vec2(1920.0, 1080.0);
     int total_samples = 0;
 
-    // average_indirect_light = texture(indirectLight, fragUv).rgb;
-
     for (int i = -range; i <= range; i += range) {
       for (int j = -range; j <= range; j += range) {
-        vec2 coords = fragUv + texel_size * vec2(i, j);
+        vec2 sample_coords = fragUv + texel_size * vec2(i, j);
+        vec3 sample_normal = texture(normalAndSpecularity, sample_coords).xyz;
+
+        // Avoid blurring where the fragment and sample have
+        // sufficiently different normals, which otherwise
+        // causes unsightly color bleeding/ghosting
+        if (dot(fragment_normal, sample_normal) < 0.9) {
+          continue;
+        }
 
         // Avoid sampling outside of the screen edges
-        if (coords.x >= 0.001 && coords.x <= 0.999 && coords.y >= 0.001 && coords.y <= 0.999) {
-          average_indirect_light += texture(indirectLight, coords).rgb;
+        if (
+          sample_coords.x >= 0.001 &&
+          sample_coords.x <= 0.999 &&
+          sample_coords.y >= 0.001 &&
+          sample_coords.y <= 0.999
+        ) {
+          average_indirect_light += texture(indirectLight, sample_coords).rgb;
           total_samples++;
         }
       }
@@ -98,9 +110,8 @@ void main() {
 
   #if USE_INDIRECT_SKY_LIGHT == 1
     vec3 color = texture(colorAndDepth, fragUv).rgb;
-    vec3 normal = texture(normalAndSpecularity, fragUv).xyz;
 
-    indirect_sky_light = color * getIndirectSkyLightContribution(normal);
+    indirect_sky_light = color * getIndirectSkyLightContribution(fragment_normal);
   #endif
 
   vec3 composite_color = average_indirect_light + indirect_sky_light;

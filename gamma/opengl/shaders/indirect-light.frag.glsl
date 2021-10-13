@@ -79,7 +79,7 @@ void main() {
   #if USE_SCREEN_SPACE_GLOBAL_ILLUMINATION == 1
     // @todo move to its own function
     const int TOTAL_SAMPLES = 20;
-    const float max_sample_radius = 250.0;
+    const float max_sample_radius = 500.0;
     const float min_sample_radius = 50.0;
     const float max_illumination_distance = 100.0;
 
@@ -110,7 +110,7 @@ void main() {
       float compared_depth = getLinearizedDepth(sample_color_and_depth.w);
       float occluder_distance = abs(compared_depth - linearized_fragment_depth);
       // @todo define and use easeOut() for distance ratio
-      float distance_factor = mix(2.0, 0.0, saturate(occluder_distance / max_illumination_distance));
+      float distance_factor = mix(3.0, 0.0, saturate(occluder_distance / max_illumination_distance));
 
       global_illumination += sample_color_and_depth.rgb * incidence_factor * distance_factor;
     }

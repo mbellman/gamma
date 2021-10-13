@@ -52,6 +52,7 @@ void DemoScene::init() {
   // mesh("daVinci").type = MeshType::REFRACTIVE;
 
   mesh("rabbit").type = MeshType::EMISSIVE;
+  mesh("cube").type = MeshType::EMISSIVE;
 
   auto& daVinci = createObjectFrom("daVinci");
 
