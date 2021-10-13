@@ -109,7 +109,8 @@ void main() {
       // by the difference between fragment and sample depth
       float compared_depth = getLinearizedDepth(sample_color_and_depth.w);
       float occluder_distance = abs(compared_depth - linearized_fragment_depth);
-      float distance_factor = saturate(mix(1.0, 0.0, occluder_distance / max_illumination_distance));
+      // @todo define and use easeOut() for distance ratio
+      float distance_factor = mix(2.0, 0.0, saturate(occluder_distance / max_illumination_distance));
 
       global_illumination += sample_color_and_depth.rgb * incidence_factor * distance_factor;
     }

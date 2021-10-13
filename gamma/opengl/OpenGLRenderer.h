@@ -57,6 +57,7 @@ namespace Gamma {
   struct RendererContext {
     uint32 internalWidth;
     uint32 internalHeight;
+    bool hasEmissiveObjects;
     bool hasReflectiveObjects;
     bool hasRefractiveObjects;
     GLenum primitiveMode;
@@ -124,6 +125,7 @@ namespace Gamma {
     void renderDirectionalShadowcasters();
     void renderSpotLights();
     void renderSpotShadowcasters();
+    void copyEmissiveObjects();
     void renderIndirectLight();
     void renderSkybox();
     void renderParticleSystems();

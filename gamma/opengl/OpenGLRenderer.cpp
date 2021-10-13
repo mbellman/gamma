@@ -150,6 +150,10 @@ namespace Gamma {
       renderSpotShadowcasters();
     }
 
+    if (ctx.hasEmissiveObjects) {
+      copyEmissiveObjects();
+    }
+
     if (
       Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION) ||
       Gm_IsFlagEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION) ||
@@ -210,13 +214,16 @@ namespace Gamma {
     ctx.inverseProjection = ctx.projection.inverse();
     ctx.inverseView = ctx.view.inverse();
 
-    // Track reflective/refractive objects
+    // Track special object types
+    ctx.hasEmissiveObjects = false;
     ctx.hasReflectiveObjects = false;
     ctx.hasRefractiveObjects = false;
 
     for (auto* glMesh : glMeshes) {
       if (glMesh->getObjectCount() > 0) {
-        if (glMesh->isMeshType(MeshType::REFLECTIVE)) {
+        if (glMesh->isMeshType(MeshType::EMISSIVE)) {
+          ctx.hasEmissiveObjects = true;
+        } else if (glMesh->isMeshType(MeshType::REFLECTIVE)) {
           ctx.hasReflectiveObjects = true;
         } else if (glMesh->isMeshType(MeshType::REFRACTIVE)) {
           ctx.hasRefractiveObjects = true;
@@ -348,8 +355,17 @@ namespace Gamma {
     shaders.geometry.setInt("meshTexture", 0);
     shaders.geometry.setInt("meshNormalMap", 1);
 
-    // @todo render emissive objects
-    // glStencilMask(MeshType::EMISSIVE);
+    // Render emissive objects
+    glStencilMask(MeshType::EMISSIVE);
+
+    for (auto* glMesh : glMeshes) {
+      if (glMesh->isMeshType(MeshType::EMISSIVE)) {
+        shaders.geometry.setBool("hasTexture", glMesh->hasTexture());
+        shaders.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
+
+        glMesh->render(ctx.primitiveMode);
+      }
+    }
 
     // Render reflective objects
     glStencilMask(MeshType::REFLECTIVE);
@@ -708,7 +724,29 @@ namespace Gamma {
   /**
    * @todo description
    */
+  void OpenGLRenderer::copyEmissiveObjects() {
+    // Only copy the color/depth frame where emissive
+    // objects have been drawn into the G-Buffer
+    glStencilFunc(GL_EQUAL, MeshType::EMISSIVE, 0xFF);
+
+    auto& shader = shaders.copyFrame;
+
+    shader.use();
+    shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+    shader.setInt("colorAndDepth", 0);
+
+    OpenGLScreenQuad::render();
+
+    // Restore the lighting stencil function, since we
+    // may render indirect lighting after this
+    glStencilFunc(GL_LESS, MeshType::PARTICLE_SYSTEM, 0xFF);
+  }
+
+  /**
+   * @todo description
+   */
   void OpenGLRenderer::renderIndirectLight() {
+    // @todo rewrite this a bit less awkwardly
     #define WRAP(index) (index) < 0 ? 3 + (index) : index
 
     auto& currentIndirectLightBuffer = buffers.indirectLight[frame % 3];
