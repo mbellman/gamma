@@ -124,9 +124,13 @@ namespace Gamma {
    */
   enum MeshType {
     /**
-     * @todo differentiate skybox/emissive types
+     * @todo description
      */
-    EMISSIVE = 0x00,
+    SKYBOX = 0x00,
+    /**
+     * @todo description
+     */
+    EMISSIVE = 0x50,
     /**
      * Defines a set of GPU-accelerated particles, with custom
      * parameters for controlling particle behavior.

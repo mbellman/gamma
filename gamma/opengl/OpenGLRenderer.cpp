@@ -772,7 +772,7 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderSkybox() {
-    glStencilFunc(GL_EQUAL, MeshType::EMISSIVE, 0xFF);
+    glStencilFunc(GL_EQUAL, MeshType::SKYBOX, 0xFF);
 
     auto& camera = *Camera::active;
 
@@ -837,7 +837,7 @@ namespace Gamma {
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
     glDepthMask(GL_TRUE);
-    glStencilMask(MeshType::EMISSIVE);
+    glStencilMask(MeshType::SKYBOX);
   }
 
   /**
