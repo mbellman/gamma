@@ -51,7 +51,6 @@ float getLightFactor(vec3 position, float incidence, float light_distance) {
   vec2 shadow_map_texel_size = 1.0 / vec2(1024.0);
 
   #if USE_VARIABLE_PENUMBRA_SIZE == 1
-    // @todo max_spread based on light.radius
     float max_spread = 200.0;
     float spread = 1.0 + pow(light_distance / light.radius, 2) * max_spread;
   #else

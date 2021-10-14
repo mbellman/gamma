@@ -41,8 +41,8 @@ float saturate(float value) {
 
 float getLightFactor(vec3 light_to_surface, float light_distance, float incidence) {
   #if USE_VARIABLE_PENUMBRA_SIZE == 1
-    float max_spread = light.radius * mix(0.01, 1.0, saturate(light.radius / 10000.0));
-    float spread = pow(light_distance / light.radius, 2) * max_spread;
+    float max_spread = 200.0;
+    float spread = 1.0 + pow(light_distance / light.radius, 2) * max_spread;
   #else
     float spread = 0.5;
   #endif

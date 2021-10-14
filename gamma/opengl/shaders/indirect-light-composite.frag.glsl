@@ -72,7 +72,7 @@ void main() {
   vec3 fragment_normal = texture(normalAndSpecularity, fragUv).xyz;
 
   #if USE_AVERAGE_INDIRECT_LIGHT == 1
-    const int range = 4;
+    const int range = 6;
     vec2 texel_size = 1.0 / vec2(1920.0, 1080.0);
     int total_samples = 0;
 
@@ -84,6 +84,9 @@ void main() {
         // Avoid blurring where the fragment and sample have
         // sufficiently different normals, which otherwise
         // causes unsightly color bleeding/ghosting
+        //
+        // @bug there are still edge cases; a luminance
+        // comparison might be preferable here
         if (dot(fragment_normal, sample_normal) < 0.9) {
           continue;
         }

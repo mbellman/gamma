@@ -23,7 +23,7 @@ layout (location = 0) out vec4 out_gi_and_ao;
 #include "utils/helpers.glsl";
 
 vec2 rotatedVogelDisc(int samples, int index) {
-  float rotation = noise(fract(1.0 + time)) * 3.141592;
+  float rotation = noise(fract(1.0 + time)) * 3.141592 * 2.0;
   float theta = 2.4 * index + rotation;
   float radius = sqrt(float(index) + 0.5) / sqrt(float(samples));
 
@@ -43,7 +43,7 @@ float getScreenSpaceAmbientOcclusionContribution(float fragment_depth) {
 
   for (int i = 0; i < TOTAL_SAMPLES; i++) {
     vec2 offset = texel_size * radius * rotatedVogelDisc(TOTAL_SAMPLES, i);
-    float compared_depth = getLinearizedDepth(texture(colorAndDepth, fragUv + offset).w);
+    float compared_depth = getLinearizedDepth(textureLod(colorAndDepth, fragUv + offset, 3).w);
 
     if (compared_depth < linearized_fragment_depth) {
       float occluder_distance = linearized_fragment_depth - compared_depth;
@@ -79,10 +79,10 @@ void main() {
 
   #if USE_SCREEN_SPACE_GLOBAL_ILLUMINATION == 1
     // @todo move to its own function
-    const int TOTAL_SAMPLES = 20;
-    const float max_sample_radius = 500.0;
+    const int TOTAL_SAMPLES = 30;
+    const float max_sample_radius = 1000.0;
     const float min_sample_radius = 50.0;
-    const float max_illumination_distance = 100.0;
+    const float max_brightness = 50.0;
 
     vec2 texel_size = 1.0 / vec2(1920.0, 1080.0);
     float linearized_fragment_depth = getLinearizedDepth(frag_color_and_depth.w);
@@ -98,20 +98,17 @@ void main() {
         continue;
       }
 
-      vec4 sample_color_and_depth = textureLod(colorAndDepth, fragUv + offset, 3);
+      vec4 sample_color_and_depth = textureLod(colorAndDepth, fragUv + offset, 6);
 
       // Diminish illumination where the sample emits
       // less incident bounce light onto the fragment
       vec3 sample_position = getWorldPosition(sample_color_and_depth.w, fragUv + offset, inverseProjection, inverseView);
-      vec3 fragment_to_sample = normalize(sample_position - fragment_position);
-      float incidence_factor = max(0.0, dot(fragment_normal, fragment_to_sample));
+      float sample_distance = distance(fragment_position, sample_position);
+      vec3 normalized_fragment_to_sample = (sample_position - fragment_position) / sample_distance;
+      float incidence_factor = max(0.0, dot(fragment_normal, normalized_fragment_to_sample));
 
-      // Diminish illumination with distance, approximated
-      // by the difference between fragment and sample depth
-      float compared_depth = getLinearizedDepth(sample_color_and_depth.w);
-      float occluder_distance = abs(compared_depth - linearized_fragment_depth);
-      // @todo define and use easeOut() for distance ratio
-      float distance_factor = mix(3.0, 0.0, saturate(occluder_distance / max_illumination_distance));
+      // Diminish illumination with distance
+      float distance_factor = max_brightness * saturate(1.0 / sample_distance);
 
       global_illumination += sample_color_and_depth.rgb * incidence_factor * distance_factor;
     }
@@ -120,7 +117,6 @@ void main() {
   #endif
 
   // @todo sample from temporally reprojected screen coordinates to fix ghosting
-  // @todo we may need one more pass to reduce noise further in extreme cases
   out_gi_and_ao = (
     vec4(global_illumination, ambient_occlusion) +
     texture(indirectLightT1, fragUv) +
