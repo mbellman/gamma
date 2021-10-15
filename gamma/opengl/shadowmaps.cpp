@@ -1,8 +1,10 @@
 #include <algorithm>
 #include <cmath>
 
-#include "opengl/shadowmaps.h"
 #include "math/constants.h"
+#include "opengl/shadowmaps.h"
+#include "system/console.h"
+#include "system/flags.h"
 
 #include "glew.h"
 
@@ -27,6 +29,10 @@ namespace Gamma {
     buffer.addColorAttachment(ColorFormat::R, 5);  // Cascade 2 (GL_TEXTURE5)
     buffer.addDepthAttachment();
     buffer.bindColorAttachments();
+
+    #if GAMMA_DEVELOPER_MODE
+      Console::log("[Gamma] OpenGLDirectionalShadowMap created");
+    #endif
   }
 
   /**
@@ -39,6 +45,10 @@ namespace Gamma {
     buffer.init();
     buffer.setSize({ 1024, 1024 });
     buffer.addDepthAttachment(3);  // Depth (GL_TEXTURE3)
+
+    #if GAMMA_DEVELOPER_MODE
+      Console::log("[Gamma] OpenGLPointShadowMap created");
+    #endif
   }
 
   /**
@@ -53,6 +63,10 @@ namespace Gamma {
     buffer.addColorAttachment(ColorFormat::R, 3);  // Depth (GL_TEXTURE3)
     buffer.addDepthAttachment();
     buffer.bindColorAttachments();
+
+    #if GAMMA_DEVELOPER_MODE
+      Console::log("[Gamma] OpenGLSpotShadowMap created");
+    #endif
   }
 
   /**

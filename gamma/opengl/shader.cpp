@@ -83,6 +83,7 @@ namespace Gamma {
       char error[512];
 
       glGetShaderInfoLog(shader, 512, 0, error);
+
       Console::log("[Gamma] Failed to compile shader:", path);
       Console::log(error);
     }
@@ -210,6 +211,12 @@ namespace Gamma {
 
   void OpenGLShader::link() {
     glLinkProgram(program);
+
+    #if GAMMA_DEVELOPER_MODE
+      for (auto& record : glShaderRecords) {
+        Console::log("[Gamma] Loaded shader:", record.path);
+      }
+    #endif
   }
 
   void OpenGLShader::setBool(std::string name, bool value) const {

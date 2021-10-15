@@ -1057,10 +1057,11 @@ namespace Gamma {
     glMeshes.push_back(new OpenGLMesh(mesh));
 
     #if GAMMA_DEVELOPER_MODE
+      // @todo move to OpenGLMesh
       uint32 totalVertices = mesh->vertices.size();
       uint32 totalTriangles = mesh->faceElements.size() / 3;
 
-      Console::log("[Gamma] Mesh created!", totalVertices, "vertices,", totalTriangles, "triangles");
+      Console::log("[Gamma] OpenGLMesh created:", totalVertices, "vertices,", totalTriangles, "triangles");
     #endif
   }
 
@@ -1076,8 +1077,6 @@ namespace Gamma {
         glSpotShadowMaps.push_back(new OpenGLSpotShadowMap(light));
         break;
     }
-
-    Console::log("[Gamma] Shadow map created!");
   }
 
   void OpenGLRenderer::destroyMesh(const Mesh* mesh) {
