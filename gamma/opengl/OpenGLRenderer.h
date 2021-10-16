@@ -71,6 +71,7 @@ namespace Gamma {
     Matrix4f inverseProjection;
     Matrix4f view;
     Matrix4f inverseView;
+    Matrix4f previousViews[2];
     OpenGLFrameBuffer* accumulationSource = nullptr;
     OpenGLFrameBuffer* accumulationTarget = nullptr;
     // @todo target (fbo)

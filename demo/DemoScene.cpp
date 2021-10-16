@@ -29,7 +29,7 @@ void DemoScene::init() {
   mesh("plane").normalMap = "./demo/assets/images/marble-normal-map.png";
   mesh("plane").normalMap = "./demo/assets/images/metal-normal-map.png";
 
-  // mesh("plane").type = MeshType::REFLECTIVE;
+  mesh("plane").type = MeshType::REFLECTIVE;
   // mesh("daVinci").type = MeshType::REFRACTIVE;
   mesh("rabbit").type = MeshType::EMISSIVE;
   // mesh("cube").type = MeshType::EMISSIVE;
@@ -106,43 +106,42 @@ void DemoScene::init() {
     commit(rabbit);
   }
 
-  auto& daVinciLight = createLight(LightType::POINT_SHADOWCASTER);
+  // auto& daVinciLight = createLight(LightType::POINT_SHADOWCASTER);
 
-  daVinciLight.position = Vec3f(0.0f, 20.0f, 0.0f);
-  daVinciLight.color = Vec3f(1.0f, 1.0f, 1.0f);
-  daVinciLight.radius = 1000.0f;
-  daVinciLight.power = 2.0f;
-  daVinciLight.direction = Vec3f(0.0f, -1.0f, 0.5f);
-  daVinciLight.fov = 80.0f;
-  daVinciLight.isStatic = true;
+  // daVinciLight.position = Vec3f(0.0f, 20.0f, 0.0f);
+  // daVinciLight.color = Vec3f(1.0f, 1.0f, 1.0f);
+  // daVinciLight.radius = 1000.0f;
+  // daVinciLight.power = 2.0f;
+  // daVinciLight.direction = Vec3f(0.0f, -1.0f, 0.5f);
+  // daVinciLight.fov = 80.0f;
+  // daVinciLight.isStatic = true;
 
-  auto& daVinciLight2 = createLight(LightType::POINT_SHADOWCASTER);
+  // auto& daVinciLight2 = createLight(LightType::POINT_SHADOWCASTER);
 
-  daVinciLight2.position = Vec3f(-50.0f, 20.0f, -50.0f);
-  daVinciLight2.color = Vec3f(0.0f, 1.0f, 0.0f);
-  daVinciLight2.color = Vec3f(1.0f, 1.0f, 1.0f);
-  daVinciLight2.radius = 1000.0f;
-  daVinciLight2.power = 2.0f;
-  daVinciLight2.direction = Vec3f(-0.3f, -1.0f, -0.3f);
-  daVinciLight2.fov = 80.0f;
-  daVinciLight2.isStatic = true;
+  // daVinciLight2.position = Vec3f(-50.0f, 20.0f, -50.0f);
+  // daVinciLight2.color = Vec3f(0.0f, 1.0f, 0.0f);
+  // daVinciLight2.color = Vec3f(1.0f, 1.0f, 1.0f);
+  // daVinciLight2.radius = 1000.0f;
+  // daVinciLight2.power = 2.0f;
+  // daVinciLight2.direction = Vec3f(-0.3f, -1.0f, -0.3f);
+  // daVinciLight2.fov = 80.0f;
+  // daVinciLight2.isStatic = true;
 
-  auto& daVinciLight3 = createLight(LightType::POINT_SHADOWCASTER);
+  // auto& daVinciLight3 = createLight(LightType::POINT_SHADOWCASTER);
 
-  daVinciLight3.position = Vec3f(50.0f, 20.0f, -50.0f);
-  daVinciLight3.color = Vec3f(0.0f, 0.0f, 1.0f);
-  daVinciLight3.color = Vec3f(1.0f, 1.0f, 1.0f);
-  daVinciLight3.radius = 1000.0f;
-  daVinciLight3.power = 2.0f;
-  daVinciLight3.direction = Vec3f(0.3f, -1.0f, -0.3f);
-  daVinciLight3.fov = 80.0f;
-  daVinciLight3.isStatic = true;
+  // daVinciLight3.position = Vec3f(50.0f, 20.0f, -50.0f);
+  // daVinciLight3.color = Vec3f(0.0f, 0.0f, 1.0f);
+  // daVinciLight3.color = Vec3f(1.0f, 1.0f, 1.0f);
+  // daVinciLight3.radius = 1000.0f;
+  // daVinciLight3.power = 2.0f;
+  // daVinciLight3.direction = Vec3f(0.3f, -1.0f, -0.3f);
+  // daVinciLight3.fov = 80.0f;
+  // daVinciLight3.isStatic = true;
 
-  // auto& sunlight = createLight(LightType::DIRECTIONAL_SHADOWCASTER);
+  auto& sunlight = createLight(LightType::DIRECTIONAL_SHADOWCASTER);
 
-  // sunlight.direction = Vec3f(-0.3f, -0.5f, 1.0f);
-  // // sunlight.color = Vec3f(1.0f, 0.3f, 0.1f);
-  // sunlight.color = Vec3f(1.0f);
+  sunlight.direction = Vec3f(-0.3f, -0.5f, 1.0f);
+  sunlight.color = Vec3f(1.0f, 0.3f, 0.1f);
 
   // auto& cameraLight = createLight(LightType::SPOT_SHADOWCASTER);
 

@@ -12,6 +12,8 @@ uniform mat4 view;
 uniform mat4 inverseView;
 uniform mat4 projection;
 uniform mat4 inverseProjection;
+uniform mat4 viewT1;
+uniform mat4 viewT2;
 uniform float time;
 
 noperspective in vec2 fragUv;
@@ -21,6 +23,7 @@ layout (location = 0) out vec4 out_gi_and_ao;
 #include "utils/conversion.glsl";
 #include "utils/random.glsl";
 #include "utils/helpers.glsl";
+#include "utils/gl.glsl";
 
 vec2 rotatedVogelDisc(int samples, int index) {
   float rotation = noise(fract(1.0 + time)) * 3.141592 * 2.0;
@@ -57,10 +60,6 @@ float getScreenSpaceAmbientOcclusionContribution(float fragment_depth) {
   return -average_occlusion * 0.1;
 }
 
-bool isOffScreen(vec2 uv) {
-  return uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1;
-}
-
 void main() {
   vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
 
@@ -94,7 +93,7 @@ void main() {
       vec2 offset = texel_size * radius * rotatedVogelDisc(TOTAL_SAMPLES, i);
       vec2 coords = fragUv + offset;
 
-      if (isOffScreen(coords)) {
+      if (isOffScreen(coords, 0.0)) {
         continue;
       }
 
@@ -116,10 +115,23 @@ void main() {
     global_illumination /= float(TOTAL_SAMPLES);
   #endif
 
-  // @todo sample from temporally reprojected screen coordinates to fix ghosting
-  out_gi_and_ao = (
-    vec4(global_illumination, ambient_occlusion) +
-    texture(indirectLightT1, fragUv) +
-    texture(indirectLightT2, fragUv)
-  ) / 3.0;
+  vec3 fragment_position_t1 = glVec3(viewT1 * glVec4(fragment_position));
+  vec3 fragment_position_t2 = glVec3(viewT2 * glVec4(fragment_position));
+  vec2 fragUv_t1 = getScreenCoordinates(fragment_position_t1.xyz, projection);
+  vec2 fragUv_t2 = getScreenCoordinates(fragment_position_t2.xyz, projection);
+  int total_temporal_samples = 1;
+
+  out_gi_and_ao = vec4(global_illumination, ambient_occlusion);
+
+  if (!isOffScreen(fragUv_t1, 0.001)) {
+    out_gi_and_ao += texture(indirectLightT1, fragUv_t1);
+    total_temporal_samples++;
+  }
+
+  if (!isOffScreen(fragUv_t2, 0.001)) {
+    out_gi_and_ao += texture(indirectLightT2, fragUv_t2);
+    total_temporal_samples++;
+  }
+
+  out_gi_and_ao /= float(total_temporal_samples);
 }

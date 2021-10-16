@@ -205,6 +205,8 @@ namespace Gamma {
 
     // Camera projection/view/inverse matrices
     ctx.projection = Matrix4f::glPerspective(internalResolution, 45.0f, 1.0f, 10000.0f).transpose();
+    ctx.previousViews[1] = ctx.previousViews[0];
+    ctx.previousViews[0] = ctx.view;
 
     ctx.view = (
       Matrix4f::rotation(camera.orientation.toVec3f()) *
@@ -781,6 +783,8 @@ namespace Gamma {
       shaders.indirectLight.setMatrix4f("view", ctx.view);
       shaders.indirectLight.setMatrix4f("inverseProjection", ctx.inverseProjection);
       shaders.indirectLight.setMatrix4f("inverseView", ctx.inverseView);
+      shaders.indirectLight.setMatrix4f("viewT1", ctx.previousViews[0]);
+      shaders.indirectLight.setMatrix4f("viewT2", ctx.previousViews[1]);
       shaders.indirectLight.setFloat("time", AbstractScene::active->getRunningTime());
 
       OpenGLScreenQuad::render();
