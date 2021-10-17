@@ -99,6 +99,7 @@ namespace Gamma {
       Matrix4f::translation(camera.position.invert().gl())
     );
 
+    // @todo pass internalResolution instead of { 1920, 1080 }
     Matrix4f cameraProjection = Matrix4f::glPerspective({ 1920, 1080 }, 45.0f, near, far);
     Matrix4f cameraViewProjection = cameraProjection * cameraView;
     Matrix4f inverseCameraViewProjection = cameraViewProjection.inverse();

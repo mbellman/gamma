@@ -49,6 +49,20 @@ namespace Gamma {
     // Initialize global buffers
     Gm_InitDrawIndirectBuffer();
 
+    #ifndef GAMMA_DEVELOPER_MODE
+      // Set uniform shader constants upfront, since
+      // shaders won't change during runtime
+      Vec2f screenSize((float)internalResolution.width, (float)internalResolution.height);
+
+      shaders.indirectLight.setVec2f("screenSize", screenSize);
+      shaders.indirectLightComposite.setVec2f("screenSize", screenSize);
+      shaders.reflectionsDenoise.setVec2f("screenSize", screenSize);
+      shaders.refractivePrepass.setVec2f("screenSize", screenSize);
+      shaders.refractiveGeometry.setVec2f("screenSize", screenSize);
+
+      // @todo set sampler2D texture units
+    #endif
+
     // Initialize screen texture
     glGenTextures(1, &screenTexture);
     glBindTexture(GL_TEXTURE_2D, screenTexture);
@@ -773,6 +787,13 @@ namespace Gamma {
       glClear(GL_COLOR_BUFFER_BIT);
 
       shaders.indirectLight.use();
+
+      #if GAMMA_DEVELOPER_MODE
+        Vec2f screenSize((float)internalResolution.width, (float)internalResolution.height);
+
+        shaders.indirectLight.setVec2f("screenSize", screenSize);
+      #endif
+
       shaders.indirectLight.setVec4f("transform", FULL_SCREEN_TRANSFORM);
       shaders.indirectLight.setInt("colorAndDepth", 0);
       shaders.indirectLight.setInt("normalAndSpecularity", 1);
@@ -798,6 +819,13 @@ namespace Gamma {
     ctx.accumulationTarget->write();
 
     shaders.indirectLightComposite.use();
+
+    #if GAMMA_DEVELOPER_MODE
+      Vec2f screenSize((float)internalResolution.width, (float)internalResolution.height);
+
+      shaders.indirectLightComposite.setVec2f("screenSize", screenSize);
+    #endif
+
     shaders.indirectLightComposite.setVec4f("transform", FULL_SCREEN_TRANSFORM);
     shaders.indirectLightComposite.setInt("colorAndDepth", 0);
     shaders.indirectLightComposite.setInt("normalAndSpecularity", 1);
@@ -899,6 +927,13 @@ namespace Gamma {
       glStencilMask(MeshType::REFRACTIVE);
 
       shaders.refractivePrepass.use();
+
+      #if GAMMA_DEVELOPER_MODE
+        Vec2f screenSize((float)internalResolution.width, (float)internalResolution.height);
+
+        shaders.refractivePrepass.setVec2f("screenSize", screenSize);
+      #endif
+
       shaders.refractivePrepass.setInt("color_and_depth", 0);
       shaders.refractivePrepass.setMatrix4f("projection", ctx.projection);
       shaders.refractivePrepass.setMatrix4f("view", ctx.view);
@@ -940,6 +975,13 @@ namespace Gamma {
     ctx.accumulationTarget->write();
 
     shaders.reflectionsDenoise.use();
+
+    #if GAMMA_DEVELOPER_MODE
+      Vec2f screenSize((float)internalResolution.width, (float)internalResolution.height);
+
+      shaders.reflectionsDenoise.setVec2f("screenSize", screenSize);
+    #endif
+
     shaders.reflectionsDenoise.setVec4f("transform", FULL_SCREEN_TRANSFORM);
     shaders.reflectionsDenoise.setInt("colorAndDepth", 0);
 
@@ -972,6 +1014,13 @@ namespace Gamma {
     glStencilMask(0xFF);
 
     shaders.refractiveGeometry.use();
+
+    #if GAMMA_DEVELOPER_MODE
+      Vec2f screenSize((float)internalResolution.width, (float)internalResolution.height);
+
+      shaders.refractiveGeometry.setVec2f("screenSize", screenSize);
+    #endif
+
     shaders.refractiveGeometry.setInt("colorAndDepth", 0);
     shaders.refractiveGeometry.setMatrix4f("projection", ctx.projection);
     shaders.refractiveGeometry.setMatrix4f("inverseProjection", ctx.inverseProjection);

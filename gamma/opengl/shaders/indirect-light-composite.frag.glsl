@@ -4,6 +4,7 @@
 #define USE_AVERAGE_INDIRECT_LIGHT 1
 #define USE_INDIRECT_SKY_LIGHT 1
 
+uniform vec2 screenSize;
 uniform sampler2D colorAndDepth;
 uniform sampler2D normalAndSpecularity;
 uniform sampler2D indirectLight;
@@ -73,7 +74,7 @@ void main() {
 
   #if USE_AVERAGE_INDIRECT_LIGHT == 1
     const int range = 6;
-    vec2 texel_size = 1.0 / vec2(1920.0, 1080.0);
+    vec2 texel_size = 1.0 / screenSize;
     int total_samples = 0;
 
     for (int i = -range; i <= range; i += range) {

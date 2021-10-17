@@ -3,6 +3,7 @@
 #define USE_SCREEN_SPACE_AMBIENT_OCCLUSION 1
 #define USE_SCREEN_SPACE_GLOBAL_ILLUMINATION 1
 
+uniform vec2 screenSize;
 uniform sampler2D colorAndDepth;
 uniform sampler2D normalAndSpecularity;
 uniform sampler2D indirectLightT1;
@@ -40,7 +41,7 @@ float getScreenSpaceAmbientOcclusionContribution(float fragment_depth) {
   const int TOTAL_SAMPLES = 10;
   const float radius = 15.0;
   vec3 contribution = vec3(0);
-  vec2 texel_size = 1.0 / vec2(1920.0, 1080.0);
+  vec2 texel_size = 1.0 / screenSize;
   float linearized_fragment_depth = getLinearizedDepth(fragment_depth);
   float occlusion = 0.0;
 
@@ -83,7 +84,7 @@ void main() {
     const float min_sample_radius = 50.0;
     const float max_brightness = 50.0;
 
-    vec2 texel_size = 1.0 / vec2(1920.0, 1080.0);
+    vec2 texel_size = 1.0 / screenSize;
     float linearized_fragment_depth = getLinearizedDepth(frag_color_and_depth.w);
     // @todo define and use easeOut()
     float radius_distance_factor = sqrt(sqrt(linearized_fragment_depth / 500.0));

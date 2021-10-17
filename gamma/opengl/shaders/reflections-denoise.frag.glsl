@@ -1,5 +1,6 @@
 #version 460 core
 
+uniform vec2 screenSize;
 uniform sampler2D colorAndDepth;
 
 noperspective in vec2 fragUv;
@@ -13,13 +14,13 @@ float luminance(vec3 color) {
 // @todo improve denoising quality; as of right now this
 // acts more as a crude selective blur filter
 void main() {
-  vec2 texel = 1.0 / vec2(1920.0, 1080.0);
+  vec2 texel_size = 1.0 / screenSize;
 
   vec4 frag = texture(colorAndDepth, fragUv);
-  vec4 top = texture(colorAndDepth, fragUv + texel * vec2(0.0, 1.0));
-  vec4 bottom = texture(colorAndDepth, fragUv + texel * vec2(0.0, -1.0));
-  vec4 left = texture(colorAndDepth, fragUv + texel * vec2(-1.0, 0.0));
-  vec4 right = texture(colorAndDepth, fragUv + texel * vec2(1.0, 0.0));
+  vec4 top = texture(colorAndDepth, fragUv + texel_size * vec2(0.0, 1.0));
+  vec4 bottom = texture(colorAndDepth, fragUv + texel_size * vec2(0.0, -1.0));
+  vec4 left = texture(colorAndDepth, fragUv + texel_size * vec2(-1.0, 0.0));
+  vec4 right = texture(colorAndDepth, fragUv + texel_size * vec2(1.0, 0.0));
 
   float frag_luminance = luminance(frag.rgb);
   float top_luminance = luminance(top.rgb);

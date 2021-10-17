@@ -1,5 +1,6 @@
 #version 460 core
 
+uniform vec2 screenSize;
 uniform sampler2D colorAndDepth;
 uniform mat4 projection;
 uniform mat4 view;
@@ -19,7 +20,7 @@ layout (location = 0) out vec4 out_color_and_depth;
 #include "utils/conversion.glsl";
 
 vec2 getPixelCoords() {
-  return gl_FragCoord.xy / vec2(1920.0, 1080.0);
+  return gl_FragCoord.xy / screenSize;
 }
 
 // @todo allow shader imports; import this function
