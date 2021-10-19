@@ -36,37 +36,8 @@ const int TOTAL_REFINEMENT_STEPS = 6;
 #include "utils/gl.glsl";
 #include "utils/conversion.glsl";
 #include "utils/random.glsl";
-
-// @todo allow shader imports; import this function
-// from skybox helpers or similar. track shader dependencies
-// as part of hot reloading
-vec3 getSkyColor(vec3 direction) {
-  vec3 sunDirection = normalize(vec3(0.3, 0.5, -1.0));
-  vec3 sunColor = vec3(1.0, 0.3, 0.1);
-  float sunBrightness = 10;
-  float altitude = 0.2;
-
-  float y = direction.y + altitude;
-  float z = direction.z;
-
-  float base_r = pow(0.5 + 0.5 * cos(y) * 0.8, 6);
-  float base_g = pow(0.5 + 0.5 * cos(y) * 0.9, 7);
-  float base_b = pow(0.5 + 0.5 * cos(y), 5);
-
-  vec3 skylight = vec3(2 * pow(0.5 * cos(y) + 0.5, 50));
-  vec3 sunlight = sunColor * sunBrightness * pow(max(dot(direction, sunDirection), 0.0), 100);
-  vec3 atmosphere = 0.2 * (skylight + sunlight);
-
-  return vec3(
-    max(base_r + atmosphere.r, 0),
-    max(base_g + 0.7 * atmosphere.g, 0),
-    max(base_b + 0.4 * atmosphere.b, 0)
-  );
-}
-
-bool isOffScreen(vec2 uv) {
-  return uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1;
-}
+#include "utils/skybox.glsl";
+#include "utils/helpers.glsl";
 
 /**
  * Returns a reflected light intensity factor, reduced
@@ -205,7 +176,8 @@ Reflection getReflection(
 
     vec2 uv = getScreenCoordinates(ray, projection);
 
-    if (isOffScreen(uv) || ray.z >= z_far) {
+    if (isOffScreen(uv, 0.0) || ray.z >= z_far) {
+      // Bail if the ray goes offscreen or beyond the far plane
       break;
     }
 

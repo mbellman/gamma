@@ -31,7 +31,7 @@ void DemoScene::init() {
 
   mesh("plane").type = MeshType::REFLECTIVE;
   // mesh("daVinci").type = MeshType::REFRACTIVE;
-  mesh("rabbit").type = MeshType::EMISSIVE;
+  mesh("rabbit").type = MeshType::REFRACTIVE;
   // mesh("cube").type = MeshType::EMISSIVE;
 
   auto& particles = mesh("particles").particleSystem;
