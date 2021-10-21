@@ -57,12 +57,13 @@ namespace Gamma {
     void addDepthAttachment(uint32 unit);
     void setSize(const Area<uint32>& size);
     void write();
+    void writeToFace(uint8 face);
 
   private:
     GLuint fbo = 0;
-    GLenum unit;
-    GLuint textureId;
-    // std::vector<ColorAttachment> colorAttachments;
+    GLenum depthTextureUnit;
+    GLuint depthTextureId;
+    std::vector<ColorAttachment> colorAttachments;
     Area<uint32> size;
   };
 }

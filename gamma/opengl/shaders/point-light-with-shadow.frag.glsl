@@ -26,6 +26,7 @@ layout (location = 0) out vec4 out_colorAndDepth;
 #include "utils/gl.glsl";
 #include "utils/conversion.glsl";
 #include "utils/random.glsl";
+#include "utils/helpers.glsl";
 
 vec3 rotatedVogelDisc(int samples, int index) {
   float rotation = noise(1.0) * 3.141592;
@@ -35,29 +36,27 @@ vec3 rotatedVogelDisc(int samples, int index) {
   return radius * vec3(cos(theta), sin(theta), 0.0);
 }
 
-float saturate(float value) {
-  return clamp(value, 0.0, 1.0);
-}
-
 float getLightFactor(vec3 light_to_surface, float light_distance, float incidence) {
   #if USE_VARIABLE_PENUMBRA_SIZE == 1
-    float max_spread = 200.0;
-    float spread = 1.0 + pow(light_distance / light.radius, 2) * max_spread;
+    const float max_spread = 200.0;
+    const float max_spread_distance = 1000.0;
+    float spread = 1.0 + pow(saturate(light_distance / max_spread_distance), 2) * max_spread;
   #else
     float spread = 0.5;
   #endif
   
+  const int TOTAL_SAMPLES = 8;
   float factor = 0.0;
 
-  for (int i = 0; i < 7; i++) {
-    vec3 sample_offset = spread * rotatedVogelDisc(7, i);
+  for (int i = 0; i < TOTAL_SAMPLES; i++) {
+    vec3 sample_offset = spread * rotatedVogelDisc(TOTAL_SAMPLES, i);
     float shadow_map_depth = texture(shadowMap, glVec3(light_to_surface + sample_offset)).r * light.radius;
     float bias = spread + pow(1.0 - incidence, 3) * 5.0;
 
     factor += shadow_map_depth > light_distance - bias ? 1.0 : 0.0;
   }
 
-  return factor / 7.0;
+  return factor / float(TOTAL_SAMPLES);
 }
 
 void main() {

@@ -29,7 +29,7 @@ namespace Gamma {
    * --------------
    */
   void OpenGLRenderer::init() {
-    // internalResolution = { 960, 540 };
+    internalResolution = { 1920, 1080 };
 
     // Initialize OpenGL
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);

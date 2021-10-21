@@ -1,7 +1,9 @@
 vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
 vec3 position = getWorldPosition(frag_color_and_depth.w, fragUv, inverseProjection, inverseView);
+vec3 surface_to_light = light.position - position;
+float light_distance = length(surface_to_light);
 
-if (length(light.position - position) > light.radius) {
+if (light_distance > light.radius) {
   discard;
 }
 
@@ -10,8 +12,6 @@ vec3 normal = frag_normal_and_specularity.xyz;
 vec3 color = frag_color_and_depth.rgb;
 
 vec3 radiant_flux = light.color * light.power * light.radius;
-vec3 surface_to_light = light.position - position;
-float light_distance = length(surface_to_light);
 vec3 normalized_surface_to_light = surface_to_light / light_distance;
 vec3 normalized_surface_to_camera = normalize(cameraPosition - position);
 vec3 half_vector = normalize(normalized_surface_to_light + normalized_surface_to_camera);

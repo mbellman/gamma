@@ -29,7 +29,7 @@ void DemoScene::init() {
   mesh("plane").normalMap = "./demo/assets/images/marble-normal-map.png";
   mesh("plane").normalMap = "./demo/assets/images/metal-normal-map.png";
 
-  mesh("plane").type = MeshType::REFLECTIVE;
+  // mesh("plane").type = MeshType::REFLECTIVE;
   // mesh("daVinci").type = MeshType::REFRACTIVE;
   mesh("rabbit").type = MeshType::REFRACTIVE;
   // mesh("cube").type = MeshType::EMISSIVE;
@@ -93,55 +93,53 @@ void DemoScene::init() {
       cosf(r) * 60.0f
     );
 
-      rabbit.color = pVec4(
-        Vec3f(
-          i / 10.0f,
-          sinf(i / 10.0f * 3.141592f),
-          1.0f - i / 10.0f
-        )
-      );
+    rabbit.color = pVec4(
+      Vec3f(
+        i / 10.0f,
+        sinf(i / 10.0f * 3.141592f),
+        1.0f - i / 10.0f
+      )
+    );
 
     // rabbit.color = pVec4(255, 200, 255);
 
     commit(rabbit);
   }
 
-  // auto& daVinciLight = createLight(LightType::POINT_SHADOWCASTER);
+  auto& daVinciLight = createLight(LightType::POINT_SHADOWCASTER);
 
-  // daVinciLight.position = Vec3f(0.0f, 20.0f, 0.0f);
-  // daVinciLight.color = Vec3f(1.0f, 1.0f, 1.0f);
-  // daVinciLight.radius = 1000.0f;
-  // daVinciLight.power = 2.0f;
-  // daVinciLight.direction = Vec3f(0.0f, -1.0f, 0.5f);
-  // daVinciLight.fov = 80.0f;
-  // daVinciLight.isStatic = true;
+  daVinciLight.position = Vec3f(0.0f, 20.0f, 0.0f);
+  daVinciLight.color = Vec3f(1.0f, 1.0f, 1.0f);
+  daVinciLight.radius = 1000.0f;
+  daVinciLight.power = 2.0f;
+  daVinciLight.direction = Vec3f(0.0f, 0.0f, 1.0f);
+  daVinciLight.fov = 80.0f;
+  daVinciLight.isStatic = true;
 
-  // auto& daVinciLight2 = createLight(LightType::POINT_SHADOWCASTER);
+  auto& daVinciLight2 = createLight(LightType::POINT_SHADOWCASTER);
 
-  // daVinciLight2.position = Vec3f(-50.0f, 20.0f, -50.0f);
-  // daVinciLight2.color = Vec3f(0.0f, 1.0f, 0.0f);
-  // daVinciLight2.color = Vec3f(1.0f, 1.0f, 1.0f);
-  // daVinciLight2.radius = 1000.0f;
-  // daVinciLight2.power = 2.0f;
-  // daVinciLight2.direction = Vec3f(-0.3f, -1.0f, -0.3f);
-  // daVinciLight2.fov = 80.0f;
-  // daVinciLight2.isStatic = true;
+  daVinciLight2.position = Vec3f(-50.0f, 20.0f, -50.0f);
+  daVinciLight2.color = Vec3f(0.0f, 1.0f, 0.0f);
+  daVinciLight2.radius = 1000.0f;
+  daVinciLight2.power = 2.0f;
+  daVinciLight2.direction = Vec3f(-0.3f, -1.0f, -0.3f);
+  daVinciLight2.fov = 80.0f;
+  daVinciLight2.isStatic = true;
 
-  // auto& daVinciLight3 = createLight(LightType::POINT_SHADOWCASTER);
+  auto& daVinciLight3 = createLight(LightType::POINT_SHADOWCASTER);
 
-  // daVinciLight3.position = Vec3f(50.0f, 20.0f, -50.0f);
-  // daVinciLight3.color = Vec3f(0.0f, 0.0f, 1.0f);
-  // daVinciLight3.color = Vec3f(1.0f, 1.0f, 1.0f);
-  // daVinciLight3.radius = 1000.0f;
-  // daVinciLight3.power = 2.0f;
-  // daVinciLight3.direction = Vec3f(0.3f, -1.0f, -0.3f);
-  // daVinciLight3.fov = 80.0f;
-  // daVinciLight3.isStatic = true;
+  daVinciLight3.position = Vec3f(50.0f, 20.0f, -50.0f);
+  daVinciLight3.color = Vec3f(0.0f, 0.0f, 1.0f);
+  daVinciLight3.radius = 1000.0f;
+  daVinciLight3.power = 2.0f;
+  daVinciLight3.direction = Vec3f(0.3f, -1.0f, -0.3f);
+  daVinciLight3.fov = 80.0f;
+  daVinciLight3.isStatic = true;
 
-  auto& sunlight = createLight(LightType::DIRECTIONAL_SHADOWCASTER);
+  // auto& sunlight = createLight(LightType::DIRECTIONAL_SHADOWCASTER);
 
-  sunlight.direction = Vec3f(-0.3f, -0.5f, 1.0f);
-  sunlight.color = Vec3f(1.0f, 0.3f, 0.1f);
+  // sunlight.direction = Vec3f(-0.3f, -0.5f, 1.0f);
+  // sunlight.color = Vec3f(1.0f, 0.3f, 0.1f);
 
   // auto& cameraLight = createLight(LightType::SPOT_SHADOWCASTER);
 
@@ -222,15 +220,15 @@ void DemoScene::destroy() {}
 void DemoScene::update(float dt) {
   useLodByDistance(mesh("rabbit"), 100.0f);
 
-  auto& wall = *mesh("wall").objects.begin();
+  // auto& wall = *mesh("wall").objects.begin();
 
-  uint8 g = uint8((0.5f * sinf(getRunningTime() * 3.0f) + 0.5f) * 1.0f);
-  uint8 b = uint8((0.5f * cosf(getRunningTime() * 2.0f) + 0.5f) * 255.0f);
+  // uint8 g = uint8((0.5f * sinf(getRunningTime() * 3.0f) + 0.5f) * 1.0f);
+  // uint8 b = uint8((0.5f * cosf(getRunningTime() * 2.0f) + 0.5f) * 255.0f);
 
-  wall.color = pVec4(255, g, b);
-  wall.position.z = 0.0f + (1.0f + sinf(getRunningTime() * 0.2f)) * 0.5f * 200.0f;
+  // wall.color = pVec4(255, g, b);
+  // wall.position.z = 0.0f + (1.0f + sinf(getRunningTime() * 0.2f)) * 0.5f * 200.0f;
 
-  commit(wall);
+  // commit(wall);
 
   // clight->direction = camera.orientation.getDirection();
   // clight->position = camera.position + camera.orientation.getDirection() * 20.0f + camera.orientation.getUpDirection() * -5.0f;

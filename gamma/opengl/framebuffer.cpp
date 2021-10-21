@@ -50,8 +50,6 @@ namespace Gamma {
 
     glDeleteTextures(1, &depthTextureId);
     glDeleteTextures(1, &depthStencilTextureId);
-
-    colorAttachments.clear();
   }
 
   void OpenGLFrameBuffer::addColorAttachment(ColorFormat format) {
@@ -148,23 +146,48 @@ namespace Gamma {
   void OpenGLCubeMap::destroy() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-
     glDeleteFramebuffers(1, &fbo);
-    glDeleteTextures(1, &textureId);
+
+    for (auto& attachment : colorAttachments) {
+      glDeleteTextures(1, &attachment.textureId);
+    }
+
+    glDeleteTextures(1, &depthTextureId);
   }
 
   void OpenGLCubeMap::addColorAttachment(ColorFormat format, uint32 unit) {
-    // @todo
+    GLuint textureId;
+    GLuint index = GL_COLOR_ATTACHMENT0 + colorAttachments.size();
+    GLint glInternalFormat = glInternalFormatMap.at(format);
+    GLenum glFormat = glFormatMap.at(format);
+
+    glGenTextures(1, &textureId);
+    glBindTexture(GL_TEXTURE_2D, textureId);
+
+    for (uint32 i = 0; i < 6; i++) {
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, glInternalFormat, size.width, size.height, 0, glFormat, GL_FLOAT, NULL);
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture(GL_FRAMEBUFFER, index, textureId, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    colorAttachments.push_back({ index, textureId, unit });
   }
 
   void OpenGLCubeMap::addDepthAttachment(uint32 unit) {
-    // @todo it's confusing to store the depth texture unit
-    // on the 'unit' field like this. figure out how to
-    // store this when adding support for color attachments.
-    this->unit = GL_TEXTURE0 + unit;
+    this->depthTextureUnit = GL_TEXTURE0 + unit;
 
-    glGenTextures(1, &textureId);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+    glGenTextures(1, &depthTextureId);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, depthTextureId);
 
     for (uint32 i = 0; i < 6; i++) {
       glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, size.width, size.height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
@@ -177,18 +200,22 @@ namespace Gamma {
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, textureId, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTextureId, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
 
   void OpenGLCubeMap::read() {
-    glActiveTexture(unit);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+    for (auto& colorAttachment : colorAttachments) {
+      glActiveTexture(colorAttachment.textureUnit);
+      glBindTexture(GL_TEXTURE_CUBE_MAP, colorAttachment.textureId);
+    }
 
-    // @todo bind different textures based on whether
-    // the cube map has color attachments
+    glActiveTexture(depthTextureUnit);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, depthTextureId);
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
   }
 
   void OpenGLCubeMap::setSize(const Area<uint32>& size) {
@@ -197,6 +224,16 @@ namespace Gamma {
 
   void OpenGLCubeMap::write() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+    glViewport(0, 0, size.width, size.height);
+  }
+
+  void OpenGLCubeMap::writeToFace(uint8 face) {
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+
+    for (auto& colorAttachment : colorAttachments) {
+      glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, colorAttachment.index, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, colorAttachment.textureId, 0);
+    }
+
     glViewport(0, 0, size.width, size.height);
   }
 }
