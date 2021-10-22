@@ -15,7 +15,7 @@ namespace Gamma {
     Vec3f getLeftDirection() const;
     Vec3f getRightDirection() const;
     Vec3f getUpDirection() const;
-    void face(const Vec3f& direction);
+    void face(const Vec3f& forward, const Vec3f& up);
     Vec3f toVec3f() const;
   };
 }

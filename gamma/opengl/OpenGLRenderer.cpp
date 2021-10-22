@@ -24,6 +24,24 @@ namespace Gamma {
   const static uint32 MAX_LIGHTS = 1000;
   const static Vec4f FULL_SCREEN_TRANSFORM = { 0.0f, 0.0f, 1.0f, 1.0f };
 
+  const static Vec3f CUBE_MAP_DIRECTIONS[6] = {
+    Vec3f(-1.0f, 0.0f, 0.0f),
+    Vec3f(1.0f, 0.0f, 0.0f),
+    Vec3f(0.0f, -1.0f, 0.0f),
+    Vec3f(0.0f, 1.0f, 0.0f),
+    Vec3f(0.0f, 0.0f, -1.0f),
+    Vec3f(0.0f, 0.0f, 1.0f)
+  };
+
+  const static Vec3f CUBE_MAP_UP_DIRECTIONS[6] = {
+    Vec3f(0.0f, -1.0f, 0.0f),
+    Vec3f(0.0f, -1.0f, 0.0f),
+    Vec3f(0.0f, 0.0f, 1.0f),
+    Vec3f(0.0f, 0.0f, -1.0f),
+    Vec3f(0.0f, -1.0f, 0.0f),
+    Vec3f(0.0f, -1.0f, 0.0f)
+  };
+
   /**
    * OpenGLRenderer
    * --------------
@@ -52,6 +70,9 @@ namespace Gamma {
     #ifndef GAMMA_DEVELOPER_MODE
       // Set uniform shader constants upfront, since
       // shaders won't change during runtime
+      //
+      // @todo these will need to be updated if the
+      // internal resolution setting is changed
       Vec2f screenSize((float)internalResolution.width, (float)internalResolution.height);
 
       shaders.indirectLight.setVec2f("screenSize", screenSize);
@@ -73,6 +94,12 @@ namespace Gamma {
     Gm_InitRendererResources(buffers, shaders, internalResolution);
 
     lightDisc.init();
+
+    // @todo remove test code
+    probeTest.init();
+    probeTest.setSize({ 1024, 1024 });
+    probeTest.addColorAttachment(ColorFormat::RGB16, 0);
+    probeTest.bindColorAttachments();
 
     // Initialize post shaders
     post.debanding.init();
@@ -106,91 +133,64 @@ namespace Gamma {
       return;
     }
 
+    // @todo remove test code
+    if (!isProbeRendered) {
+      Vec3f probePosition(0.0f, 100.0f, 0.0f);
+
+      initializeRendererContext();
+      initializeLightArrays();
+
+      internalResolution = { 1024, 1024 };
+      ctx.internalWidth = 1024;
+      ctx.internalHeight = 1024;
+
+      for (uint8 i = 0; i < 6; i++) {
+        auto& direction = CUBE_MAP_DIRECTIONS[i];
+        auto& upDirection = CUBE_MAP_UP_DIRECTIONS[i];
+        float farDistance = 1000.0f;
+
+        Matrix4f projection = Matrix4f::glPerspective({ 1024, 1024 }, 90.0f, 1.0f, farDistance).transpose();
+
+        // @bug the view matrix is still wrong; probe views aren't rendered properly
+        Matrix4f view = Matrix4f::lookAt(probePosition.gl(), direction, upDirection).transpose();
+
+        ctx.projection = projection;
+        ctx.view = view;
+
+        ctx.inverseProjection = ctx.projection.inverse();
+        ctx.inverseView = ctx.view.inverse();
+
+        Camera probeCamera;
+
+        probeCamera.position = probePosition;
+        // @todo orientation
+
+        Camera::active = &probeCamera;
+
+        renderToAccumulationBuffer();
+
+        ctx.accumulationSource->read();
+        probeTest.writeToFace(i);
+
+        shaders.copyFrame.use();
+        shaders.copyFrame.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+        shaders.copyFrame.setInt("colorAndDepth", 0);
+
+        OpenGLScreenQuad::render();
+      }
+
+      internalResolution = { 1920, 1080 };
+      isProbeRendered = true;
+
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+      return;
+    }
+
+    handleSettingsChanges();
     initializeRendererContext();
     initializeLightArrays();
-    handleSettingsChanges();
-    renderSceneToGBuffer();
-
-    if (Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
-      if (glDirectionalShadowMaps.size() > 0) {
-        renderDirectionalShadowMaps();
-      }
-
-      if (glPointShadowMaps.size() > 0) {
-        renderPointShadowMaps();
-      }
-
-      if (glSpotShadowMaps.size() > 0) {
-        renderSpotShadowMaps();
-      }
-    }
-
-    prepareLightingPass();
-
-    if (
-      ctx.directionalLights.size() == 0 &&
-      ctx.directionalShadowcasters.size() == 0 &&
-      (
-        ctx.hasReflectiveObjects ||
-        ctx.hasRefractiveObjects ||
-        Gm_IsFlagEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION) ||
-        Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)
-      )
-    ) {
-      copyDepthIntoAccumulationBuffer();
-    }
-
-    if (ctx.pointLights.size() > 0) {
-      renderPointLights();
-    }
-
-    if (ctx.pointShadowCasters.size() > 0) {
-      renderPointShadowcasters();
-    }
-
-    if (ctx.directionalLights.size() > 0) {
-      renderDirectionalLights();
-    }
-
-    if (ctx.directionalShadowcasters.size() > 0) {
-      renderDirectionalShadowcasters();
-    }
-
-    if (ctx.spotLights.size() > 0) {
-      renderSpotLights();
-    }
-
-    if (ctx.spotShadowcasters.size() > 0) {
-      renderSpotShadowcasters();
-    }
-
-    if (ctx.hasEmissiveObjects) {
-      copyEmissiveObjects();
-    }
-
-    if (
-      Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION) ||
-      Gm_IsFlagEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION) ||
-      Gm_IsFlagEnabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)
-    ) {
-      renderIndirectLight();
-    }
-
-    glDisable(GL_BLEND);
-
-    renderSkybox();
-
-    // @todo if (ctx.hasParticleSystems)
-    renderParticleSystems();
-
-    if (ctx.hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
-      renderReflections();
-    }
-
-    if (ctx.hasRefractiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_GEOMETRY)) {
-      renderRefractiveGeometry();
-    }
-
+    renderToAccumulationBuffer();
     renderPostEffects();
 
     #if GAMMA_DEVELOPER_MODE
@@ -200,6 +200,53 @@ namespace Gamma {
     #endif
 
     frame++;
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::handleSettingsChanges() {
+    if (Gm_FlagWasEnabled(GammaFlags::VSYNC)) {
+      SDL_GL_SetSwapInterval(1);
+
+      #if GAMMA_DEVELOPER_MODE
+        Console::log("[Gamma] V-Sync enabled");
+      #endif
+    } else if (Gm_FlagWasDisabled(GammaFlags::VSYNC)) {
+      SDL_GL_SetSwapInterval(0);
+
+      #if GAMMA_DEVELOPER_MODE
+        Console::log("[Gamma] V-Sync disabled");
+      #endif
+    }
+
+    if (Gm_FlagWasEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)) {
+      shaders.indirectLight.define("USE_SCREEN_SPACE_AMBIENT_OCCLUSION", "1");
+      shaders.indirectLightComposite.define("USE_AVERAGE_INDIRECT_LIGHT", "1");
+    } else if (Gm_FlagWasDisabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)) {
+      shaders.indirectLight.define("USE_SCREEN_SPACE_AMBIENT_OCCLUSION", "0");
+
+      if (!Gm_IsFlagEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)) {
+        shaders.indirectLightComposite.define("USE_AVERAGE_INDIRECT_LIGHT", "0");
+      }
+    }
+
+    if (Gm_FlagWasEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)) {
+      shaders.indirectLight.define("USE_SCREEN_SPACE_GLOBAL_ILLUMINATION", "1");
+      shaders.indirectLightComposite.define("USE_AVERAGE_INDIRECT_LIGHT", "1");
+    } else if (Gm_FlagWasDisabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)) {
+      shaders.indirectLight.define("USE_SCREEN_SPACE_GLOBAL_ILLUMINATION", "0");
+
+      if (!Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)) {
+        shaders.indirectLightComposite.define("USE_AVERAGE_INDIRECT_LIGHT", "0");
+      }
+    }
+
+    if (Gm_FlagWasEnabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)) {
+      shaders.indirectLightComposite.define("USE_INDIRECT_SKY_LIGHT", "1");
+    } else if (Gm_FlagWasDisabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)) {
+      shaders.indirectLightComposite.define("USE_INDIRECT_SKY_LIGHT", "0");
+    }
   }
 
   /**
@@ -301,48 +348,91 @@ namespace Gamma {
   /**
    * @todo description
    */
-  void OpenGLRenderer::handleSettingsChanges() {
-    if (Gm_FlagWasEnabled(GammaFlags::VSYNC)) {
-      SDL_GL_SetSwapInterval(1);
+  void OpenGLRenderer::renderToAccumulationBuffer() {
+    renderSceneToGBuffer();
 
-      #if GAMMA_DEVELOPER_MODE
-        Console::log("[Gamma] V-Sync enabled");
-      #endif
-    } else if (Gm_FlagWasDisabled(GammaFlags::VSYNC)) {
-      SDL_GL_SetSwapInterval(0);
+    if (Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
+      if (glDirectionalShadowMaps.size() > 0) {
+        renderDirectionalShadowMaps();
+      }
 
-      #if GAMMA_DEVELOPER_MODE
-        Console::log("[Gamma] V-Sync disabled");
-      #endif
-    }
+      if (glPointShadowMaps.size() > 0) {
+        renderPointShadowMaps();
+      }
 
-    if (Gm_FlagWasEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)) {
-      shaders.indirectLight.define("USE_SCREEN_SPACE_AMBIENT_OCCLUSION", "1");
-      shaders.indirectLightComposite.define("USE_AVERAGE_INDIRECT_LIGHT", "1");
-    } else if (Gm_FlagWasDisabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)) {
-      shaders.indirectLight.define("USE_SCREEN_SPACE_AMBIENT_OCCLUSION", "0");
-
-      if (!Gm_IsFlagEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)) {
-        shaders.indirectLightComposite.define("USE_AVERAGE_INDIRECT_LIGHT", "0");
+      if (glSpotShadowMaps.size() > 0) {
+        renderSpotShadowMaps();
       }
     }
 
-    if (Gm_FlagWasEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)) {
-      shaders.indirectLight.define("USE_SCREEN_SPACE_GLOBAL_ILLUMINATION", "1");
-      shaders.indirectLightComposite.define("USE_AVERAGE_INDIRECT_LIGHT", "1");
-    } else if (Gm_FlagWasDisabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)) {
-      shaders.indirectLight.define("USE_SCREEN_SPACE_GLOBAL_ILLUMINATION", "0");
+    prepareLightingPass();
 
-      if (!Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)) {
-        shaders.indirectLightComposite.define("USE_AVERAGE_INDIRECT_LIGHT", "0");
-      }
+    if (
+      ctx.directionalLights.size() == 0 &&
+      ctx.directionalShadowcasters.size() == 0 &&
+      (
+        ctx.hasReflectiveObjects ||
+        ctx.hasRefractiveObjects ||
+        Gm_IsFlagEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION) ||
+        Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)
+      )
+    ) {
+      copyDepthIntoAccumulationBuffer();
     }
 
-    if (Gm_FlagWasEnabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)) {
-      shaders.indirectLightComposite.define("USE_INDIRECT_SKY_LIGHT", "1");
-    } else if (Gm_FlagWasDisabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)) {
-      shaders.indirectLightComposite.define("USE_INDIRECT_SKY_LIGHT", "0");
+    if (ctx.pointLights.size() > 0) {
+      renderPointLights();
     }
+
+    if (ctx.pointShadowCasters.size() > 0) {
+      renderPointShadowcasters();
+    }
+
+    if (ctx.directionalLights.size() > 0) {
+      renderDirectionalLights();
+    }
+
+    if (ctx.directionalShadowcasters.size() > 0) {
+      renderDirectionalShadowcasters();
+    }
+
+    if (ctx.spotLights.size() > 0) {
+      renderSpotLights();
+    }
+
+    if (ctx.spotShadowcasters.size() > 0) {
+      renderSpotShadowcasters();
+    }
+
+    if (ctx.hasEmissiveObjects) {
+      copyEmissiveObjects();
+    }
+
+    if (
+      Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION) ||
+      Gm_IsFlagEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION) ||
+      Gm_IsFlagEnabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)
+    ) {
+      renderIndirectLight();
+    }
+
+    glDisable(GL_BLEND);
+
+    renderSkybox();
+
+    // @todo if (ctx.hasParticleSystems)
+    renderParticleSystems();
+
+    if (ctx.hasReflectiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFLECTIONS)) {
+      renderReflections();
+    }
+
+    if (ctx.hasRefractiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_GEOMETRY)) {
+      renderRefractiveGeometry();
+    }
+
+    swapAccumulationBuffers();
+    glDisable(GL_STENCIL_TEST);
   }
 
   /**
@@ -362,8 +452,6 @@ namespace Gamma {
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glStencilFunc(GL_ALWAYS, 0xFF, 0xFF);
     glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
-
-    auto& camera = *Camera::active;
 
     shaders.geometry.use();
     shaders.geometry.setMatrix4f("projection", ctx.projection);
@@ -450,24 +538,6 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderPointShadowMaps() {
-    const static Vec3f directions[6] = {
-      Vec3f(-1.0f, 0.0f, 0.0f),
-      Vec3f(1.0f, 0.0f, 0.0f),
-      Vec3f(0.0f, -1.0f, 0.0f),
-      Vec3f(0.0f, 1.0f, 0.0f),
-      Vec3f(0.0f, 0.0f, -1.0f),
-      Vec3f(0.0f, 0.0f, 1.0f)
-    };
-
-    const static Vec3f tops[6] = {
-      Vec3f(0.0f, -1.0f, 0.0f),
-      Vec3f(0.0f, -1.0f, 0.0f),
-      Vec3f(0.0f, 0.0f, 1.0f),
-      Vec3f(0.0f, 0.0f, -1.0f),
-      Vec3f(0.0f, -1.0f, 0.0f),
-      Vec3f(0.0f, -1.0f, 0.0f)
-    };
-
     auto& shader = shaders.pointShadowcasterView;
 
     shader.use();
@@ -485,8 +555,11 @@ namespace Gamma {
       glClear(GL_DEPTH_BUFFER_BIT);
 
       for (uint32 i = 0; i < 6; i++) {
+        auto& direction = CUBE_MAP_DIRECTIONS[i];
+        auto& upDirection = CUBE_MAP_UP_DIRECTIONS[i];
+
         Matrix4f projection = Matrix4f::glPerspective({ 1024, 1024 }, 90.0f, 1.0f, light.radius);
-        Matrix4f view = Matrix4f::lookAt(light.position.gl(), directions[i], tops[i]);
+        Matrix4f view = Matrix4f::lookAt(light.position.gl(), direction, upDirection);
         Matrix4f lightMatrix = (projection * view).transpose();
 
         shader.setMatrix4f("lightMatrices[" + std::to_string(i) + "]", lightMatrix);
@@ -852,6 +925,14 @@ namespace Gamma {
     shaders.skybox.setMatrix4f("inverseProjection", ctx.inverseProjection);
     shaders.skybox.setMatrix4f("inverseView", ctx.inverseView);
 
+    // @todo remove test code
+    if (isProbeRendered) {
+      probeTest.read();
+    }
+
+    shaders.skybox.setBool("useTexture", isProbeRendered);
+    shaders.skybox.setInt("sky", 0);
+
     OpenGLScreenQuad::render();
   }
 
@@ -1059,8 +1140,6 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderPostEffects() {
-    swapAccumulationBuffers();
-
     ctx.accumulationSource->read();
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 

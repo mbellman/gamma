@@ -25,7 +25,7 @@ namespace Gamma {
     return Orientation(roll, pitch - PI / 2.0f, yaw).getDirection();
   }
 
-  void Orientation::face(const Vec3f& direction) {
+  void Orientation::face(const Vec3f& forward, const Vec3f& up) {
     // @todo
   }
 

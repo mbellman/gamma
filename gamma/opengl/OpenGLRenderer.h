@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "math/vector.h"
 #include "opengl/framebuffer.h"
 #include "opengl/OpenGLLightDisc.h"
 #include "opengl/OpenGLMesh.h"
@@ -10,7 +11,6 @@
 #include "system/AbstractRenderer.h"
 #include "system/entities.h"
 #include "system/type_aliases.h"
-#include "math/vector.h"
 
 #include "SDL.h"
 #include "SDL_ttf.h"
@@ -26,7 +26,6 @@ namespace Gamma {
 
   struct RendererShaders {
     OpenGLShader geometry;
-    OpenGLShader emissives;
     OpenGLShader particles;
     OpenGLShader copyDepth;
     OpenGLShader pointLight;
@@ -107,13 +106,19 @@ namespace Gamma {
     std::vector<OpenGLPointShadowMap*> glPointShadowMaps;
     std::vector<OpenGLSpotShadowMap*> glSpotShadowMaps;
 
+    // @todo remove
+    OpenGLCubeMap probeTest;
+    bool isProbeRendered = false;
+
     struct PostShaders {
       OpenGLShader debanding;
     } post;
 
+    void handleSettingsChanges();
     void initializeRendererContext();
     void initializeLightArrays();
-    void handleSettingsChanges();
+    void renderToAccumulationBuffer();
+  
     void renderSceneToGBuffer();
     void renderDirectionalShadowMaps();
     void renderPointShadowMaps();

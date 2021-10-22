@@ -162,7 +162,7 @@ namespace Gamma {
     GLenum glFormat = glFormatMap.at(format);
 
     glGenTextures(1, &textureId);
-    glBindTexture(GL_TEXTURE_2D, textureId);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
 
     for (uint32 i = 0; i < 6; i++) {
       glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, glInternalFormat, size.width, size.height, 0, glFormat, GL_FLOAT, NULL);
@@ -174,17 +174,22 @@ namespace Gamma {
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
+    // glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0);
+    // glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 0);
+    // glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glFramebufferTexture(GL_FRAMEBUFFER, index, textureId, 0);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // glDrawBuffer(GL_NONE);
+    // glReadBuffer(GL_NONE);
+    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     colorAttachments.push_back({ index, textureId, unit });
   }
 
   void OpenGLCubeMap::addDepthAttachment(uint32 unit) {
-    this->depthTextureUnit = GL_TEXTURE0 + unit;
+    this->depthTextureUnit = unit;
 
     glGenTextures(1, &depthTextureId);
     glBindTexture(GL_TEXTURE_CUBE_MAP, depthTextureId);
@@ -206,14 +211,28 @@ namespace Gamma {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
 
+  void OpenGLCubeMap::bindColorAttachments() {
+    GLuint* attachments = new GLuint[colorAttachments.size()];
+
+    for (uint32 i = 0; i < colorAttachments.size(); i++) {
+      attachments[i] = colorAttachments[i].index;
+    }
+
+    glDrawBuffers(colorAttachments.size(), attachments);
+
+    delete[] attachments;
+  }
+
   void OpenGLCubeMap::read() {
     for (auto& colorAttachment : colorAttachments) {
-      glActiveTexture(colorAttachment.textureUnit);
+      glActiveTexture(GL_TEXTURE0 + colorAttachment.textureUnit);
       glBindTexture(GL_TEXTURE_CUBE_MAP, colorAttachment.textureId);
     }
 
-    glActiveTexture(depthTextureUnit);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, depthTextureId);
+    if (depthTextureId != 0) {
+      glActiveTexture(GL_TEXTURE0 + depthTextureUnit);
+      glBindTexture(GL_TEXTURE_CUBE_MAP, depthTextureId);
+    }
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
   }
