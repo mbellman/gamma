@@ -135,7 +135,14 @@ namespace Gamma {
 
     // @todo remove test code
     if (!isProbeRendered) {
-      Vec3f probePosition(0.0f, 300.0f, 0.0f);
+      Vec3f probePosition(0.0f, 25.0f, 0.0f);
+
+      Gm_SavePreviousFlags();
+
+      // Gm_DisableFlags(GammaFlags::RENDER_AMBIENT_OCCLUSION);
+      Gm_DisableFlags(GammaFlags::RENDER_GLOBAL_ILLUMINATION);
+
+      handleSettingsChanges();
 
       initializeRendererContext();
       initializeLightArrays();
@@ -174,6 +181,13 @@ namespace Gamma {
 
         OpenGLScreenQuad::render();
       }
+
+      Gm_SavePreviousFlags();
+
+      // Gm_EnableFlags(GammaFlags::RENDER_AMBIENT_OCCLUSION);
+      Gm_EnableFlags(GammaFlags::RENDER_GLOBAL_ILLUMINATION);
+
+      handleSettingsChanges();
 
       isProbeRendered = true;
 
@@ -427,7 +441,6 @@ namespace Gamma {
     }
 
     swapAccumulationBuffers();
-    glDisable(GL_STENCIL_TEST);
   }
 
   /**
@@ -438,6 +451,7 @@ namespace Gamma {
 
     glViewport(0, 0, ctx.internalWidth, ctx.internalHeight);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glStencilMask(0xFF);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
@@ -1141,7 +1155,6 @@ namespace Gamma {
     glViewport(0, 0, Window::size.width, Window::size.height);
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_STENCIL_TEST);
-    glStencilMask(0xFF);
 
     post.debanding.use();
     post.debanding.setVec4f("transform", FULL_SCREEN_TRANSFORM);
