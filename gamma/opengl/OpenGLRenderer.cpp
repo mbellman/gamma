@@ -135,14 +135,10 @@ namespace Gamma {
 
     // @todo remove test code
     if (!isProbeRendered) {
-      Vec3f probePosition(0.0f, 100.0f, 0.0f);
+      Vec3f probePosition(0.0f, 300.0f, 0.0f);
 
       initializeRendererContext();
       initializeLightArrays();
-
-      internalResolution = { 1024, 1024 };
-      ctx.internalWidth = 1024;
-      ctx.internalHeight = 1024;
 
       for (uint8 i = 0; i < 6; i++) {
         auto& direction = CUBE_MAP_DIRECTIONS[i];
@@ -150,12 +146,12 @@ namespace Gamma {
         float farDistance = 1000.0f;
 
         Matrix4f projection = Matrix4f::glPerspective({ 1024, 1024 }, 90.0f, 1.0f, farDistance).transpose();
-
-        // @bug the view matrix is still wrong; probe views aren't rendered properly
         Matrix4f view = Matrix4f::lookAt(probePosition.gl(), direction, upDirection).transpose();
 
         ctx.projection = projection;
         ctx.view = view;
+        ctx.previousViews[0] = view;
+        ctx.previousViews[1] = view;
 
         ctx.inverseProjection = ctx.projection.inverse();
         ctx.inverseView = ctx.view.inverse();
@@ -179,7 +175,6 @@ namespace Gamma {
         OpenGLScreenQuad::render();
       }
 
-      internalResolution = { 1920, 1080 };
       isProbeRendered = true;
 
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
