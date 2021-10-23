@@ -84,6 +84,10 @@ namespace Gamma {
     printf("{ %f, %f, %f }\n", x, y, z);
   }
 
+  float Vec3f::dot(const Vec3f& v1, const Vec3f& v2) {
+    return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+  }
+
   Vec3f Vec3f::gl() const {
     return *this * Vec3f(1.0f, 1.0f, -1.0f);
   }

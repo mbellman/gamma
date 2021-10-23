@@ -65,6 +65,7 @@ void main() {
   vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
 
   if (frag_color_and_depth.w == 1.0) {
+    // @bug this causes a white outline where geometry meets the skybox
     discard;
   }
 

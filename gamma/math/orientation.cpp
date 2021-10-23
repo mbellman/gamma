@@ -26,7 +26,24 @@ namespace Gamma {
   }
 
   void Orientation::face(const Vec3f& forward, const Vec3f& up) {
-    // @todo
+    const static Vec3f Y_UP(0.0f, 1.0f, 0.0f);
+    float uDotY = Vec3f::dot(up, Y_UP);
+
+    // Calculate yaw as a function of forward z/x
+    yaw = -1.0f * (atan2f(forward.z, forward.x) - HALF_PI);
+
+    if (uDotY < 0.0f) {
+      // If upside-down, flip the yaw by 180 degrees
+      yaw -= PI;
+    }
+
+    Vec3f rUp = up;
+
+    // Rotate the up vector back onto the y/z plane,
+    // and calculate pitch as a function of y/z
+    rUp.z = up.x * sinf(yaw) + up.z * cosf(yaw);
+
+    pitch = -1.0f * (atan2f(rUp.y, rUp.z) - HALF_PI);
   }
 
   Vec3f Orientation::toVec3f() const {

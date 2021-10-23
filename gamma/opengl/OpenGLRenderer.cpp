@@ -135,7 +135,7 @@ namespace Gamma {
 
     // @todo remove test code
     if (!isProbeRendered) {
-      Vec3f probePosition(0.0f, 25.0f, 0.0f);
+      Vec3f probePosition(0.0f, 150.0f, 0.0f);
 
       Gm_SavePreviousFlags();
 
@@ -147,13 +147,31 @@ namespace Gamma {
       initializeRendererContext();
       initializeLightArrays();
 
+      std::vector<uint8> order = { 1, 0, 3, 2, 5, 4 };
+
       for (uint8 i = 0; i < 6; i++) {
-        auto& direction = CUBE_MAP_DIRECTIONS[i];
-        auto& upDirection = CUBE_MAP_UP_DIRECTIONS[i];
+        auto& direction = CUBE_MAP_DIRECTIONS[order[i]];
+        auto& upDirection = CUBE_MAP_UP_DIRECTIONS[order[i]];
         float farDistance = 1000.0f;
 
+        Camera probeCamera;
+
+        probeCamera.position = probePosition;
+        probeCamera.orientation.face(direction, upDirection);
+
+        Camera::active = &probeCamera;
+
         Matrix4f projection = Matrix4f::glPerspective({ 1024, 1024 }, 90.0f, 1.0f, farDistance).transpose();
-        Matrix4f view = Matrix4f::lookAt(probePosition.gl(), direction, upDirection).transpose();
+
+        if (i == 2 || i == 3) {
+          // @hack @todo there may be a bug in Orientation::face()
+          probeCamera.orientation.yaw += (3.141592f / 2.0f);
+        }
+
+        Matrix4f view = (
+          Matrix4f::rotation(probeCamera.orientation.toVec3f()) *
+          Matrix4f::translation(probeCamera.position.invert().gl())
+        ).transpose();
 
         ctx.projection = projection;
         ctx.view = view;
@@ -163,20 +181,13 @@ namespace Gamma {
         ctx.inverseProjection = ctx.projection.inverse();
         ctx.inverseView = ctx.view.inverse();
 
-        Camera probeCamera;
-
-        probeCamera.position = probePosition;
-        // @todo orientation
-
-        Camera::active = &probeCamera;
-
         renderToAccumulationBuffer();
 
         ctx.accumulationSource->read();
         probeTest.writeToFace(i);
 
         shaders.copyFrame.use();
-        shaders.copyFrame.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+        shaders.copyFrame.setVec4f("transform", { 0.0f, 0.0f, -1.0f, 1.0f });
         shaders.copyFrame.setInt("colorAndDepth", 0);
 
         OpenGLScreenQuad::render();
