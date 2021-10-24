@@ -29,8 +29,13 @@ void DemoScene::init() {
   mesh("plane").normalMap = "./demo/assets/images/marble-normal-map.png";
   mesh("plane").normalMap = "./demo/assets/images/metal-normal-map.png";
 
+  addProbe("center", Vec3f(0.0f, 20.0f, 0.0f));
+
   // mesh("plane").type = MeshType::REFLECTIVE;
-  // mesh("daVinci").type = MeshType::REFRACTIVE;
+
+  mesh("daVinci").type = MeshType::PROBE_REFLECTOR;
+  mesh("daVinci").probe = "center";
+
   // mesh("rabbit").type = MeshType::REFRACTIVE;
   // mesh("cube").type = MeshType::EMISSIVE;
 

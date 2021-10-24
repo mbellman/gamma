@@ -147,6 +147,10 @@ namespace Gamma {
      */
     REFLECTIVE = 0xFA,
     /**
+     * @todo description
+     */
+    PROBE_REFLECTOR = 0xFB,
+    /**
      * Defines standard Meshes without any unique rendering properties.
      */
     NON_EMISSIVE = 0xFF
@@ -260,6 +264,10 @@ namespace Gamma {
      * An optional specularity map texture for the mesh.
      */
     std::string specularityMap = "";
+    /**
+     * The probe name to use for probe reflectors.
+     */
+    std::string probe = "";
     /**
      * Defines the mesh type.
      *

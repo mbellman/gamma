@@ -34,6 +34,7 @@ namespace Gamma {
 
   protected:
     void addMesh(std::string meshName, uint16 maxInstances, Mesh* mesh);
+    void addProbe(std::string probeName, const Vec3f& position);
     void commit(const Object& object);
     Light& createLight(LightType type);
     Object& createObjectFrom(std::string meshName);
@@ -48,6 +49,7 @@ namespace Gamma {
   private:
     std::vector<Mesh*> meshes;
     std::map<std::string, Mesh*> meshMap;
+    std::map<std::string, Vec3f> probeMap;
     std::map<std::string, ObjectRecord> objectStore;
     std::vector<Light> lights;
     float runningTime = 0.0f;

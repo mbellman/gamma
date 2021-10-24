@@ -38,6 +38,10 @@ namespace Gamma {
     signal("mesh-created", mesh);
   }
 
+  void AbstractScene::addProbe(std::string probeName, const Vec3f& position) {
+    probeMap.emplace(probeName, position);
+  }
+
   void AbstractScene::commit(const Object& object) {
     auto& record = object._record;
     auto* mesh = meshes[record.meshIndex];
