@@ -15,6 +15,7 @@ void DemoScene::init() {
   addMesh("plane", 1, Mesh::Plane(10));
   addMesh("wall", 1, Mesh::Plane(10));
   addMesh("particles", 10000, Mesh::Particles());
+  addMesh("ball", 1, Mesh::Model("./demo/assets/models/ball.obj"));
 
   addMesh("rabbit", 10, Mesh::Model({
     "./demo/assets/models/rabbit-lod1.obj",
@@ -32,12 +33,16 @@ void DemoScene::init() {
   addProbe("center", Vec3f(0.0f, 20.0f, 0.0f));
 
   // mesh("plane").type = MeshType::REFLECTIVE;
-
-  mesh("daVinci").type = MeshType::PROBE_REFLECTOR;
-  mesh("daVinci").probe = "center";
-
   // mesh("rabbit").type = MeshType::REFRACTIVE;
   // mesh("cube").type = MeshType::EMISSIVE;
+  mesh("ball").type = MeshType::PROBE_REFLECTOR;
+
+  auto& ball = createObjectFrom("ball");
+
+  ball.scale = 8.0f;
+  ball.position = Vec3f(0.0f, 15.0f, 0.0f);
+
+  commit(ball);
 
   auto& particles = mesh("particles").particleSystem;
 

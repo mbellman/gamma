@@ -26,6 +26,7 @@ namespace Gamma {
 
   struct RendererShaders {
     OpenGLShader geometry;
+    OpenGLShader probeReflector;
     OpenGLShader particles;
     OpenGLShader copyDepth;
     OpenGLShader pointLight;

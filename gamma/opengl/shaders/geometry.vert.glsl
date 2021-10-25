@@ -11,6 +11,7 @@ layout (location = 4) in uint modelColor;
 layout (location = 5) in mat4 modelMatrix;
 
 flat out vec3 fragColor;
+out vec3 fragPosition;
 out vec3 fragNormal;
 out vec3 fragTangent;
 out vec3 fragBitangent;
@@ -44,13 +45,15 @@ vec3 unpack(uint color) {
 }
 
 void main() {
-  gl_Position = projection * view * glMat4(modelMatrix) * vec4(vertexPosition, 1.0);
+  vec4 world_position = glMat4(modelMatrix) * vec4(vertexPosition, 1.0);
+  mat3 normal_matrix = transpose(inverse(mat3(modelMatrix)));
 
-  mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
+  gl_Position = projection * view * world_position;
 
   fragColor = unpack(modelColor);
-  fragNormal = glVec3(normalMatrix * vertexNormal);
-  fragTangent = glVec3(normalMatrix * vertexTangent);
+  fragPosition = glVec3(world_position);
+  fragNormal = glVec3(normal_matrix * vertexNormal);
+  fragTangent = glVec3(normal_matrix * vertexTangent);
   fragBitangent = getFragBitangent(fragNormal, fragTangent);
   fragUv = vertexUv;
 }

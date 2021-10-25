@@ -68,6 +68,11 @@ namespace Gamma {
     shaders.geometry.fragment("./gamma/opengl/shaders/geometry.frag.glsl");
     shaders.geometry.link();
 
+    shaders.probeReflector.init();
+    shaders.probeReflector.vertex("./gamma/opengl/shaders/geometry.vert.glsl");
+    shaders.probeReflector.fragment("./gamma/opengl/shaders/probe-reflector.frag.glsl");
+    shaders.probeReflector.link();
+
     shaders.particles.init();
     shaders.particles.vertex("./gamma/opengl/shaders/particle-system.vert.glsl");
     shaders.particles.fragment("./gamma/opengl/shaders/particle-system.frag.glsl");
@@ -189,6 +194,7 @@ namespace Gamma {
     buffers.accumulation2.destroy();
 
     shaders.geometry.destroy();
+    shaders.probeReflector.destroy();
     shaders.particles.destroy();
     shaders.copyDepth.destroy();
     shaders.pointLight.destroy();

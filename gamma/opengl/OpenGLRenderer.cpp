@@ -98,7 +98,7 @@ namespace Gamma {
     // @todo remove test code
     probeTest.init();
     probeTest.setSize({ 1024, 1024 });
-    probeTest.addColorAttachment(ColorFormat::RGB16, 0);
+    probeTest.addColorAttachment(ColorFormat::RGB16, 3);
     probeTest.bindColorAttachments();
 
     // Initialize post shaders
@@ -135,7 +135,7 @@ namespace Gamma {
 
     // @todo remove test code
     if (!isProbeRendered) {
-      Vec3f probePosition(0.0f, 150.0f, 0.0f);
+      Vec3f probePosition(0.0f, 15.0f, 0.0f);
 
       Gm_SavePreviousFlags();
 
@@ -515,6 +515,31 @@ namespace Gamma {
       }
     }
 
+    if (isProbeRendered) {  // @todo remove test condition, use ctx.hasProbeReflectors
+      glStencilFunc(GL_ALWAYS, MeshType::PROBE_REFLECTOR, 0xFF);
+      glStencilMask(0xFF);
+
+      shaders.probeReflector.use();
+      shaders.probeReflector.setMatrix4f("projection", ctx.projection);
+      shaders.probeReflector.setMatrix4f("view", ctx.view);
+      shaders.probeReflector.setInt("meshTexture", 0);
+      shaders.probeReflector.setInt("meshNormalMap", 1);
+      shaders.probeReflector.setInt("probeMap", 3);
+      shaders.probeReflector.setVec3f("cameraPosition", Camera::active->position);
+
+      for (auto* glMesh : glMeshes) {
+        if (glMesh->isMeshType(MeshType::PROBE_REFLECTOR)) {
+          shaders.probeReflector.setBool("hasTexture", glMesh->hasTexture());
+          shaders.probeReflector.setBool("hasNormalMap", glMesh->hasNormalMap());
+
+          // @todo replace with mesh probe
+          probeTest.read();
+
+          glMesh->render(ctx.primitiveMode);
+        }
+      }
+    }
+
     glDisable(GL_STENCIL_TEST);
   }
 
@@ -870,7 +895,7 @@ namespace Gamma {
       ctx.accumulationTarget->read();
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 6);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 5);
       glGenerateMipmap(GL_TEXTURE_2D);
 
       indirectLightBufferT1.read();
@@ -937,21 +962,11 @@ namespace Gamma {
   void OpenGLRenderer::renderSkybox() {
     glStencilFunc(GL_EQUAL, MeshType::SKYBOX, 0xFF);
 
-    auto& camera = *Camera::active;
-
     shaders.skybox.use();
     shaders.skybox.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-    shaders.skybox.setVec3f("cameraPosition", camera.position);
+    shaders.skybox.setVec3f("cameraPosition", Camera::active->position);
     shaders.skybox.setMatrix4f("inverseProjection", ctx.inverseProjection);
     shaders.skybox.setMatrix4f("inverseView", ctx.inverseView);
-
-    // @todo remove test code
-    if (isProbeRendered) {
-      probeTest.read();
-    }
-
-    shaders.skybox.setBool("useTexture", isProbeRendered);
-    shaders.skybox.setInt("sky", 0);
 
     OpenGLScreenQuad::render();
   }

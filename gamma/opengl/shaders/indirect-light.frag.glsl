@@ -99,7 +99,13 @@ void main() {
         continue;
       }
 
-      vec4 sample_color_and_depth = textureLod(colorAndDepth, fragUv + offset, 6);
+      vec4 sample_color_and_depth = textureLod(colorAndDepth, fragUv + offset, 5);
+
+      // @todo why is this necessary? why are certain sample
+      // color components < 0?
+      sample_color_and_depth.r = saturate(sample_color_and_depth.r);
+      sample_color_and_depth.g = saturate(sample_color_and_depth.g);
+      sample_color_and_depth.b = saturate(sample_color_and_depth.b);
 
       // Diminish illumination where the sample emits
       // less incident bounce light onto the fragment
