@@ -17,7 +17,7 @@ struct Cascade {
 };
 
 uniform sampler2D colorAndDepth;
-uniform sampler2D normalAndSpecularity;
+uniform sampler2D normalAndEmissivity;
 uniform vec3 cameraPosition;
 uniform mat4 inverseProjection;
 uniform mat4 inverseView;
@@ -117,10 +117,11 @@ float getLightIntensity(Cascade cascade, vec4 transform) {
 
 void main() {
   vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
-  vec4 frag_normal_and_specularity = texture(normalAndSpecularity, fragUv);
-  vec3 position = getWorldPosition(frag_color_and_depth.w, fragUv, inverseProjection, inverseView);
-  vec3 normal = frag_normal_and_specularity.xyz;
+  vec4 frag_normal_and_emissivity = texture(normalAndEmissivity, fragUv);
   vec3 color = frag_color_and_depth.rgb;
+  vec3 position = getWorldPosition(frag_color_and_depth.w, fragUv, inverseProjection, inverseView);
+  vec3 normal = frag_normal_and_emissivity.xyz;
+  float emissivity = frag_normal_and_emissivity.w;
 
   #include "inline/directional-light.glsl";
 
@@ -133,5 +134,5 @@ void main() {
 
   float light_intensity = getLightIntensity(cascade, shadow_map_transform);
 
-  out_color_and_depth = vec4(illuminated_color * light_intensity, frag_color_and_depth.w);
+  out_color_and_depth = vec4(illuminated_color * light_intensity * (1.0 - emissivity), frag_color_and_depth.w);
 }

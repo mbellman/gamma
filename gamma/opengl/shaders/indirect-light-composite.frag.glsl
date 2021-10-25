@@ -6,7 +6,7 @@
 
 uniform vec2 screenSize;
 uniform sampler2D colorAndDepth;
-uniform sampler2D normalAndSpecularity;
+uniform sampler2D normalAndEmissivity;
 uniform sampler2D indirectLight;
 
 noperspective in vec2 fragUv;
@@ -42,11 +42,15 @@ vec3 getIndirectSkyLightContribution(vec3 fragment_normal) {
 }
 
 void main() {
+  vec4 frag_normal_and_emissivity = texture(normalAndEmissivity, fragUv);
+  vec3 fragment_albedo = texture(colorAndDepth, fragUv).rgb;
+  vec3 fragment_normal = frag_normal_and_emissivity.xyz;
+  float emissivity = frag_normal_and_emissivity.w;
   vec3 average_indirect_light = vec3(0);
   vec3 indirect_sky_light = vec3(0);
-  vec3 fragment_normal = texture(normalAndSpecularity, fragUv).xyz;
 
   #if USE_AVERAGE_INDIRECT_LIGHT == 1
+    // @todo extract into its own function
     const int range = 6;
     vec2 texel_size = 1.0 / screenSize;
     int total_samples = 0;
@@ -54,7 +58,7 @@ void main() {
     for (int i = -range; i <= range; i += range) {
       for (int j = -range; j <= range; j += range) {
         vec2 sample_coords = fragUv + texel_size * vec2(i, j);
-        vec3 sample_normal = texture(normalAndSpecularity, sample_coords).xyz;
+        vec3 sample_normal = texture(normalAndEmissivity, sample_coords).xyz;
 
         // Avoid blurring where the fragment and sample have
         // sufficiently different normals, which otherwise
@@ -87,12 +91,10 @@ void main() {
   #endif
 
   #if USE_INDIRECT_SKY_LIGHT == 1
-    vec3 color = texture(colorAndDepth, fragUv).rgb;
-
-    indirect_sky_light = color * getIndirectSkyLightContribution(fragment_normal);
+    indirect_sky_light = fragment_albedo * getIndirectSkyLightContribution(fragment_normal);
   #endif
 
-  vec3 composite_color = average_indirect_light + indirect_sky_light;
+  vec3 composite_color = fragment_albedo * emissivity + average_indirect_light + indirect_sky_light;
 
   out_color_and_depth = vec4(composite_color, 0);
 }

@@ -1,6 +1,6 @@
 #version 460 core
 
-#define MAX_LIGHTS 10
+#define MAX_DIRECTIONAL_LIGHTS 10
 
 struct DirectionalLight {
   vec3 color;
@@ -9,7 +9,7 @@ struct DirectionalLight {
 };
 
 uniform sampler2D colorAndDepth;
-uniform sampler2D normalAndSpecularity;
+uniform sampler2D normalAndEmissivity;
 uniform vec3 cameraPosition;
 uniform mat4 inverseProjection;
 uniform mat4 inverseView;
@@ -23,13 +23,14 @@ layout (location = 0) out vec4 out_colorAndDepth;
 
 void main() {
   vec4 frag_colorAndDepth = texture(colorAndDepth, fragUv);
-  vec4 frag_normalAndSpecularity = texture(normalAndSpecularity, fragUv);
+  vec4 frag_normalAndEmissivity = texture(normalAndEmissivity, fragUv);
   vec3 position = getWorldPosition(frag_colorAndDepth.w, fragUv, inverseProjection, inverseView);
-  vec3 normal = frag_normalAndSpecularity.xyz;
+  vec3 normal = frag_normalAndEmissivity.xyz;
   vec3 color = frag_colorAndDepth.rgb;
+  float emissivity = frag_normalAndEmissivity.w;
   vec3 accumulatedColor = vec3(0.0);
 
-  for (int i = 0; i < MAX_LIGHTS; i++) {
+  for (int i = 0; i < MAX_DIRECTIONAL_LIGHTS; i++) {
     DirectionalLight light = lights[i];
 
     #include "inline/directional-light.glsl";
@@ -37,5 +38,5 @@ void main() {
     accumulatedColor += illuminated_color;
   }
 
-  out_colorAndDepth = vec4(accumulatedColor, frag_colorAndDepth.w);
+  out_colorAndDepth = vec4(accumulatedColor * (1.0 - emissivity), frag_colorAndDepth.w);
 }

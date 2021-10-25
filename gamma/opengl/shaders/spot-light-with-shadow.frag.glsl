@@ -12,7 +12,7 @@ struct Light {
 };
 
 uniform sampler2D colorAndDepth;
-uniform sampler2D normalAndSpecularity;
+uniform sampler2D normalAndEmissivity;
 uniform sampler2D shadowMap;
 uniform vec3 cameraPosition;
 uniform mat4 inverseProjection;

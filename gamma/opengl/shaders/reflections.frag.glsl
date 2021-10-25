@@ -1,7 +1,7 @@
 #version 460 core
 
 uniform sampler2D colorAndDepth;
-uniform sampler2D normalAndSpecularity;
+uniform sampler2D normalAndEmissivity;
 uniform vec3 cameraPosition;
 uniform mat4 view;
 uniform mat4 inverseView;
@@ -221,11 +221,11 @@ Reflection getReflection(
 
 void main() {
   vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
-  vec4 frag_normal_and_specularity = texture(normalAndSpecularity, fragUv);
+  vec4 frag_normal_and_emissivity = texture(normalAndEmissivity, fragUv);
   vec3 frag_world_position = getWorldPosition(frag_color_and_depth.w, fragUv, inverseProjection, inverseView);
   vec3 camera_to_fragment = frag_world_position - cameraPosition;
   vec3 normalized_camera_to_fragment = normalize(camera_to_fragment);
-  vec3 frag_world_normal = frag_normal_and_specularity.rgb;
+  vec3 frag_world_normal = frag_normal_and_emissivity.rgb;
 
   vec4 frag_view_position = glVec4(view * glVec4(frag_world_position));
   vec4 frag_view_normal = glVec4(transpose(inverseView) * glVec4(frag_world_normal));

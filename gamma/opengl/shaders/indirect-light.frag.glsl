@@ -5,7 +5,7 @@
 
 uniform vec2 screenSize;
 uniform sampler2D colorAndDepth;
-uniform sampler2D normalAndSpecularity;
+uniform sampler2D normalAndEmissivity;
 uniform sampler2D indirectLightT1;
 uniform sampler2D indirectLightT2;
 uniform vec3 cameraPosition;
@@ -70,7 +70,7 @@ void main() {
   }
 
   vec3 fragment_position = getWorldPosition(frag_color_and_depth.w, fragUv, inverseProjection, inverseView);
-  vec3 fragment_normal = texture(normalAndSpecularity, fragUv).xyz;
+  vec3 fragment_normal = texture(normalAndEmissivity, fragUv).xyz;
   vec3 global_illumination = vec3(0.0);
   float ambient_occlusion = 0.0;
 

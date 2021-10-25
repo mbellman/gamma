@@ -7,4 +7,5 @@ float specularity = pow(max(dot(half_vector, normal), 0.0), 50);
 
 vec3 diffuse_term = adjusted_light_color * incidence;
 vec3 specular_term = adjusted_light_color * specularity;
+
 vec3 illuminated_color = color * (diffuse_term + specular_term);

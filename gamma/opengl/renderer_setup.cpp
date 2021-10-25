@@ -10,7 +10,7 @@ namespace Gamma {
     buffers.gBuffer.setSize(internalResolution);
     buffers.gBuffer.addColorAttachment(ColorFormat::RGBA);    // (RGB) Albedo, (A) Depth
     // @todo specularity -> material? meshId + UBO/SSBO for materials?
-    buffers.gBuffer.addColorAttachment(ColorFormat::RGBA16);  // (RGB) Normal, (A) Specularity
+    buffers.gBuffer.addColorAttachment(ColorFormat::RGBA16);  // (RGB) Normal, (A) Emissivity
     buffers.gBuffer.addDepthStencilAttachment();
     buffers.gBuffer.bindColorAttachments();
 

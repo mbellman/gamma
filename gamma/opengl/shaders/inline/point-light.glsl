@@ -7,8 +7,8 @@ if (light_distance > light.radius) {
   discard;
 }
 
-vec4 frag_normal_and_specularity = texture(normalAndSpecularity, fragUv);
-vec3 normal = frag_normal_and_specularity.xyz;
+vec4 frag_normal_and_emissivity = texture(normalAndEmissivity, fragUv);
+vec3 normal = frag_normal_and_emissivity.xyz;
 vec3 color = frag_color_and_depth.rgb;
 
 vec3 radiant_flux = light.color * light.power * light.radius;
@@ -27,4 +27,5 @@ float hack_soft_tapering = (20.0 * (light_distance / light.radius));
 vec3 diffuse_term = radiant_flux * incidence * attenuation * hack_radial_influence * hack_soft_tapering;
 vec3 specular_term = radiant_flux * specularity * attenuation;
 
-vec3 illuminated_color = color * (diffuse_term + specular_term);
+float emissivity = frag_normal_and_emissivity.w;
+vec3 illuminated_color = color * (diffuse_term + specular_term) * (1.0 - emissivity);

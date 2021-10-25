@@ -25,8 +25,8 @@ float range = max_factor - min_factor;
 float adjusted_factor = max(direction_factor - min_factor, 0.0);
 float spot_factor = sqrt(adjusted_factor / range);
 
-vec4 frag_normal_and_specularity = texture(normalAndSpecularity, fragUv);
-vec3 normal = frag_normal_and_specularity.xyz;
+vec4 frag_normal_and_emissivity = texture(normalAndEmissivity, fragUv);
+vec3 normal = frag_normal_and_emissivity.xyz;
 vec3 color = frag_color_and_depth.rgb;
 
 float incidence = max(dot(normalized_surface_to_light, normal), 0.0);
@@ -44,4 +44,5 @@ vec3 radiant_flux = light.color * light.power * light.radius;
 vec3 diffuse_term = radiant_flux * incidence * attenuation * hack_radial_influence * hack_soft_tapering + hack_indirect_light;
 vec3 specular_term = radiant_flux * specularity * attenuation;
 
-vec3 illuminated_color = color * spot_factor * (diffuse_term + specular_term);
+float emissivity = frag_normal_and_emissivity.w;
+vec3 illuminated_color = color * (diffuse_term + specular_term) * (1.0 - emissivity);
