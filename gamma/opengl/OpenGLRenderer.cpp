@@ -95,12 +95,6 @@ namespace Gamma {
 
     lightDisc.init();
 
-    // @todo remove test code
-    probeTest.init();
-    probeTest.setSize({ 1024, 1024 });
-    probeTest.addColorAttachment(ColorFormat::RGB16, 3);
-    probeTest.bindColorAttachments();
-
     // Initialize post shaders
     post.debanding.init();
     post.debanding.vertex("./gamma/opengl/shaders/quad.vert.glsl");
@@ -133,76 +127,39 @@ namespace Gamma {
       return;
     }
 
-    // @todo remove test code
-    if (!isProbeRendered) {
-      Vec3f probePosition(40.0f, 5.0f, -40.0f);
-
+    // @todo consider moving this out of render() and
+    // initializing probes before the rendering loop
+    if (
+      !areProbesRendered &&
+      // @hack make sure all mesh textures are loaded in from the
+      // initial rendered frame.
+      //
+      // @todo properly initialize meshes, then render probes,
+      // then proceed to render the scene normally.
+      frame > 0 &&
+      AbstractScene::active->getProbeMap().size() > 0
+    ) {
       Gm_SavePreviousFlags();
-
-      // Gm_DisableFlags(GammaFlags::RENDER_AMBIENT_OCCLUSION);
+      Gm_DisableFlags(GammaFlags::RENDER_AMBIENT_OCCLUSION);
       Gm_DisableFlags(GammaFlags::RENDER_GLOBAL_ILLUMINATION);
 
       handleSettingsChanges();
-
       initializeRendererContext();
       initializeLightArrays();
 
-      std::vector<uint8> order = { 1, 0, 3, 2, 5, 4 };
-
-      for (uint8 i = 0; i < 6; i++) {
-        auto& direction = CUBE_MAP_DIRECTIONS[order[i]];
-        auto& upDirection = CUBE_MAP_UP_DIRECTIONS[order[i]];
-        float farDistance = 1000.0f;
-
-        Camera probeCamera;
-
-        probeCamera.position = probePosition;
-        probeCamera.orientation.face(direction, upDirection);
-
-        Camera::active = &probeCamera;
-
-        Matrix4f projection = Matrix4f::glPerspective({ 1024, 1024 }, 90.0f, 1.0f, farDistance).transpose();
-
-        if (i == 2 || i == 3) {
-          // @hack @todo there may be a bug in Orientation::face()
-          probeCamera.orientation.yaw += (3.141592f / 2.0f);
-        }
-
-        Matrix4f view = (
-          Matrix4f::rotation(probeCamera.orientation.toVec3f()) *
-          Matrix4f::translation(probeCamera.position.invert().gl())
-        ).transpose();
-
-        ctx.projection = projection;
-        ctx.view = view;
-        ctx.previousViews[0] = view;
-        ctx.previousViews[1] = view;
-
-        ctx.inverseProjection = ctx.projection.inverse();
-        ctx.inverseView = ctx.view.inverse();
-
-        renderToAccumulationBuffer();
-
-        ctx.accumulationSource->read();
-        probeTest.writeToFace(i);
-
-        shaders.copyFrame.use();
-        shaders.copyFrame.setVec4f("transform", { 0.0f, 0.0f, -1.0f, 1.0f });
-        shaders.copyFrame.setInt("colorAndDepth", 0);
-
-        OpenGLScreenQuad::render();
+      for (auto& [ name, position ] : AbstractScene::active->getProbeMap()) {
+        createAndRenderProbe(name, position);
       }
 
       Gm_SavePreviousFlags();
-
-      // Gm_EnableFlags(GammaFlags::RENDER_AMBIENT_OCCLUSION);
+      Gm_EnableFlags(GammaFlags::RENDER_AMBIENT_OCCLUSION);
       Gm_EnableFlags(GammaFlags::RENDER_GLOBAL_ILLUMINATION);
 
       handleSettingsChanges();
 
-      isProbeRendered = true;
-
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+      areProbesRendered = true;
 
       return;
     }
@@ -518,7 +475,9 @@ namespace Gamma {
       }
     }
 
-    if (isProbeRendered) {  // @todo remove test condition, use ctx.hasProbeReflectors
+    // @todo use ctx.hasProbeReflectors
+    // @todo render probe reflectors, sans reflections, within probe cubemaps
+    if (areProbesRendered) {
       glStencilFunc(GL_ALWAYS, MeshType::PROBE_REFLECTOR, 0xFF);
       glStencilMask(0xFF);
 
@@ -535,10 +494,13 @@ namespace Gamma {
           shaders.probeReflector.setBool("hasTexture", glMesh->hasTexture());
           shaders.probeReflector.setBool("hasNormalMap", glMesh->hasNormalMap());
 
-          // @todo replace with mesh probe
-          probeTest.read();
+          auto& probeName = glMesh->getSourceMesh()->probe;
 
-          glMesh->render(ctx.primitiveMode);
+          if (glProbes.find(probeName) != glProbes.end()) {
+            glProbes[probeName]->read();
+
+            glMesh->render(ctx.primitiveMode);
+          }
         }
       }
     }
@@ -720,7 +682,7 @@ namespace Gamma {
     shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
     shader.setMatrix4f("inverseView", ctx.inverseView);
 
-    lightDisc.draw(ctx.pointLights);
+    lightDisc.draw(ctx.pointLights, internalResolution);
   }
 
   /**
@@ -743,7 +705,7 @@ namespace Gamma {
       auto& light = ctx.pointShadowCasters[i];
 
       glShadowMap.buffer.read();
-      lightDisc.draw(light);
+      lightDisc.draw(light, internalResolution);
     }
   }
 
@@ -825,7 +787,7 @@ namespace Gamma {
     shader.setMatrix4f("inverseProjection", ctx.inverseProjection);
     shader.setMatrix4f("inverseView", ctx.inverseView);
 
-    lightDisc.draw(ctx.spotLights);
+    lightDisc.draw(ctx.spotLights, internalResolution);
   }
 
   /**
@@ -855,7 +817,7 @@ namespace Gamma {
       shader.setMatrix4f("lightMatrix", lightMatrix);
 
       glShadowMap.buffer.read();
-      lightDisc.draw(light);
+      lightDisc.draw(light, internalResolution);
     }
   }
 
@@ -1183,11 +1145,12 @@ namespace Gamma {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
     glViewport(0, 0, Window::size.width, Window::size.height);
-    glClear(GL_COLOR_BUFFER_BIT);
+    // glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_STENCIL_TEST);
 
     post.debanding.use();
     post.debanding.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+    post.debanding.setInt("color", 0);
 
     OpenGLScreenQuad::render();
   }
@@ -1280,11 +1243,60 @@ namespace Gamma {
     SDL_GL_SwapWindow(sdl_window);
   }
 
-  void OpenGLRenderer::swapAccumulationBuffers() {
-    OpenGLFrameBuffer* source = ctx.accumulationSource;
+  void OpenGLRenderer::createAndRenderProbe(const std::string& name, const Vec3f& position) {
+    auto probe = new OpenGLCubeMap();
 
-    ctx.accumulationSource = ctx.accumulationTarget;
-    ctx.accumulationTarget = source;
+    probe->init();
+    probe->setSize({ 1024, 1024 });
+    probe->addColorAttachment(ColorFormat::RGB16, 3);
+    probe->bindColorAttachments();
+
+    glProbes[name] = probe;
+
+    std::vector<uint8> order = { 1, 0, 3, 2, 5, 4 };
+
+    for (uint8 i = 0; i < 6; i++) {
+      auto& direction = CUBE_MAP_DIRECTIONS[order[i]];
+      auto& upDirection = CUBE_MAP_UP_DIRECTIONS[order[i]];
+      float farDistance = 1000.0f;
+
+      Camera probeCamera;
+
+      probeCamera.position = position;
+      probeCamera.orientation.face(direction, upDirection);
+
+      Camera::active = &probeCamera;
+      Matrix4f projection = Matrix4f::glPerspective({ 1024, 1024 }, 90.0f, 1.0f, farDistance).transpose();
+
+      if (i == 2 || i == 3) {
+        // @hack @todo there may be a bug in Orientation::face()
+        probeCamera.orientation.yaw += (3.141592f / 2.0f);
+      }
+
+      Matrix4f view = (
+        Matrix4f::rotation(probeCamera.orientation.toVec3f()) *
+        Matrix4f::translation(probeCamera.position.invert().gl())
+      ).transpose();
+
+      ctx.projection = projection;
+      ctx.view = view;
+      ctx.previousViews[0] = view;
+      ctx.previousViews[1] = view;
+
+      ctx.inverseProjection = ctx.projection.inverse();
+      ctx.inverseView = ctx.view.inverse();
+
+      renderToAccumulationBuffer();
+
+      ctx.accumulationSource->read();
+      probe->writeToFace(i);
+
+      shaders.copyFrame.use();
+      shaders.copyFrame.setVec4f("transform", { 0.0f, 0.0f, -1.0f, 1.0f });
+      shaders.copyFrame.setInt("colorAndDepth", 0);
+
+      OpenGLScreenQuad::render();
+    }
   }
 
   void OpenGLRenderer::renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background) {
@@ -1317,5 +1329,12 @@ namespace Gamma {
     renderSurfaceToScreen(text, x, y, color, background);
 
     SDL_FreeSurface(text);
+  }
+
+  void OpenGLRenderer::swapAccumulationBuffers() {
+    OpenGLFrameBuffer* source = ctx.accumulationSource;
+
+    ctx.accumulationSource = ctx.accumulationTarget;
+    ctx.accumulationTarget = source;
   }
 }

@@ -117,6 +117,10 @@ namespace Gamma {
     return *object;
   }
 
+  const std::map<std::string, Vec3f> AbstractScene::getProbeMap() const {
+    return probeMap;
+  }
+
   const float AbstractScene::getRunningTime() {
     return runningTime;
   }

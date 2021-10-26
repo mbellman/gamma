@@ -28,6 +28,7 @@ namespace Gamma {
     virtual ~AbstractScene();
 
     const std::vector<Light>& getLights() const;
+    const std::map<std::string, Vec3f> getProbeMap() const;
     const float getRunningTime();
     const SceneStats getStats() const;
     virtual void updateScene(float dt) final;

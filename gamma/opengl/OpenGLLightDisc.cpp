@@ -5,7 +5,6 @@
 #include "opengl/OpenGLLightDisc.h"
 #include "system/camera.h"
 #include "system/console.h"
-#include "system/Window.h"
 
 #include "glew.h"
 
@@ -102,7 +101,7 @@ namespace Gamma {
     // @todo
   }
 
-  void OpenGLLightDisc::configureDisc(Disc& disc, const Light& light, const Matrix4f& projection, const Matrix4f& view, float windowAspectRatio) {
+  void OpenGLLightDisc::configureDisc(Disc& disc, const Light& light, const Matrix4f& projection, const Matrix4f& view, float resolutionAspectRatio) {
     Vec3f localLightPosition = (view * light.position).toVec3f();
 
     disc.light = light;
@@ -114,7 +113,7 @@ namespace Gamma {
       disc.offset = Vec2f(screenLightPosition.x, screenLightPosition.y);
       // @todo use 1 + log(light.power) or similar for scaling term
       disc.scale.x = 1.3f * light.radius / localLightPosition.z;
-      disc.scale.y = 1.3f * light.radius / localLightPosition.z * windowAspectRatio;
+      disc.scale.y = 1.3f * light.radius / localLightPosition.z * resolutionAspectRatio;
     } else {
       // Light source behind the camera; scale to cover
       // screen when within range, and scale to 0 when
@@ -126,12 +125,12 @@ namespace Gamma {
     }
   }
 
-  void OpenGLLightDisc::draw(const Light& light) {
+  void OpenGLLightDisc::draw(const Light& light, const Area<uint32>& resolution) {
     Disc discs[1];
     auto& disc = discs[0];
     auto& camera = *Camera::active;
-    float aspectRatio = (float)Window::size.width / (float)Window::size.height;
-    Matrix4f projection = Matrix4f::glPerspective(Window::size, 90.0f * 0.5f, 1.0f, 10000.0f);
+    float aspectRatio = (float)resolution.width / (float)resolution.height;
+    Matrix4f projection = Matrix4f::glPerspective(resolution, 90.0f * 0.5f, 1.0f, 10000.0f);
 
     Matrix4f view = (
       Matrix4f::rotation(camera.orientation.toVec3f().invert()) *
@@ -147,12 +146,12 @@ namespace Gamma {
     glDrawArrays(GL_TRIANGLES, 0, DISC_SLICES * 3);
   }
 
-  void OpenGLLightDisc::draw(const std::vector<Light>& lights) {
+  void OpenGLLightDisc::draw(const std::vector<Light>& lights, const Area<uint32>& resolution) {
     // @todo avoid reallocating/freeing the disc array on each draw
     Disc* discs = new Disc[lights.size()];
     auto& camera = *Camera::active;
-    float aspectRatio = (float)Window::size.width / (float)Window::size.height;
-    Matrix4f projection = Matrix4f::glPerspective(Window::size, 90.0f * 0.5f, 1.0f, 10000.0f);
+    float aspectRatio = (float)resolution.width / (float)resolution.height;
+    Matrix4f projection = Matrix4f::glPerspective(resolution, 90.0f * 0.5f, 1.0f, 10000.0f);
 
     Matrix4f view = (
       Matrix4f::rotation(camera.orientation.toVec3f().invert()) *

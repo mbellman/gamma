@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "math/plane.h"
 #include "system/entities.h"
 #include "system/traits.h"
 #include "system/type_aliases.h"
@@ -17,8 +18,8 @@ namespace Gamma {
   public:
     virtual void init() override;
     virtual void destroy() override;
-    void draw(const Light& light);
-    void draw(const std::vector<Light>& lights);
+    void draw(const Light& light, const Area<uint32>& resolution);
+    void draw(const std::vector<Light>& lights, const Area<uint32>& resolution);
 
   private:
     GLuint vao;
@@ -30,6 +31,6 @@ namespace Gamma {
      */
     GLuint buffers[2];
 
-    void configureDisc(Disc& disc, const Light& light, const Matrix4f& projection, const Matrix4f& view, float windowAspectRatio);
+    void configureDisc(Disc& disc, const Light& light, const Matrix4f& projection, const Matrix4f& view, float resolutionAspectRatio);
   };
 }

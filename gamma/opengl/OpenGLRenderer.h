@@ -106,10 +106,8 @@ namespace Gamma {
     std::vector<OpenGLDirectionalShadowMap*> glDirectionalShadowMaps;
     std::vector<OpenGLPointShadowMap*> glPointShadowMaps;
     std::vector<OpenGLSpotShadowMap*> glSpotShadowMaps;
-
-    // @todo remove
-    OpenGLCubeMap probeTest;
-    bool isProbeRendered = false;
+    std::map<std::string, OpenGLCubeMap*> glProbes;
+    bool areProbesRendered = false;
 
     struct PostShaders {
       OpenGLShader debanding;
@@ -141,7 +139,8 @@ namespace Gamma {
     void renderPostEffects();
     void renderDevBuffers();
 
-    void swapAccumulationBuffers();
+    void createAndRenderProbe(const std::string& name, const Vec3f& position);
     void renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background);
+    void swapAccumulationBuffers();
   };
 }
