@@ -42,8 +42,10 @@ void main() {
 
   vec3 incident_vector = normalize(position - cameraPosition);
   vec3 reflection_vector = reflect(incident_vector, normal);
+  // @todo support roughness
   vec3 probe_reflector_color = color * texture(probeMap, reflection_vector).rgb;
 
   out_color_and_depth = vec4(probe_reflector_color, gl_FragCoord.z);
+  // @todo support custom emissivity
   out_normal_and_emissivity = vec4(normal, 0.3);
 }

@@ -293,7 +293,7 @@ namespace Gamma {
     static Mesh* Model(const char* path);
     static Mesh* Model(std::initializer_list<const char*> paths);
     static Mesh* Particles();
-    static Mesh* Plane(uint32 size);
+    static Mesh* Plane(uint32 size, bool useLoopingTexture = false);
   };
 
   /**

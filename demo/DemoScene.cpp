@@ -10,12 +10,12 @@ void DemoScene::init() {
 
   camera.position.z = -300.0f;
 
-  addMesh("cube", 100, Mesh::Cube());
+  addFloor();
+  addCubesExhibit();
+
   addMesh("daVinci", 1, Mesh::Model("./demo/assets/models/da-vinci.obj"));
-  addMesh("plane", 1, Mesh::Plane(10));
   addMesh("wall", 1, Mesh::Plane(10));
   addMesh("particles", 10000, Mesh::Particles());
-  addMesh("ball", 1, Mesh::Model("./demo/assets/models/ball.obj"));
 
   addMesh("rabbit", 10, Mesh::Model({
     "./demo/assets/models/rabbit-lod1.obj",
@@ -24,34 +24,12 @@ void DemoScene::init() {
 
   // mesh("cube").texture = "./demo/assets/images/cat.png";
   // mesh("wall").texture = "./demo/assets/images/cat.png";
-  mesh("cube").texture = "./demo/assets/images/marble.png";
-  mesh("cube").normalMap = "./demo/assets/images/marble-normal-map.png";
-  mesh("plane").texture = "./demo/assets/images/marble.png";
-  mesh("plane").normalMap = "./demo/assets/images/marble-normal-map.png";
-  mesh("plane").normalMap = "./demo/assets/images/metal-normal-map.png";
-
-  addProbe("ball-probe", Vec3f(40.0f, 5.0f, -40.0f));
-  addProbe("center", Vec3f(0.0f, 20.0f, 0.0f));
+  // mesh("cube").texture = "./demo/assets/images/marble.png";
+  // mesh("cube").normalMap = "./demo/assets/images/marble-normal-map.png";
 
   // mesh("plane").type = MeshType::REFLECTIVE;
   // mesh("rabbit").type = MeshType::REFRACTIVE;
   // mesh("cube").type = MeshType::EMISSIVE;
-
-  mesh("daVinci").type = MeshType::PROBE_REFLECTOR;
-  mesh("daVinci").probe = "center";
-
-  mesh("rabbit").type = MeshType::PROBE_REFLECTOR;
-  mesh("rabbit").probe = "center";
-
-  mesh("ball").type = MeshType::PROBE_REFLECTOR;
-  mesh("ball").probe = "ball-probe";
-
-  auto& ball = createObjectFrom("ball");
-
-  ball.scale = 8.0f;
-  ball.position = Vec3f(40.0f, 5.0f, -40.0f);
-
-  commit(ball);
 
   auto& particles = mesh("particles").particleSystem;
 
@@ -83,13 +61,6 @@ void DemoScene::init() {
   daVinci.color = pVec4(100, 175, 255);
 
   commit(daVinci);
-
-  auto& plane = createObjectFrom("plane");
-
-  plane.scale = Vec3f(400.0f, 1.0f, 400.0f);
-  plane.position.y = -20.0f;
-
-  commit(plane);
 
   auto& wall = createObjectFrom("wall");
 
@@ -125,82 +96,40 @@ void DemoScene::init() {
     commit(rabbit);
   }
 
-  auto& daVinciLight = createLight(LightType::POINT_SHADOWCASTER);
+  // auto& daVinciLight = createLight(LightType::POINT_SHADOWCASTER);
 
-  daVinciLight.position = Vec3f(0.0f, 20.0f, 0.0f);
-  daVinciLight.color = Vec3f(1.0f, 1.0f, 1.0f);
-  daVinciLight.radius = 1000.0f;
-  daVinciLight.power = 2.0f;
-  daVinciLight.direction = Vec3f(0.0f, 0.0f, 1.0f);
-  daVinciLight.fov = 80.0f;
-  daVinciLight.isStatic = true;
+  // daVinciLight.position = Vec3f(0.0f, 20.0f, 0.0f);
+  // daVinciLight.color = Vec3f(1.0f, 1.0f, 1.0f);
+  // daVinciLight.radius = 1000.0f;
+  // daVinciLight.power = 2.0f;
+  // daVinciLight.direction = Vec3f(0.0f, 0.0f, 1.0f);
+  // daVinciLight.fov = 80.0f;
+  // daVinciLight.isStatic = true;
 
-  auto& daVinciLight2 = createLight(LightType::POINT_SHADOWCASTER);
+  // auto& daVinciLight2 = createLight(LightType::POINT_SHADOWCASTER);
 
-  daVinciLight2.position = Vec3f(-50.0f, 20.0f, -50.0f);
-  daVinciLight2.color = Vec3f(0.0f, 1.0f, 0.0f);
-  daVinciLight2.radius = 1000.0f;
-  daVinciLight2.power = 2.0f;
-  daVinciLight2.direction = Vec3f(-0.3f, -1.0f, -0.3f);
-  daVinciLight2.fov = 80.0f;
-  daVinciLight2.isStatic = true;
+  // daVinciLight2.position = Vec3f(-50.0f, 20.0f, -50.0f);
+  // daVinciLight2.color = Vec3f(0.0f, 1.0f, 0.0f);
+  // daVinciLight2.radius = 1000.0f;
+  // daVinciLight2.power = 2.0f;
+  // daVinciLight2.direction = Vec3f(-0.3f, -1.0f, -0.3f);
+  // daVinciLight2.fov = 80.0f;
+  // daVinciLight2.isStatic = true;
 
-  auto& daVinciLight3 = createLight(LightType::POINT_SHADOWCASTER);
+  // auto& daVinciLight3 = createLight(LightType::POINT_SHADOWCASTER);
 
-  daVinciLight3.position = Vec3f(50.0f, 20.0f, -50.0f);
-  daVinciLight3.color = Vec3f(0.0f, 0.0f, 1.0f);
-  daVinciLight3.radius = 1000.0f;
-  daVinciLight3.power = 2.0f;
-  daVinciLight3.direction = Vec3f(0.3f, -1.0f, -0.3f);
-  daVinciLight3.fov = 80.0f;
-  daVinciLight3.isStatic = true;
+  // daVinciLight3.position = Vec3f(50.0f, 20.0f, -50.0f);
+  // daVinciLight3.color = Vec3f(0.0f, 0.0f, 1.0f);
+  // daVinciLight3.radius = 1000.0f;
+  // daVinciLight3.power = 2.0f;
+  // daVinciLight3.direction = Vec3f(0.3f, -1.0f, -0.3f);
+  // daVinciLight3.fov = 80.0f;
+  // daVinciLight3.isStatic = true;
 
-  // auto& sunlight = createLight(LightType::DIRECTIONAL_SHADOWCASTER);
+  auto& sunlight = createLight(LightType::DIRECTIONAL_SHADOWCASTER);
 
-  // sunlight.direction = Vec3f(-0.3f, -0.5f, 1.0f);
-  // sunlight.color = Vec3f(1.0f, 1.0f, 1.0f);
-
-  // auto& cameraLight = createLight(LightType::SPOT_SHADOWCASTER);
-
-  // cameraLight.color = Vec3f(1.0f, 1.0f, 1.0f);
-  // cameraLight.fov = 90.0f;
-  // cameraLight.radius = 500.0f;
-  // cameraLight.position = Vec3f(0.0f, 25.0f, 0.0f);
-  // cameraLight.direction = Vec3f(0.0f, 0.0f, 1.0f);
-  // cameraLight.power = 3.0f;
-
-  // clight = &cameraLight;
-
-  for (int i = 0; i < 10; i++) {
-    for (int j = 0; j < 10; j++) {
-      auto& cube = createObjectFrom("cube");
-
-      Vec3f cubePosition = Vec3f(
-        40.0f * (i - 5),
-        -12.0f,
-        40.0f * (j - 5)
-      );
-
-      cube.position = cubePosition;
-      cube.scale = 8.0f;
-
-      cube.color = pVec4(
-        Vec3f(
-          i / 10.0f,
-          sinf(i / 10.0f * 3.141592f) * sinf(j / 10.0f * 3.141592f),
-          1.0f - j / 10.0f
-        )
-      );
-
-      // auto& cubeLight = createLight(LightType::POINT);
-
-      // cubeLight.color = Vec3f(0.1f, 0.3f, 1.0f);
-      // cubeLight.radius = 25.0f;
-      // cubeLight.position = cubePosition + Vec3f(0.0f, 10.0f, 0.0f);
-
-      commit(cube);
-    }
-  }
+  sunlight.direction = Vec3f(-0.3f, -0.5f, 1.0f);
+  sunlight.color = Vec3f(1.0f);
 
   input.on<MouseMoveEvent>("mousemove", [&](const MouseMoveEvent& event) {
     if (SDL_GetRelativeMouseMode()) {
@@ -251,4 +180,73 @@ void DemoScene::update(float dt) {
 
   // clight->direction = camera.orientation.getDirection();
   // clight->position = camera.position + camera.orientation.getDirection() * 20.0f + camera.orientation.getUpDirection() * -5.0f;
+}
+
+void DemoScene::addFloor() {
+  addMesh("floor", 1, Mesh::Plane(30, true));
+
+  mesh("floor").texture = "./demo/assets/images/checkerboard.png";
+  mesh("floor").normalMap = "./demo/assets/images/marble-normal-map.png";
+
+  auto& floor = createObjectFrom("floor");
+
+  floor.scale = Vec3f(1000.0f, 1.0f, 1000.0f);
+  floor.position.y = -20.0f;
+
+  commit(floor);
+}
+
+void DemoScene::addCubesExhibit() {
+  const float pi = 3.141592f;
+  Vec3f location = Vec3f(-150.0f, 0.0f, 50.0f);
+
+  addMesh("cube", 16, Mesh::Cube());
+  addMesh("ball", 1, Mesh::Model("./demo/assets/models/ball.obj"));
+
+  mesh("cube").texture = "./demo/assets/images/marble.png";
+  mesh("cube").normalMap = "./demo/assets/images/marble-normal-map.png";
+
+  mesh("ball").type = MeshType::PROBE_REFLECTOR;
+  mesh("ball").probe = "ball-probe";
+
+  auto& ball = createObjectFrom("ball");
+
+  ball.scale = 16.0f;
+  ball.position = location + Vec3f(-10.0f, 15.0f, -10.0f); 
+
+  commit(ball);
+
+  addProbe("ball-probe", ball.position);
+
+  auto n_sinf = [](float value) {
+    return sinf(value) * 0.5f + 0.5f;
+  };
+
+  auto n_cosf = [](float value) {
+    return cosf(value) * 0.5f + 0.5f;
+  };
+
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      auto& cube = createObjectFrom("cube");
+
+      cube.position = location + Vec3f(
+        20.0f * (i - 2.0f),
+        -12.0f,
+        20.0f * (j - 2.0f)
+      );
+
+      cube.scale = 8.0f;
+
+      cube.color = pVec4(
+        Vec3f(
+          n_sinf(i / 3.0f * pi - pi * 0.5f),
+          n_cosf(i / 3.0f * pi),
+          n_sinf(j / 3.0f * pi - pi * 0.5f)
+        )
+      );
+
+      commit(cube);
+    }
+  }
 }
