@@ -99,10 +99,7 @@ void main() {
         continue;
       }
 
-      // @todo mipmap 3 fixes issues with incorrect depth determination,
-      // but incurs a slightly greater performance penalty. consider
-      // compromising for the visual improvements.
-      vec4 sample_color_and_depth = textureLod(colorAndDepth, fragUv + offset, 5);
+      vec4 sample_color_and_depth = textureLod(colorAndDepth, fragUv + offset, 3);
 
       // @todo why is this necessary? why are certain sample
       // color components < 0? note: this is to do with
