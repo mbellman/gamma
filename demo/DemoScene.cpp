@@ -96,17 +96,17 @@ void DemoScene::init() {
     commit(rabbit);
   }
 
-  // auto& daVinciLight = createLight(LightType::POINT_SHADOWCASTER);
+  // auto& daVinciLight = createLight(LightType::SPOT_SHADOWCASTER);
 
   // daVinciLight.position = Vec3f(0.0f, 20.0f, 0.0f);
-  // daVinciLight.color = Vec3f(1.0f, 1.0f, 1.0f);
+  // daVinciLight.color = Vec3f(1.0f, 0.0f, 0.0f);
   // daVinciLight.radius = 1000.0f;
   // daVinciLight.power = 2.0f;
   // daVinciLight.direction = Vec3f(0.0f, 0.0f, 1.0f);
   // daVinciLight.fov = 80.0f;
   // daVinciLight.isStatic = true;
 
-  // auto& daVinciLight2 = createLight(LightType::POINT_SHADOWCASTER);
+  // auto& daVinciLight2 = createLight(LightType::SPOT_SHADOWCASTER);
 
   // daVinciLight2.position = Vec3f(-50.0f, 20.0f, -50.0f);
   // daVinciLight2.color = Vec3f(0.0f, 1.0f, 0.0f);
@@ -116,7 +116,7 @@ void DemoScene::init() {
   // daVinciLight2.fov = 80.0f;
   // daVinciLight2.isStatic = true;
 
-  // auto& daVinciLight3 = createLight(LightType::POINT_SHADOWCASTER);
+  // auto& daVinciLight3 = createLight(LightType::SPOT_SHADOWCASTER);
 
   // daVinciLight3.position = Vec3f(50.0f, 20.0f, -50.0f);
   // daVinciLight3.color = Vec3f(0.0f, 0.0f, 1.0f);
@@ -177,9 +177,6 @@ void DemoScene::update(float dt) {
   // wall.position.z = 0.0f + (1.0f + sinf(getRunningTime() * 0.2f)) * 0.5f * 200.0f;
 
   // commit(wall);
-
-  // clight->direction = camera.orientation.getDirection();
-  // clight->position = camera.position + camera.orientation.getDirection() * 20.0f + camera.orientation.getUpDirection() * -5.0f;
 }
 
 void DemoScene::addFloor() {

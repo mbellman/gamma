@@ -7,6 +7,8 @@ layout (location = 3) in vec2 vertexUv;
 layout (location = 4) in uint modelColor;
 layout (location = 5) in mat4 modelMatrix;
 
+#include "utils/gl.glsl";
+
 void main() {
-  gl_Position = modelMatrix * vec4(vertexPosition, 1.0);
+  gl_Position = glMat4(modelMatrix) * vec4(vertexPosition, 1.0);
 }

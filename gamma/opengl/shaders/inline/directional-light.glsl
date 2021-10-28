@@ -1,4 +1,5 @@
 vec3 adjusted_light_color = light.color * light.power;
+// @optimize normalize light direction outside of the shader
 vec3 normalized_surface_to_light = normalize(light.direction) * -1.0;
 vec3 normalized_surface_to_camera = normalize(cameraPosition - position);
 vec3 half_vector = normalize(normalized_surface_to_light + normalized_surface_to_camera);

@@ -8,7 +8,6 @@ public:
 
 private:
   int lastRemovedIndex = 0;
-  Gamma::Light* clight = nullptr;
 
   void addFloor();
   void addCubesExhibit();
