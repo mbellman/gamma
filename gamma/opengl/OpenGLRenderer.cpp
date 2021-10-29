@@ -1247,7 +1247,8 @@ namespace Gamma {
     auto probe = new OpenGLCubeMap();
 
     probe->init();
-    probe->setSize({ 1024, 1024 });
+    // @todo configurable probe size
+    probe->setSize({ 512, 512 });
     probe->addColorAttachment(ColorFormat::RGB16, 3);
     probe->bindColorAttachments();
 

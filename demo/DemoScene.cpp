@@ -11,16 +11,17 @@ void DemoScene::init() {
   camera.position.z = -300.0f;
 
   addFloor();
-  addCubesExhibit();
+  addCenterCubesExhibit();
+  addRainbowCubesExhibit();
 
-  addMesh("daVinci", 1, Mesh::Model("./demo/assets/models/da-vinci.obj"));
+  // addMesh("daVinci", 1, Mesh::Model("./demo/assets/models/da-vinci.obj"));
   addMesh("wall", 1, Mesh::Plane(10));
-  addMesh("particles", 10000, Mesh::Particles());
+  // addMesh("particles", 10000, Mesh::Particles());
 
-  addMesh("rabbit", 10, Mesh::Model({
-    "./demo/assets/models/rabbit-lod1.obj",
-    "./demo/assets/models/rabbit-lod2.obj"
-  }));
+  // addMesh("rabbit", 10, Mesh::Model({
+  //   "./demo/assets/models/rabbit-lod1.obj",
+  //   "./demo/assets/models/rabbit-lod2.obj"
+  // }));
 
   // mesh("cube").texture = "./demo/assets/images/cat.png";
   // mesh("wall").texture = "./demo/assets/images/cat.png";
@@ -31,36 +32,36 @@ void DemoScene::init() {
   // mesh("rabbit").type = MeshType::REFRACTIVE;
   // mesh("cube").type = MeshType::EMISSIVE;
 
-  auto& particles = mesh("particles").particleSystem;
+  // auto& particles = mesh("particles").particleSystem;
 
-  particles.spawn = Vec3f(0.0f, 20.0f, 0.0f);
-  particles.spread = 10.0f;
-  particles.minimumRadius = 0.0f;
-  particles.medianSpeed = 0.1f;
-  particles.speedVariation = 0.1f;
-  particles.medianSize = 10.0f;
-  particles.sizeVariation = 10.0f;
-  particles.deviation = 3.0f;
-  particles.isCircuit = true;
+  // particles.spawn = Vec3f(0.0f, 20.0f, 0.0f);
+  // particles.spread = 10.0f;
+  // particles.minimumRadius = 0.0f;
+  // particles.medianSpeed = 0.1f;
+  // particles.speedVariation = 0.1f;
+  // particles.medianSize = 10.0f;
+  // particles.sizeVariation = 10.0f;
+  // particles.deviation = 3.0f;
+  // particles.isCircuit = true;
 
-  particles.path = {
-    Vec3f(0.0f, 20.0f, 0.0f),
-    Vec3f(20.0f, -10.0f, -40.0f),
-    Vec3f(50.0f, 40.0f, 10.0f),
-    Vec3f(0.0f, 30.0f, 10.0f),
-    Vec3f(-20.0f, 40.0f, 35.0f),
-    Vec3f(-40.0f, 15.0f, 25.0f),
-    Vec3f(-60.0f, 20.0f, -30.0f),
-    Vec3f(-5.0f, 20.0f, -5)
-  };
+  // particles.path = {
+  //   Vec3f(0.0f, 20.0f, 0.0f),
+  //   Vec3f(20.0f, -10.0f, -40.0f),
+  //   Vec3f(50.0f, 40.0f, 10.0f),
+  //   Vec3f(0.0f, 30.0f, 10.0f),
+  //   Vec3f(-20.0f, 40.0f, 35.0f),
+  //   Vec3f(-40.0f, 15.0f, 25.0f),
+  //   Vec3f(-60.0f, 20.0f, -30.0f),
+  //   Vec3f(-5.0f, 20.0f, -5)
+  // };
 
-  auto& daVinci = createObjectFrom("daVinci");
+  // auto& daVinci = createObjectFrom("daVinci");
 
-  daVinci.position = Vec3f(0.0f, 20.0f, 0.0f);
-  daVinci.scale = 50.0f;
-  daVinci.color = pVec4(100, 175, 255);
+  // daVinci.position = Vec3f(0.0f, 20.0f, 0.0f);
+  // daVinci.scale = 50.0f;
+  // daVinci.color = pVec4(100, 175, 255);
 
-  commit(daVinci);
+  // commit(daVinci);
 
   auto& wall = createObjectFrom("wall");
 
@@ -71,30 +72,30 @@ void DemoScene::init() {
 
   commit(wall);
 
-  for (uint32 i = 0; i < 10; i++) {
-    auto& rabbit = createObjectFrom("rabbit");
-    float r = (float)i / 10.0f * M_PI * 2.0f;
+  // for (uint32 i = 0; i < 10; i++) {
+  //   auto& rabbit = createObjectFrom("rabbit");
+  //   float r = (float)i / 10.0f * M_PI * 2.0f;
 
-    rabbit.scale = 10.0f;
+  //   rabbit.scale = 10.0f;
 
-    rabbit.position = Vec3f(
-      sinf(r) * 60.0f,
-      -17.0f,
-      cosf(r) * 60.0f
-    );
+  //   rabbit.position = Vec3f(
+  //     sinf(r) * 60.0f,
+  //     -17.0f,
+  //     cosf(r) * 60.0f
+  //   );
 
-    rabbit.color = pVec4(
-      Vec3f(
-        i / 10.0f,
-        sinf(i / 10.0f * 3.141592f),
-        1.0f - i / 10.0f
-      )
-    );
+  //   rabbit.rotation = Vec3f(0.0f, -1.0f * i / 10.0f * 3.141592f * 2.0f, 0.0f);
 
-    // rabbit.color = pVec4(255, 200, 255);
+  //   rabbit.color = pVec4(
+  //     Vec3f(
+  //       i / 10.0f,
+  //       sinf(i / 10.0f * 3.141592f),
+  //       1.0f - i / 10.0f
+  //     )
+  //   );
 
-    commit(rabbit);
-  }
+  //   commit(rabbit);
+  // }
 
   // auto& daVinciLight = createLight(LightType::SPOT_SHADOWCASTER);
 
@@ -166,7 +167,13 @@ void DemoScene::init() {
 void DemoScene::destroy() {}
 
 void DemoScene::update(float dt) {
-  useLodByDistance(mesh("rabbit"), 100.0f);
+  // useLodByDistance(mesh("rabbit"), 100.0f);
+
+  for (auto& cube : mesh("cat-cube").objects) {
+    cube.rotation += Vec3f(0.5f * dt);
+
+    commit(cube);
+  }
 
   // auto& wall = *mesh("wall").objects.begin();
 
@@ -193,9 +200,40 @@ void DemoScene::addFloor() {
   commit(floor);
 }
 
-void DemoScene::addCubesExhibit() {
+void DemoScene::addCenterCubesExhibit() {
+  Vec3f location(0.0f);
+
+  addMesh("cat-cube", 3, Mesh::Cube());
+
+  mesh("cat-cube").texture = "./demo/assets/images/cat.png";
+
+  auto& cube1 = createObjectFrom("cat-cube");
+  auto& cube2 = createObjectFrom("cat-cube");
+  auto& cube3 = createObjectFrom("cat-cube");
+
+  cube1.position = location + Vec3f(-50.0f, 15.0f, 0.0f);
+  cube1.scale = 20.0f;
+  cube1.rotation = Vec3f(1.5f, 0.7f, 2.1f);
+  cube1.color = pVec4(255, 50, 10);
+
+  cube2.position = location + Vec3f(0.0f, 15.0f, 0.0f);
+  cube2.scale = 10.0f;
+  cube2.rotation = Vec3f(0.3f, 1.1f, 0.8f);
+  cube2.color = pVec4(10, 255, 50);
+
+  cube3.position = location + Vec3f(30.0f, 15.0f, 0.0f);
+  cube3.scale = 5.0f;
+  cube3.rotation = Vec3f(0.9f, 2.5f, 3.1f);
+  cube3.color = pVec4(10, 50, 255);
+
+  commit(cube1);
+  commit(cube2);
+  commit(cube3);
+}
+
+void DemoScene::addRainbowCubesExhibit() {
   const float pi = 3.141592f;
-  Vec3f location = Vec3f(-150.0f, 0.0f, 50.0f);
+  Vec3f location = Vec3f(-150.0f, 0.0f, 12.0f);
 
   addMesh("cube", 16, Mesh::Cube());
   addMesh("ball", 1, Mesh::Model("./demo/assets/models/ball.obj"));

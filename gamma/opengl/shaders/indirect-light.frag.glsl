@@ -61,11 +61,75 @@ float getScreenSpaceAmbientOcclusionContribution(float fragment_depth) {
   return -average_occlusion * 0.1;
 }
 
+// @todo fix excessively bright/illuminated spots up close
+vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fragment_position, vec3 fragment_normal) {
+  const int TOTAL_SAMPLES = 30;
+  const float max_sample_radius = 1000.0;
+  const float min_sample_radius = 50.0;
+  const float max_brightness = 50.0;
+  vec2 texel_size = 1.0 / screenSize;
+
+  vec3 global_illumination = vec3(0.0);
+
+  float linearized_fragment_depth = getLinearizedDepth(fragment_depth);
+  // @todo define and use easeOut()
+  float radius_distance_factor = saturate(sqrt(sqrt(linearized_fragment_depth / 500.0)));
+  float radius = mix(max_sample_radius, min_sample_radius, radius_distance_factor);
+
+  for (int i = 0; i < TOTAL_SAMPLES; i++) {
+    vec2 offset = texel_size * radius * rotatedVogelDisc(TOTAL_SAMPLES, i);
+    vec2 coords = fragUv + offset;
+
+    if (isOffScreen(coords, 0.0)) {
+      continue;
+    }
+
+    vec4 sample_color_and_depth = textureLod(colorAndDepth, fragUv + offset, 3);
+
+    // @todo why is this necessary? why are certain sample
+    // color components < 0? note: this is to do with
+    // probe reflectors
+    sample_color_and_depth.r = saturate(sample_color_and_depth.r);
+    sample_color_and_depth.g = saturate(sample_color_and_depth.g);
+    sample_color_and_depth.b = saturate(sample_color_and_depth.b);
+
+    // Diminish illumination where the sample emits
+    // less incident bounce light onto the fragment
+    vec3 sample_position = getWorldPosition(sample_color_and_depth.w, fragUv + offset, inverseProjection, inverseView);
+    float sample_distance = distance(fragment_position, sample_position);
+    vec3 normalized_fragment_to_sample = (sample_position - fragment_position) / sample_distance;
+    float incidence_factor = max(0.0, dot(fragment_normal, normalized_fragment_to_sample));
+
+    // Diminish illumination with distance
+    float distance_factor = max_brightness * saturate(1.0 / sample_distance);
+
+    global_illumination += sample_color_and_depth.rgb * incidence_factor * distance_factor;
+  }
+
+  return global_illumination / float(TOTAL_SAMPLES);
+}
+
+/**
+ * Determines whether a previous-frame temporal sample
+ * has a light enough color to use for denoising. Fragments
+ * where geometry was not rendered during the previous
+ * frame will be black or near black, and we want to avoid
+ * including these in the temporally averaged color. This
+ * is mainly a problem where moving geometry edges meet
+ * the sky, and reprojected samples are taken from points
+ * where no geometry was rendered during an earlier frame,
+ * and the sampled color would be invalid.
+ */
+bool isUsableTemporalSampleColor(vec3 color) {
+  const float threshold = 0.1;
+
+  return color.r >= threshold || color.g >= threshold || color.b >= threshold;
+}
+
 void main() {
   vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
 
   if (frag_color_and_depth.w == 1.0) {
-    // @bug this causes a white outline where geometry meets the skybox
     discard;
   }
 
@@ -79,49 +143,7 @@ void main() {
   #endif
 
   #if USE_SCREEN_SPACE_GLOBAL_ILLUMINATION == 1
-    // @todo move to its own function
-    const int TOTAL_SAMPLES = 30;
-    const float max_sample_radius = 1000.0;
-    const float min_sample_radius = 50.0;
-    const float max_brightness = 50.0;
-
-    vec2 texel_size = 1.0 / screenSize;
-    float linearized_fragment_depth = getLinearizedDepth(frag_color_and_depth.w);
-    // @todo define and use easeOut()
-    float radius_distance_factor = saturate(sqrt(sqrt(linearized_fragment_depth / 500.0)));
-    float radius = mix(max_sample_radius, min_sample_radius, radius_distance_factor);
-
-    for (int i = 0; i < TOTAL_SAMPLES; i++) {
-      vec2 offset = texel_size * radius * rotatedVogelDisc(TOTAL_SAMPLES, i);
-      vec2 coords = fragUv + offset;
-
-      if (isOffScreen(coords, 0.0)) {
-        continue;
-      }
-
-      vec4 sample_color_and_depth = textureLod(colorAndDepth, fragUv + offset, 3);
-
-      // @todo why is this necessary? why are certain sample
-      // color components < 0? note: this is to do with
-      // probe reflectors
-      sample_color_and_depth.r = saturate(sample_color_and_depth.r);
-      sample_color_and_depth.g = saturate(sample_color_and_depth.g);
-      sample_color_and_depth.b = saturate(sample_color_and_depth.b);
-
-      // Diminish illumination where the sample emits
-      // less incident bounce light onto the fragment
-      vec3 sample_position = getWorldPosition(sample_color_and_depth.w, fragUv + offset, inverseProjection, inverseView);
-      float sample_distance = distance(fragment_position, sample_position);
-      vec3 normalized_fragment_to_sample = (sample_position - fragment_position) / sample_distance;
-      float incidence_factor = max(0.0, dot(fragment_normal, normalized_fragment_to_sample));
-
-      // Diminish illumination with distance
-      float distance_factor = max_brightness * saturate(1.0 / sample_distance);
-
-      global_illumination += sample_color_and_depth.rgb * incidence_factor * distance_factor;
-    }
-
-    global_illumination /= float(TOTAL_SAMPLES);
+    global_illumination = getScreenSpaceGlobalIlluminationContribution(frag_color_and_depth.w, fragment_position, fragment_normal);
   #endif
 
   vec3 fragment_position_t1 = glVec3(viewT1 * glVec4(fragment_position));
@@ -133,13 +155,21 @@ void main() {
   out_gi_and_ao = vec4(global_illumination, ambient_occlusion);
 
   if (!isOffScreen(fragUv_t1, 0.001)) {
-    out_gi_and_ao += texture(indirectLightT1, fragUv_t1);
-    total_temporal_samples++;
+    vec4 sample_t1 = texture(indirectLightT1, fragUv_t1);
+
+    if (isUsableTemporalSampleColor(sample_t1.rgb)) {
+      out_gi_and_ao += sample_t1;
+      total_temporal_samples++;
+    }
   }
 
   if (!isOffScreen(fragUv_t2, 0.001)) {
-    out_gi_and_ao += texture(indirectLightT2, fragUv_t2);
-    total_temporal_samples++;
+    vec4 sample_t2 = texture(indirectLightT2, fragUv_t2);
+
+    if (isUsableTemporalSampleColor(sample_t2.rgb)) {
+      out_gi_and_ao += sample_t2;
+      total_temporal_samples++;
+    }
   }
 
   out_gi_and_ao /= float(total_temporal_samples);

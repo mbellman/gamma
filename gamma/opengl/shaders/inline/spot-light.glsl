@@ -11,17 +11,17 @@ float light_distance = length(surface_to_light);
 vec3 normalized_surface_to_light = surface_to_light / light_distance;
 
 // @optimize normalize light direction outside of the shader
-float directional_alignment = dot(normalized_surface_to_light * -1, normalize(light.direction));
+float fragment_alignment = dot(normalized_surface_to_light * -1, normalize(light.direction));
 float cone_edge_alignment = 1.0 - (light.fov / 180.0);
 
-if (directional_alignment < cone_edge_alignment) {
+if (fragment_alignment < cone_edge_alignment) {
   // Discard any fragments outside of the light cone
   discard;
 }
 
-float alignment_range = 1.0 - cone_edge_alignment;
-float edge_proximity = directional_alignment - cone_edge_alignment;
-float spot_factor = sqrt(edge_proximity / alignment_range);
+float cone_edge_range = 1.0 - cone_edge_alignment;
+float cone_edge_proximity = fragment_alignment - cone_edge_alignment;
+float spot_factor = sqrt(cone_edge_proximity / cone_edge_range);
 
 vec4 frag_normal_and_emissivity = texture(normalAndEmissivity, fragUv);
 vec3 normal = frag_normal_and_emissivity.xyz;

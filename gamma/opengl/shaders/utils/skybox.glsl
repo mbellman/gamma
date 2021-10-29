@@ -3,13 +3,13 @@ vec3 getSkyColor(vec3 direction) {
   vec3 sunDirection = normalize(vec3(0.3, 0.5, -1.0));
   vec3 sunColor = vec3(1.0, 0.3, 0.1);
   float sunBrightness = 10;
-  float altitude = -0.5;
+  float altitude = 0.2;
 
   float y = direction.y + altitude;
   float z = direction.z;
 
   float base_r = pow(0.5 + 0.5 * cos(y) * 0.8, 6);
-  float base_g = pow(0.5 + 0.5 * cos(y) * 0.9, 7);
+  float base_g = 0.3 * pow(0.5 + 0.5 * cos(y) * 0.9, 7);
   float base_b = pow(0.5 + 0.5 * cos(y), 5);
 
   vec3 skylight = vec3(2 * pow(0.5 * cos(y) + 0.5, 50));

@@ -10,5 +10,6 @@ private:
   int lastRemovedIndex = 0;
 
   void addFloor();
-  void addCubesExhibit();
+  void addCenterCubesExhibit();
+  void addRainbowCubesExhibit();
 };
