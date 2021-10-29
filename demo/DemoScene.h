@@ -12,4 +12,5 @@ private:
   void addFloor();
   void addCenterCubesExhibit();
   void addRainbowCubesExhibit();
+  void addStatuesExhibit();
 };

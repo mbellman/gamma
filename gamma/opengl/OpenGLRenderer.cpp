@@ -1248,7 +1248,7 @@ namespace Gamma {
 
     probe->init();
     // @todo configurable probe size
-    probe->setSize({ 512, 512 });
+    probe->setSize({ 1024, 1024 });
     probe->addColorAttachment(ColorFormat::RGB16, 3);
     probe->bindColorAttachments();
 

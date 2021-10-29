@@ -61,20 +61,15 @@ float getScreenSpaceAmbientOcclusionContribution(float fragment_depth) {
   return -average_occlusion * 0.1;
 }
 
-// @todo fix excessively bright/illuminated spots up close
 vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fragment_position, vec3 fragment_normal) {
   const int TOTAL_SAMPLES = 30;
   const float max_sample_radius = 1000.0;
-  const float min_sample_radius = 50.0;
-  const float max_brightness = 50.0;
+  const float max_brightness = 100.0;
   vec2 texel_size = 1.0 / screenSize;
-
   vec3 global_illumination = vec3(0.0);
 
   float linearized_fragment_depth = getLinearizedDepth(fragment_depth);
-  // @todo define and use easeOut()
-  float radius_distance_factor = saturate(sqrt(sqrt(linearized_fragment_depth / 500.0)));
-  float radius = mix(max_sample_radius, min_sample_radius, radius_distance_factor);
+  float radius = max_sample_radius * saturate(1.0 / (linearized_fragment_depth * 0.01));
 
   for (int i = 0; i < TOTAL_SAMPLES; i++) {
     vec2 offset = texel_size * radius * rotatedVogelDisc(TOTAL_SAMPLES, i);
@@ -101,7 +96,7 @@ vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fra
     float incidence_factor = max(0.0, dot(fragment_normal, normalized_fragment_to_sample));
 
     // Diminish illumination with distance
-    float distance_factor = max_brightness * saturate(1.0 / sample_distance);
+    float distance_factor = max_brightness * saturate(1.0 / sample_distance) * saturate(linearized_fragment_depth / 100.0);
 
     global_illumination += sample_color_and_depth.rgb * incidence_factor * distance_factor;
   }
@@ -111,9 +106,9 @@ vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fra
 
 /**
  * Determines whether a previous-frame temporal sample
- * has a light enough color to use for denoising. Fragments
- * where geometry was not rendered during the previous
- * frame will be black or near black, and we want to avoid
+ * has enough color to use for denoising. Fragments where
+ * geometry was not rendered during the previous frame
+ * will be black or near black, and we want to avoid
  * including these in the temporally averaged color. This
  * is mainly a problem where moving geometry edges meet
  * the sky, and reprojected samples are taken from points
@@ -121,7 +116,7 @@ vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fra
  * and the sampled color would be invalid.
  */
 bool isUsableTemporalSampleColor(vec3 color) {
-  const float threshold = 0.1;
+  const float threshold = 0.04;
 
   return color.r >= threshold || color.g >= threshold || color.b >= threshold;
 }

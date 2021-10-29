@@ -15,6 +15,7 @@ layout (location = 0) out vec4 out_color_and_depth;
 
 #include "utils/random.glsl";
 #include "utils/skybox.glsl";
+#include "utils/helpers.glsl";
 
 const vec3 sky_sample_offsets[] = {
   vec3(0),
@@ -26,14 +27,13 @@ const vec3 sky_sample_offsets[] = {
   vec3(0, 0, -1)
 };
 
-// @todo pass in as a uniform
-const float indirect_sky_light_intensity = 0.5;
-
 vec3 getIndirectSkyLightContribution(vec3 fragment_normal) {
+  // @todo pass in as a uniform
+  const float indirect_sky_light_intensity = 0.5;
   vec3 contribution = vec3(0);
 
   for (int i = 0; i < 7; i++) {
-    vec3 direction = normalize(fragment_normal + 2.0 * sky_sample_offsets[i]);
+    vec3 direction = normalize(1.1 * fragment_normal + sky_sample_offsets[i]);
 
     contribution += getSkyColor(direction) * indirect_sky_light_intensity;
   }
@@ -71,12 +71,7 @@ void main() {
         }
 
         // Avoid sampling outside of the screen edges
-        if (
-          sample_coords.x >= 0.001 &&
-          sample_coords.x <= 0.999 &&
-          sample_coords.y >= 0.001 &&
-          sample_coords.y <= 0.999
-        ) {
+        if (!isOffScreen(sample_coords, 0.001)) {
           average_indirect_light += texture(indirectLight, sample_coords).rgb;
           total_samples++;
         }

@@ -9,10 +9,12 @@ void DemoScene::init() {
   Gm_EnableFlags(GammaFlags::FREE_CAMERA_MODE);
 
   camera.position.z = -300.0f;
+  camera.position.y = 20.0f;
 
   addFloor();
   addCenterCubesExhibit();
   addRainbowCubesExhibit();
+  addStatuesExhibit();
 
   // addMesh("daVinci", 1, Mesh::Model("./demo/assets/models/da-vinci.obj"));
   addMesh("wall", 1, Mesh::Plane(10));
@@ -195,7 +197,6 @@ void DemoScene::addFloor() {
   auto& floor = createObjectFrom("floor");
 
   floor.scale = Vec3f(1000.0f, 1.0f, 1000.0f);
-  floor.position.y = -20.0f;
 
   commit(floor);
 }
@@ -211,17 +212,17 @@ void DemoScene::addCenterCubesExhibit() {
   auto& cube2 = createObjectFrom("cat-cube");
   auto& cube3 = createObjectFrom("cat-cube");
 
-  cube1.position = location + Vec3f(-50.0f, 15.0f, 0.0f);
+  cube1.position = location + Vec3f(-50.0f, 35.0f, 0.0f);
   cube1.scale = 20.0f;
   cube1.rotation = Vec3f(1.5f, 0.7f, 2.1f);
   cube1.color = pVec4(255, 50, 10);
 
-  cube2.position = location + Vec3f(0.0f, 15.0f, 0.0f);
+  cube2.position = location + Vec3f(0.0f, 35.0f, 0.0f);
   cube2.scale = 10.0f;
   cube2.rotation = Vec3f(0.3f, 1.1f, 0.8f);
   cube2.color = pVec4(10, 255, 50);
 
-  cube3.position = location + Vec3f(30.0f, 15.0f, 0.0f);
+  cube3.position = location + Vec3f(30.0f, 35.0f, 0.0f);
   cube3.scale = 5.0f;
   cube3.rotation = Vec3f(0.9f, 2.5f, 3.1f);
   cube3.color = pVec4(10, 50, 255);
@@ -247,7 +248,7 @@ void DemoScene::addRainbowCubesExhibit() {
   auto& ball = createObjectFrom("ball");
 
   ball.scale = 16.0f;
-  ball.position = location + Vec3f(-10.0f, 15.0f, -10.0f); 
+  ball.position = location + Vec3f(-10.0f, 35.0f, -10.0f); 
 
   commit(ball);
 
@@ -267,7 +268,7 @@ void DemoScene::addRainbowCubesExhibit() {
 
       cube.position = location + Vec3f(
         20.0f * (i - 2.0f),
-        -12.0f,
+        8.0f,
         20.0f * (j - 2.0f)
       );
 
@@ -284,4 +285,17 @@ void DemoScene::addRainbowCubesExhibit() {
       commit(cube);
     }
   }
+}
+
+void DemoScene::addStatuesExhibit() {
+  Vec3f location(150.0f, 0.0f, 175.0f);
+
+  addMesh("lucy", 1, Mesh::Model("./demo/assets/models/lucy.obj"));
+
+  auto& lucy = createObjectFrom("lucy");
+
+  lucy.position = location;
+  lucy.scale = 10.0f;
+
+  commit(lucy);
 }
