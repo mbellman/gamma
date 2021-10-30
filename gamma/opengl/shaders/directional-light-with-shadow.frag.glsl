@@ -108,6 +108,7 @@ float getLightIntensity(Cascade cascade, vec4 transform) {
     vec2 texel_coords = transform.xy + texel_offset;
     float shadow_map_depth = texture(shadowMaps[cascade.index], texel_coords).r;
 
+    // @todo base bias on incidence
     if (shadow_map_depth > transform.z - (cascade.bias + spread * 0.00025)) {
       light_intensity += 1.0;
     }
