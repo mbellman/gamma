@@ -18,6 +18,7 @@ namespace Gamma {
   public:
     template<typename ...Args>
     static void log(Args&& ...args) {
+      // @todo output time with each console message
       out(args...);
       std::cout << "\n";
     }

@@ -6,7 +6,7 @@
 #include "system/console.h"
 
 namespace Gamma {
-  void AbstractLoader::fillBufferUntil(std::string end) {
+  void AbstractLoader::fillBufferUntil(const std::string& end) {
     if (!isLoading) {
       return;
     }
@@ -33,7 +33,7 @@ namespace Gamma {
     }
   }
 
-  bool AbstractLoader::bufferEndsWith(std::string str) {
+  bool AbstractLoader::bufferEndsWith(const std::string& str) {
     int pos = std::max((int)(buffer.length() - str.length()), 0);
     int len = str.length();
 
@@ -74,10 +74,11 @@ namespace Gamma {
 
   void AbstractLoader::nextLine() {
     fillBufferUntil("\n");
+
     buffer.clear();
   }
 
-  void AbstractLoader::setChunkDelimiter(std::string delimiter) {
+  void AbstractLoader::setChunkDelimiter(const std::string& delimiter) {
     this->delimiter = delimiter;
   }
 }

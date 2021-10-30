@@ -335,7 +335,7 @@ void DemoScene::addStatuesExhibit() {
 
   auto& lucyLight2 = createLight(LightType::POINT);
 
-  lucyLight2.position = lucy.position + Vec3f(0.0f, 40.0f, 5.0f);
+  lucyLight2.position = lucy.position + Vec3f(0.0f, 30.0f, 10.0f);
   lucyLight2.color = Vec3f(1.0f);
   lucyLight2.radius = 50.0f;
 }
