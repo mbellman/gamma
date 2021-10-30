@@ -64,8 +64,9 @@ namespace Gamma {
     return fgetc(file);
   }
 
-  std::string AbstractLoader::readNextChunk() {
+  const std::string& AbstractLoader::readNextChunk() {
     buffer.clear();
+
     fillBufferUntil(delimiter);
 
     return buffer.size() == 0 && isLoading ? readNextChunk() : buffer;

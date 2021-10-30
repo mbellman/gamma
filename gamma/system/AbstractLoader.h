@@ -11,7 +11,7 @@ namespace Gamma {
     bool isLoading = false;
 
     void load(const char* filePath);
-    std::string readNextChunk();
+    const std::string& readNextChunk();
     void nextLine();
     void setChunkDelimiter(std::string delimiter);
 

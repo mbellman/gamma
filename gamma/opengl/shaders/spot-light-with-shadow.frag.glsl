@@ -55,12 +55,13 @@ float getLightFactor(vec3 position, float incidence, float light_distance) {
     float spread = 3.0;
   #endif
 
+  const int TOTAL_SAMPLES = 12;
   const vec2 shadow_map_texel_size = 1.0 / vec2(1024.0);
   float bias = mix(0.001, 0.0002, saturate(light_distance / 100.0));
   float factor = 0.0;
 
-  for (int i = 0; i < 12; i++) {
-    vec2 texel_offset = spread * rotatedVogelDisc(12, i) * shadow_map_texel_size;
+  for (int i = 0; i < TOTAL_SAMPLES; i++) {
+    vec2 texel_offset = spread * rotatedVogelDisc(TOTAL_SAMPLES, i) * shadow_map_texel_size;
     vec2 texel_coords = transform.xy + texel_offset;
     float occluder_distance = texture(shadowMap, texel_coords).r;
 
@@ -69,7 +70,7 @@ float getLightFactor(vec3 position, float incidence, float light_distance) {
     }
   }
 
-  return factor / 12.0;
+  return factor / float(TOTAL_SAMPLES);
 }
 
 void main() {

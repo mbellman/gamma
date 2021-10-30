@@ -16,7 +16,7 @@ namespace Gamma {
     while (isLoading) {
       setChunkDelimiter(" ");
 
-      std::string label = readNextChunk();
+      const std::string& label = readNextChunk();
 
       if (label == VERTEX_LABEL) {
         handleVertex();
@@ -86,7 +86,7 @@ namespace Gamma {
    * and vn the normal index, with respect to previously listed
    * vertex/texture coordinate/normal values.
    */
-  VertexData ObjLoader::parseVertexData(std::string chunk) {
+  VertexData ObjLoader::parseVertexData(const std::string& chunk) {
     VertexData vertexData;
     int offset = 0;
     int indexes[3];

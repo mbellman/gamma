@@ -61,6 +61,6 @@ namespace Gamma {
     void handleNormal();
     void handleVertex();
     void handleTextureCoordinate();
-    VertexData parseVertexData(std::string data);
+    VertexData parseVertexData(const std::string& data);
   };
 }

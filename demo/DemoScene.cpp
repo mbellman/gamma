@@ -17,7 +17,6 @@ void DemoScene::init() {
   addStatuesExhibit();
 
   // addMesh("daVinci", 1, Mesh::Model("./demo/assets/models/da-vinci.obj"));
-  addMesh("wall", 1, Mesh::Plane(10));
   // addMesh("particles", 10000, Mesh::Particles());
 
   // addMesh("rabbit", 10, Mesh::Model({
@@ -64,15 +63,6 @@ void DemoScene::init() {
   // daVinci.color = pVec4(100, 175, 255);
 
   // commit(daVinci);
-
-  auto& wall = createObjectFrom("wall");
-
-  wall.scale = Vec3f(400.0f, 400.0f, 400.0f);
-  wall.position = Vec3f(0.0f, 100.0f, 200.0f);
-  wall.rotation.x = M_PI * 0.5f;
-  wall.color = pVec4(255, 0, 0);
-
-  commit(wall);
 
   // for (uint32 i = 0; i < 10; i++) {
   //   auto& rabbit = createObjectFrom("rabbit");
@@ -288,9 +278,11 @@ void DemoScene::addRainbowCubesExhibit() {
 }
 
 void DemoScene::addStatuesExhibit() {
-  Vec3f location(150.0f, 0.0f, 175.0f);
+  Vec3f location(150.0f, 0.0f, 0.0f);
 
+  addMesh("statue-wall", 4, Mesh::Cube());
   addMesh("lucy", 1, Mesh::Model("./demo/assets/models/lucy.obj"));
+  addMesh("dragon", 1, Mesh::Model("./demo/assets/models/dragon.obj"));
 
   auto& lucy = createObjectFrom("lucy");
 
@@ -298,4 +290,52 @@ void DemoScene::addStatuesExhibit() {
   lucy.scale = 10.0f;
 
   commit(lucy);
+
+  auto& dragon = createObjectFrom("dragon");
+
+  dragon.position = location + Vec3f(40.0f, 0, 0);
+  dragon.scale = 10.0f;
+
+  commit(dragon);
+
+  auto& wall1 = createObjectFrom("statue-wall");
+  auto& wall2 = createObjectFrom("statue-wall");
+  auto& wall3 = createObjectFrom("statue-wall");
+  auto& ceiling = createObjectFrom("statue-wall");
+
+  wall1.position = location + Vec3f(-17.0f, 25.0f, -7.5f);
+  wall1.scale = Vec3f(3.0f, 25.0f, 40.0f);
+  wall1.color = pVec4(255, 0, 0);
+
+  wall2.position = location + Vec3f(17.0f, 25.0f, -7.5f);
+  wall2.scale = Vec3f(3.0f, 25.0f, 40.0f);
+  wall2.color = pVec4(0, 255, 0);
+
+  wall3.position = location + Vec3f(0, 25.0f, 28.0f);
+  wall3.scale = Vec3f(70.0f, 25.0f, 3.0f);
+  wall3.color = pVec4(0, 0, 255);
+
+  ceiling.position = location + Vec3f(0, 53.0f, -7.5f);
+  ceiling.scale = Vec3f(70.0f, 3.0f, 40.0f);
+  ceiling.color = pVec4(255, 255, 255);
+
+  commit(wall1);
+  commit(wall2);
+  commit(wall3);
+  commit(ceiling);
+
+  auto& lucyLight = createLight(LightType::SPOT_SHADOWCASTER);
+
+  lucyLight.position = lucy.position + Vec3f(0.0f, 5.0f, -20.0f);
+  lucyLight.color = Vec3f(1.0f);
+  lucyLight.direction = Vec3f(0.0f, 1.0f, 0.75f);
+  lucyLight.fov = 60.0f;
+  lucyLight.radius = 200.0f;
+  lucyLight.isStatic = true;
+
+  auto& lucyLight2 = createLight(LightType::POINT);
+
+  lucyLight2.position = lucy.position + Vec3f(0.0f, 40.0f, 5.0f);
+  lucyLight2.color = Vec3f(1.0f);
+  lucyLight2.radius = 50.0f;
 }

@@ -77,6 +77,7 @@ namespace Gamma {
   }
 
   Object& AbstractScene::createObjectFrom(std::string meshName) {
+    // @todo assert that mesh exists
     auto& mesh = *meshMap.at(meshName);
     auto& object = mesh.objects.createObject();
 

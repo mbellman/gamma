@@ -40,12 +40,12 @@ float getLightFactor(vec3 light_to_surface, float light_distance, float incidenc
   #if USE_VARIABLE_PENUMBRA_SIZE == 1
     const float max_spread = 200.0;
     const float max_spread_distance = 1000.0;
-    float spread = 1.0 + pow(saturate(light_distance / max_spread_distance), 2) * max_spread;
+    float spread = 0.5 + pow(saturate(light_distance / max_spread_distance), 2) * max_spread;
   #else
     float spread = 0.5;
   #endif
   
-  const int TOTAL_SAMPLES = 8;
+  const int TOTAL_SAMPLES = 12;
   float factor = 0.0;
 
   for (int i = 0; i < TOTAL_SAMPLES; i++) {

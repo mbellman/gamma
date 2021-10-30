@@ -71,15 +71,21 @@ vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fra
   float linearized_fragment_depth = getLinearizedDepth(fragment_depth);
   float radius = max_sample_radius * saturate(1.0 / (linearized_fragment_depth * 0.01));
 
+  vec3 camera_to_fragment = normalize(fragment_position - cameraPosition);
+  vec3 reflection_vector = reflect(camera_to_fragment, fragment_normal);
+  vec3 world_sample_center = fragment_position + reflection_vector * 10.0;
+  vec3 view_sample_center = glVec3(view * glVec4(world_sample_center));
+  vec2 sample_center_uv = getScreenCoordinates(view_sample_center, projection);
+
   for (int i = 0; i < TOTAL_SAMPLES; i++) {
     vec2 offset = texel_size * radius * rotatedVogelDisc(TOTAL_SAMPLES, i);
-    vec2 coords = fragUv + offset;
+    vec2 coords = sample_center_uv + offset;
 
     if (isOffScreen(coords, 0.0)) {
       continue;
     }
 
-    vec4 sample_color_and_depth = textureLod(colorAndDepth, fragUv + offset, 3);
+    vec4 sample_color_and_depth = textureLod(colorAndDepth, coords, 3);
 
     // @todo why is this necessary? why are certain sample
     // color components < 0? note: this is to do with

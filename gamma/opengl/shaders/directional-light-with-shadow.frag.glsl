@@ -38,11 +38,11 @@ const float cascade_depth_2 = 600.0;
 
 Cascade getCascadeByDepth(float linearized_depth) {
   if (linearized_depth < cascade_depth_1) {
-    return Cascade(0, lightMatrices[0], 0.0005, 1000.0, 30.0);
+    return Cascade(0, lightMatrices[0], 0.0002, 1000.0, 20.0);
   } else if (linearized_depth < cascade_depth_2) {
-    return Cascade(1, lightMatrices[1], 0.002, 750.0, 20.0);
+    return Cascade(1, lightMatrices[1], 0.0005, 750.0, 5.0);
   } else {
-    return Cascade(2, lightMatrices[2], 0.002, 800.0, 15.0);
+    return Cascade(2, lightMatrices[2], 0.0005, 500.0, 3.0);
   }
 }
 
@@ -100,10 +100,11 @@ float getLightIntensity(Cascade cascade, vec4 transform) {
     float spread = cascade.spread_factor / 500.0;
   #endif
 
+  const int TOTAL_SAMPLES = 16;
   float light_intensity = 0.0;
 
-  for (int i = 0; i < 16; i++) {
-    vec2 texel_offset = spread * rotatedVogelDisc(16, i) * shadow_map_texel_size;
+  for (int i = 0; i < TOTAL_SAMPLES; i++) {
+    vec2 texel_offset = spread * rotatedVogelDisc(TOTAL_SAMPLES, i) * shadow_map_texel_size;
     vec2 texel_coords = transform.xy + texel_offset;
     float shadow_map_depth = texture(shadowMaps[cascade.index], texel_coords).r;
 
@@ -112,7 +113,7 @@ float getLightIntensity(Cascade cascade, vec4 transform) {
     }
   }
 
-  return light_intensity / 16.0;
+  return light_intensity / float(TOTAL_SAMPLES);
 }
 
 void main() {

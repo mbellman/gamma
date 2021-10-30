@@ -40,7 +40,7 @@ float hack_soft_tapering = (20.0 * (light_distance / light.radius));
 
 vec3 radiant_flux = light.color * light.power * light.radius;
 vec3 diffuse_term = color * radiant_flux * incidence * attenuation * hack_radial_influence * hack_soft_tapering * (1.0 - specularity);
-vec3 specular_term = radiant_flux * specularity * attenuation;
+vec3 specular_term = 5.0 * radiant_flux * specularity * attenuation;
 
 float emissivity = frag_normal_and_emissivity.w;
 vec3 illuminated_color = (diffuse_term + specular_term) * (1.0 - emissivity) * spot_factor;
