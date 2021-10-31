@@ -72,7 +72,11 @@ void main() {
 
         // Avoid sampling outside of the screen edges
         if (!isOffScreen(sample_coords, 0.001)) {
-          average_indirect_light += texture(indirectLight, sample_coords).rgb;
+          vec4 indirect_light = texture(indirectLight, sample_coords);
+
+          // Add global illumination term
+          average_indirect_light += indirect_light.rgb;
+          // average_indirect_light -= indirect_light.w;
           total_samples++;
         }
       }
@@ -80,8 +84,9 @@ void main() {
 
     average_indirect_light /= float(total_samples);
 
-    if (fragUv.x >= 0.001 && fragUv.x <= 0.999 && fragUv.y >= 0.001 && fragUv.y <= 0.999) {
-      average_indirect_light += texture(indirectLight, fragUv).w;
+    if (!isOffScreen(fragUv, 0.001)) {
+      // Subtract ambient occlusion term
+      average_indirect_light -= texture(indirectLight, fragUv).w;
     }
   #endif
 
