@@ -16,6 +16,7 @@ layout (location = 0) out vec4 out_color_and_depth;
 #include "utils/random.glsl";
 #include "utils/skybox.glsl";
 #include "utils/helpers.glsl";
+#include "utils/conversion.glsl";
 
 const vec3 sky_sample_offsets[] = {
   vec3(0),
@@ -43,7 +44,9 @@ vec3 getIndirectSkyLightContribution(vec3 fragment_normal) {
 
 void main() {
   vec4 frag_normal_and_emissivity = texture(normalAndEmissivity, fragUv);
-  vec3 fragment_albedo = texture(colorAndDepth, fragUv).rgb;
+  vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
+  vec3 fragment_albedo = frag_color_and_depth.rgb;
+  float linear_fragment_depth = getLinearizedDepth(frag_color_and_depth.w);
   vec3 fragment_normal = frag_normal_and_emissivity.xyz;
   float emissivity = frag_normal_and_emissivity.w;
   vec3 average_indirect_light = vec3(0);
@@ -58,15 +61,10 @@ void main() {
     for (int i = -range; i <= range; i += range) {
       for (int j = -range; j <= range; j += range) {
         vec2 sample_coords = fragUv + texel_size * vec2(i, j);
-        vec3 sample_normal = texture(normalAndEmissivity, sample_coords).xyz;
+        float linear_sample_depth = getLinearizedDepth(texture(colorAndDepth, sample_coords).w);
 
-        // Avoid blurring where the fragment and sample have
-        // sufficiently different normals, which otherwise
-        // causes unsightly color bleeding/ghosting
-        //
-        // @bug there are still edge cases; a luminance
-        // comparison might be preferable here
-        if (dot(fragment_normal, sample_normal) < 0.9) {
+        if (distance(linear_fragment_depth, linear_sample_depth) > 1.0) {
+          // Avoid blurring across unconnected surfaces
           continue;
         }
 
@@ -76,7 +74,7 @@ void main() {
 
           // Add global illumination term
           average_indirect_light += indirect_light.rgb;
-          // average_indirect_light -= indirect_light.w;
+          average_indirect_light -= indirect_light.w;
           total_samples++;
         }
       }
@@ -84,10 +82,10 @@ void main() {
 
     average_indirect_light /= float(total_samples);
 
-    if (!isOffScreen(fragUv, 0.001)) {
-      // Subtract ambient occlusion term
-      average_indirect_light -= texture(indirectLight, fragUv).w;
-    }
+    // if (!isOffScreen(fragUv, 0.001)) {
+    //   // Subtract ambient occlusion term
+    //   average_indirect_light -= texture(indirectLight, fragUv).w;
+    // }
   #endif
 
   #if USE_INDIRECT_SKY_LIGHT == 1
