@@ -86,7 +86,7 @@ float getScreenSpaceAmbientOcclusionContribution(float fragment_depth, vec3 frag
     }
   }
 
-  return occlusion / float(TOTAL_SAMPLES);
+  return occlusion / float(TOTAL_SAMPLES);// * saturate(1.0 - linearized_fragment_depth / 300.0);
 }
 
 vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fragment_position, vec3 fragment_normal) {
@@ -170,7 +170,7 @@ void main() {
     total_temporal_samples++;
   }
 
-  if (!isOffScreen(fragUv_t1, 0.001)) {
+  if (!isOffScreen(fragUv_t2, 0.001)) {
     vec4 sample_t2 = texture(indirectLightT2, fragUv_t2);
 
     out_gi_and_ao += sample_t2;

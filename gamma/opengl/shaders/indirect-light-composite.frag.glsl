@@ -58,6 +58,9 @@ void main() {
     vec2 texel_size = 1.0 / screenSize;
     int total_samples = 0;
 
+    // @todo it might be preferable to blur at half-resolution,
+    // since we at least have to jump two pixels each time here
+    // to read a different half-res indirect light buffer sample.
     for (int i = -range; i <= range; i += range) {
       for (int j = -range; j <= range; j += range) {
         vec2 sample_coords = fragUv + texel_size * vec2(i, j);
