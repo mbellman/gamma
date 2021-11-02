@@ -49,47 +49,8 @@ void main() {
   float linear_fragment_depth = getLinearizedDepth(frag_color_and_depth.w);
   vec3 fragment_normal = frag_normal_and_emissivity.xyz;
   float emissivity = frag_normal_and_emissivity.w;
-  vec3 average_indirect_light = vec3(0);
+  vec3 average_indirect_light = texture(indirectLight, fragUv).rgb - texture(indirectLight, fragUv).w;
   vec3 indirect_sky_light = vec3(0);
-
-  #if USE_AVERAGE_INDIRECT_LIGHT == 1
-    // @todo extract into its own function
-    const int range = 6;
-    vec2 texel_size = 1.0 / screenSize;
-    int total_samples = 0;
-
-    // @todo it might be preferable to blur at half-resolution,
-    // since we at least have to jump two pixels each time here
-    // to read a different half-res indirect light buffer sample.
-    for (int i = -range; i <= range; i += range) {
-      for (int j = -range; j <= range; j += range) {
-        vec2 sample_coords = fragUv + texel_size * vec2(i, j);
-        float linear_sample_depth = getLinearizedDepth(texture(colorAndDepth, sample_coords).w);
-
-        if (distance(linear_fragment_depth, linear_sample_depth) > 1.0) {
-          // Avoid blurring across unconnected surfaces
-          continue;
-        }
-
-        // Avoid sampling outside of the screen edges
-        if (!isOffScreen(sample_coords, 0.001)) {
-          vec4 indirect_light = texture(indirectLight, sample_coords);
-
-          // Add global illumination term
-          average_indirect_light += indirect_light.rgb;
-          average_indirect_light -= indirect_light.w;
-          total_samples++;
-        }
-      }
-    }
-
-    average_indirect_light /= float(total_samples);
-
-    // if (!isOffScreen(fragUv, 0.001)) {
-    //   // Subtract ambient occlusion term
-    //   average_indirect_light -= texture(indirectLight, fragUv).w;
-    // }
-  #endif
 
   #if USE_INDIRECT_SKY_LIGHT == 1
     indirect_sky_light = fragment_albedo * getIndirectSkyLightContribution(fragment_normal);
@@ -97,5 +58,5 @@ void main() {
 
   vec3 composite_color = fragment_albedo * emissivity + average_indirect_light + indirect_sky_light;
 
-  out_color_and_depth = vec4(composite_color, 0);
+  out_color_and_depth = vec4(composite_color, frag_color_and_depth.w);
 }

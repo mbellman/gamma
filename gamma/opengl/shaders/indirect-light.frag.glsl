@@ -27,22 +27,22 @@ layout (location = 0) out vec4 out_gi_and_ao;
 #include "utils/gl.glsl";
 
 const vec3[] ssao_sample_points = {
-  vec3(0.063843, -0.07013, 0.031714),
-  vec3(-0.134622, 0.03991, 0.068544),
-  vec3(0.194556, 0.036847, 0.077114),
-  vec3(-0.081489, -0.152912, 0.205436),
-  vec3(-0.168704, 0.123969, 0.248587),
-  vec3(0.22973, 0.120897, 0.279212),
-  vec3(0.141791, 0.178289, 0.373517),
-  vec3(0.018047, 0.460015, 0.178465),
-  vec3(-0.376326, 0.185857, 0.355437),
-  vec3(0.516018, -0.183684, 0.259855),
-  vec3(-0.061337, 0.579925, 0.314374),
-  vec3(-0.031821, 0.586648, 0.414045),
-  vec3(0.082566, -0.726592, 0.256655),
-  vec3(-0.503813, 0.102343, 0.653204),
-  vec3(0.58586, 0.655299, 0.122507),
-  vec3(-0.509251, -0.517294, 0.603104)
+  vec3(0.021429, 0.059112, 0.07776),
+  vec3(0.042287, -0.020052, 0.092332),
+  vec3(0.087243, -0.025947, 0.068744),
+  vec3(-0.001496, -0.027043, 0.128824),
+  vec3(-0.088486, -0.099508, 0.081747),
+  vec3(0.108582, 0.02973, 0.15043),
+  vec3(-0.131723, 0.143868, 0.115246),
+  vec3(-0.137142, -0.089451, 0.21753),
+  vec3(-0.225405, 0.214709, 0.09337),
+  vec3(-0.152747, 0.129375, 0.328595),
+  vec3(0.155238, 0.146029, 0.398102),
+  vec3(-0.205277, 0.358875, 0.3242),
+  vec3(0.129059, 0.579216, 0.124064),
+  vec3(-0.427557, -0.123908, 0.53261),
+  vec3(0.661657, -0.296235, 0.311568),
+  vec3(0.175674, 0.013574, 0.87342)
 };
 
 vec2 rotatedVogelDisc(int samples, int index) {
@@ -54,10 +54,10 @@ vec2 rotatedVogelDisc(int samples, int index) {
 }
 
 // @todo fix distance occlusion issues due to depth mipmap sampling
-// @todo fix banding artifacts visible in occlusion density falloff
+// @todo fix convergence issues
 float getScreenSpaceAmbientOcclusionContribution(float fragment_depth, vec3 fragment_position, vec3 fragment_normal) {
   const int TOTAL_SAMPLES = 16;
-  const float radius = 3.0;
+  const float radius = 15.0;
   vec3 contribution = vec3(0);
   vec2 texel_size = 1.0 / screenSize;
   float linearized_fragment_depth = getLinearizedDepth(fragment_depth);
@@ -72,8 +72,6 @@ float getScreenSpaceAmbientOcclusionContribution(float fragment_depth, vec3 frag
   for (int i = 0; i < TOTAL_SAMPLES; i++) {
     vec3 sample_offset = tbn * ssao_sample_points[i];
     vec3 world_sample_position = fragment_position + sample_offset * radius;
-    vec3 fragment_to_sample = normalize(world_sample_position - fragment_position);
-
     vec3 view_sample_position = glVec3(view * glVec4(world_sample_position));
     vec2 screen_sample_position = getScreenCoordinates(view_sample_position, projection);
     float sample_depth = textureLod(colorAndDepth, screen_sample_position, 3).w;
@@ -81,12 +79,13 @@ float getScreenSpaceAmbientOcclusionContribution(float fragment_depth, vec3 frag
 
     if (linear_sample_depth < view_sample_position.z) {
       float occluder_distance = view_sample_position.z - linear_sample_depth;
+      float occlusion_factor = mix(1.0, 0.0, saturate(occluder_distance / radius));
 
-      occlusion += mix(1.0, 0.0, saturate(occluder_distance / 3.0));
+      occlusion += occlusion_factor;
     }
   }
 
-  return occlusion / float(TOTAL_SAMPLES);// * saturate(1.0 - linearized_fragment_depth / 300.0);
+  return occlusion / float(TOTAL_SAMPLES);
 }
 
 vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fragment_position, vec3 fragment_normal) {
@@ -147,35 +146,36 @@ void main() {
   vec3 global_illumination = vec3(0.0);
   float ambient_occlusion = 0.0;
 
-  #if USE_SCREEN_SPACE_AMBIENT_OCCLUSION == 1
-    ambient_occlusion = getScreenSpaceAmbientOcclusionContribution(frag_color_and_depth.w, fragment_position, fragment_normal);
-  #endif
-
   #if USE_SCREEN_SPACE_GLOBAL_ILLUMINATION == 1
     global_illumination = getScreenSpaceGlobalIlluminationContribution(frag_color_and_depth.w, fragment_position, fragment_normal);
+  #endif
+
+  #if USE_SCREEN_SPACE_AMBIENT_OCCLUSION == 1
+    ambient_occlusion = getScreenSpaceAmbientOcclusionContribution(frag_color_and_depth.w, fragment_position, fragment_normal);
   #endif
 
   vec3 fragment_position_t1 = glVec3(viewT1 * glVec4(fragment_position));
   vec3 fragment_position_t2 = glVec3(viewT2 * glVec4(fragment_position));
   vec2 fragUv_t1 = getScreenCoordinates(fragment_position_t1.xyz, projection);
   vec2 fragUv_t2 = getScreenCoordinates(fragment_position_t2.xyz, projection);
-  int total_temporal_samples = 1;
+  float divisor = 0.0;
 
-  out_gi_and_ao = vec4(global_illumination, ambient_occlusion);
+  out_gi_and_ao = vec4(global_illumination, ambient_occlusion) * 0.1;
+  divisor += 0.1;
 
   if (!isOffScreen(fragUv_t1, 0.001)) {
     vec4 sample_t1 = texture(indirectLightT1, fragUv_t1);
 
-    out_gi_and_ao += sample_t1;
-    total_temporal_samples++;
+    out_gi_and_ao += sample_t1 * 0.4;
+    divisor += 0.4;
   }
 
   if (!isOffScreen(fragUv_t2, 0.001)) {
     vec4 sample_t2 = texture(indirectLightT2, fragUv_t2);
 
-    out_gi_and_ao += sample_t2;
-    total_temporal_samples++;
+    out_gi_and_ao += sample_t2 * 2.5;
+    divisor += 2.5;
   }
 
-  out_gi_and_ao /= float(total_temporal_samples);
+  out_gi_and_ao /= divisor;
 }

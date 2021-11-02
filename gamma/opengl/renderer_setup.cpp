@@ -9,7 +9,6 @@ namespace Gamma {
     buffers.gBuffer.init();
     buffers.gBuffer.setSize(internalResolution);
     buffers.gBuffer.addColorAttachment(ColorFormat::RGBA);    // (RGB) Albedo, (A) Depth
-    // @todo specularity -> material? meshId + UBO/SSBO for materials?
     buffers.gBuffer.addColorAttachment(ColorFormat::RGBA16);  // (RGB) Normal, (A) Emissivity
     buffers.gBuffer.addDepthStencilAttachment();
     buffers.gBuffer.bindColorAttachments();
@@ -46,6 +45,7 @@ namespace Gamma {
     buffers.accumulation1.setSize(internalResolution);
     buffers.accumulation1.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
 
+    // @todo OpenGLFrameBuffer::enableMipmaps()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -57,6 +57,7 @@ namespace Gamma {
     buffers.accumulation2.setSize(internalResolution);
     buffers.accumulation2.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
 
+    // @todo OpenGLFrameBuffer::enableMipmaps()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glGenerateMipmap(GL_TEXTURE_2D);
