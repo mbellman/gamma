@@ -31,12 +31,14 @@ const vec3 sky_sample_offsets[] = {
 vec3 getIndirectSkyLightContribution(vec3 fragment_normal) {
   // @todo pass in as a uniform
   const float indirect_sky_light_intensity = 0.5;
+  const vec3 up = vec3(0, 1, 0);
   vec3 contribution = vec3(0);
+  float directional_factor = 0.6 + 0.5 * dot(fragment_normal, up);
 
   for (int i = 0; i < 7; i++) {
     vec3 direction = normalize(1.1 * fragment_normal + sky_sample_offsets[i]);
 
-    contribution += getSkyColor(direction) * indirect_sky_light_intensity;
+    contribution += getSkyColor(direction) * indirect_sky_light_intensity * directional_factor;
   }
 
   return contribution / 7.0;

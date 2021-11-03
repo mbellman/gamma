@@ -56,7 +56,6 @@ vec2 rotatedVogelDisc(int samples, int index) {
 }
 
 // @todo fix distance occlusion issues due to depth mipmap sampling
-// @todo fix convergence issues
 float getScreenSpaceAmbientOcclusionContribution(float fragment_depth, vec3 fragment_position, vec3 fragment_normal) {
   const int TOTAL_SAMPLES = 16;
   const float radius = 15.0;
@@ -154,28 +153,39 @@ void main() {
     ambient_occlusion = getScreenSpaceAmbientOcclusionContribution(frag_color_and_depth.w, fragment_position, fragment_normal);
   #endif
 
-  vec3 fragment_position_t1 = glVec3(viewT1 * glVec4(fragment_position));
-  vec2 fragUv_t1 = getScreenCoordinates(fragment_position_t1.xyz, projection);
-  float divisor = 0.0;
+  // Prepare for temporal denoising using the previous frame
+  vec3 view_fragment_position_t1 = glVec3(viewT1 * glVec4(fragment_position));
+  vec2 fragUv_t1 = getScreenCoordinates(view_fragment_position_t1.xyz, projection);
+  float denoising_sum = 0.0;
 
-  float d1 = 1.0;
-  float d2 = 4.0;
+  // Same-frame contribution factor
+  float df1 = 1.0;
+  // Temporal sample contribution factor
+  float df2 = 4.0;
 
-  out_gi_and_ao = vec4(global_illumination, ambient_occlusion) * d1;
-  divisor += d1;
+  out_gi_and_ao = vec4(global_illumination, ambient_occlusion) * df1;
+  denoising_sum += df1;
 
+  // Sample the previous frame's global illumination/ambient occlusion
+  // result over a small area to yield smoother blending. Since each
+  // frame is temporally denoised using the frame prior, successive
+  // frames will converge upon a smooth image.
+  //
+  // @todo since motion disrupts the convergence, we'll eventually need
+  // a way to reduce the contribution of samples dislocated from the
+  // current frame's fragment position, e.g. from camera or object movement
   for (int i = -1; i <= 1; i++) {
     for (int j = -1; j <= 1; j++) {
-      vec2 sample_frag = fragUv_t1 + vec2(float(i), float(j)) * texel_size;
+      vec2 sample_uv = fragUv_t1 + vec2(float(i), float(j)) * texel_size;
 
-      if (!isOffScreen(sample_frag, 0.001)) {
-        vec4 sample_t1 = texture(indirectLightT1, sample_frag);
+      if (!isOffScreen(sample_uv, 0.001)) {
+        vec4 sample_t1 = texture(indirectLightT1, sample_uv);
 
-        out_gi_and_ao += sample_t1 * d2;
-        divisor += d2;
+        out_gi_and_ao += sample_t1 * df2;
+        denoising_sum += df2;
       }
     }
   }
 
-  out_gi_and_ao /= divisor;
+  out_gi_and_ao /= denoising_sum;
 }

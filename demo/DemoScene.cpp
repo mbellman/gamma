@@ -160,11 +160,19 @@ void DemoScene::destroy() {}
 
 void DemoScene::update(float dt) {
   // useLodByDistance(mesh("rabbit"), 100.0f);
+  useLodByDistance(mesh("dragon"), 200.0f);
+  useLodByDistance(mesh("lucy"), 100.0f);
 
   for (auto& cube : mesh("cat-cube").objects) {
     cube.rotation += Vec3f(0.5f * dt);
 
     commit(cube);
+  }
+
+  for (auto& l : mesh("lucy").objects) {
+    l.rotation.y += dt;
+
+    commit(l);
   }
 
   // auto& wall = *mesh("wall").objects.begin();
@@ -281,8 +289,16 @@ void DemoScene::addStatuesExhibit() {
   Vec3f location(150.0f, 0.0f, 0.0f);
 
   addMesh("statue-wall", 4, Mesh::Cube());
-  addMesh("lucy", 1, Mesh::Model("./demo/assets/models/lucy.obj"));
-  addMesh("dragon", 1, Mesh::Model("./demo/assets/models/dragon.obj"));
+
+  addMesh("lucy", 1, Mesh::Model({
+    "./demo/assets/models/lucy.obj",
+    "./demo/assets/models/lucy-lod.obj"
+  }));
+
+  addMesh("dragon", 1, Mesh::Model({
+    "./demo/assets/models/dragon.obj",
+    "./demo/assets/models/dragon-lod.obj"
+  }));
 
   auto& lucy = createObjectFrom("lucy");
 
@@ -331,11 +347,11 @@ void DemoScene::addStatuesExhibit() {
   lucyLight.direction = Vec3f(0.0f, 1.0f, 0.75f);
   lucyLight.fov = 60.0f;
   lucyLight.radius = 200.0f;
-  lucyLight.isStatic = true;
+  // lucyLight.isStatic = true;
 
-  auto& lucyLight2 = createLight(LightType::POINT);
+  // auto& lucyLight2 = createLight(LightType::POINT);
 
-  lucyLight2.position = lucy.position + Vec3f(0.0f, 30.0f, 10.0f);
-  lucyLight2.color = Vec3f(1.0f);
-  lucyLight2.radius = 50.0f;
+  // lucyLight2.position = lucy.position + Vec3f(0.0f, 30.0f, 10.0f);
+  // lucyLight2.color = Vec3f(1.0f);
+  // lucyLight2.radius = 50.0f;
 }
