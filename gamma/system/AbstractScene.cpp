@@ -168,6 +168,10 @@ namespace Gamma {
 
     camera.position += freeCameraVelocity * dt;
     freeCameraVelocity *= (0.995f - dt * 5.0f);
+
+    if (freeCameraVelocity.magnitude() < 0.1f) {
+      freeCameraVelocity = Vec3f(0.0f);
+    }
   }
 
   Mesh& AbstractScene::mesh(std::string meshName) {

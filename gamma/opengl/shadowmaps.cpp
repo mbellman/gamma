@@ -135,6 +135,9 @@ namespace Gamma {
 
     // Align the frustum center in texel space, and then
     // restore that to its world space coordinates
+    //
+    // @bug we still get occasional flickering shadowmap
+    // texel issues; cause unknown (rounding errors?)
     frustumCenter = (texelMatrix * frustumCenter).homogenize();
     frustumCenter.x = floorf(frustumCenter.x);
     frustumCenter.y = floorf(frustumCenter.y);

@@ -45,6 +45,8 @@ const vec3[] ssao_sample_points = {
   vec3(0.175674, 0.013574, 0.87342)
 };
 
+vec2 texel_size = 1.0 / screenSize;
+
 vec2 rotatedVogelDisc(int samples, int index) {
   float rotation = noise(fract(1.0 + time)) * 3.141592 * 2.0;
   float theta = 2.4 * index + rotation;
@@ -59,7 +61,6 @@ float getScreenSpaceAmbientOcclusionContribution(float fragment_depth, vec3 frag
   const int TOTAL_SAMPLES = 16;
   const float radius = 15.0;
   vec3 contribution = vec3(0);
-  vec2 texel_size = 1.0 / screenSize;
   float linearized_fragment_depth = getLinearizedDepth(fragment_depth);
   float occlusion = 0.0;
 
@@ -90,9 +91,8 @@ float getScreenSpaceAmbientOcclusionContribution(float fragment_depth, vec3 frag
 
 vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fragment_position, vec3 fragment_normal) {
   const int TOTAL_SAMPLES = 30;
-  const float max_sample_radius = 1000.0;
+  const float max_sample_radius = 750.0;
   const float max_brightness = 100.0;
-  vec2 texel_size = 1.0 / screenSize;
   vec3 global_illumination = vec3(0.0);
 
   float linearized_fragment_depth = getLinearizedDepth(fragment_depth);
@@ -155,26 +155,26 @@ void main() {
   #endif
 
   vec3 fragment_position_t1 = glVec3(viewT1 * glVec4(fragment_position));
-  vec3 fragment_position_t2 = glVec3(viewT2 * glVec4(fragment_position));
   vec2 fragUv_t1 = getScreenCoordinates(fragment_position_t1.xyz, projection);
-  vec2 fragUv_t2 = getScreenCoordinates(fragment_position_t2.xyz, projection);
   float divisor = 0.0;
 
-  out_gi_and_ao = vec4(global_illumination, ambient_occlusion) * 0.1;
-  divisor += 0.1;
+  float d1 = 1.0;
+  float d2 = 4.0;
 
-  if (!isOffScreen(fragUv_t1, 0.001)) {
-    vec4 sample_t1 = texture(indirectLightT1, fragUv_t1);
+  out_gi_and_ao = vec4(global_illumination, ambient_occlusion) * d1;
+  divisor += d1;
 
-    out_gi_and_ao += sample_t1 * 0.4;
-    divisor += 0.4;
-  }
+  for (int i = -1; i <= 1; i++) {
+    for (int j = -1; j <= 1; j++) {
+      vec2 sample_frag = fragUv_t1 + vec2(float(i), float(j)) * texel_size;
 
-  if (!isOffScreen(fragUv_t2, 0.001)) {
-    vec4 sample_t2 = texture(indirectLightT2, fragUv_t2);
+      if (!isOffScreen(sample_frag, 0.001)) {
+        vec4 sample_t1 = texture(indirectLightT1, sample_frag);
 
-    out_gi_and_ao += sample_t2 * 2.5;
-    divisor += 2.5;
+        out_gi_and_ao += sample_t1 * d2;
+        divisor += d2;
+      }
+    }
   }
 
   out_gi_and_ao /= divisor;

@@ -920,6 +920,8 @@ namespace Gamma {
 
     glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ZERO, GL_ONE);
 
+    // glDisable(GL_BLEND);
+
     OpenGLScreenQuad::render();
 
     glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);

@@ -24,6 +24,7 @@ namespace Gamma {
     buffers.indirectLight[1].addColorAttachment(ColorFormat::RGBA16, 2);  // (RGB) Color
     buffers.indirectLight[1].bindColorAttachments();
 
+    // @todo we no longer need a third buffer
     buffers.indirectLight[2].init();
     buffers.indirectLight[2].setSize({ internalResolution.width / 2, internalResolution.height / 2 });
     buffers.indirectLight[2].addColorAttachment(ColorFormat::RGBA16, 2);  // (RGB) Color
