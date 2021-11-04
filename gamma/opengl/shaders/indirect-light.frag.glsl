@@ -58,7 +58,7 @@ vec2 rotatedVogelDisc(int samples, int index) {
 // @todo fix distance occlusion issues due to depth mipmap sampling
 float getScreenSpaceAmbientOcclusionContribution(float fragment_depth, vec3 fragment_position, vec3 fragment_normal) {
   const int TOTAL_SAMPLES = 16;
-  const float radius = 15.0;
+  const float radius = 8.0;
   vec3 contribution = vec3(0);
   float linearized_fragment_depth = getLinearizedDepth(fragment_depth);
   float occlusion = 0.0;
@@ -85,7 +85,7 @@ float getScreenSpaceAmbientOcclusionContribution(float fragment_depth, vec3 frag
     }
   }
 
-  return occlusion / float(TOTAL_SAMPLES);
+  return 1.5 * sqrt(occlusion / float(TOTAL_SAMPLES));
 }
 
 vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fragment_position, vec3 fragment_normal) {

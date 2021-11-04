@@ -51,13 +51,16 @@ void main() {
   float linear_fragment_depth = getLinearizedDepth(frag_color_and_depth.w);
   vec3 fragment_normal = frag_normal_and_emissivity.xyz;
   float emissivity = frag_normal_and_emissivity.w;
+  vec3 global_illumination = vec3(0);
+  float ambient_occlusion = 0.0;
   vec3 average_indirect_light = vec3(0);
   vec3 indirect_sky_light = vec3(0);
 
   #if USE_AVERAGE_INDIRECT_LIGHT == 1
     vec4 indirect_light = texture(indirectLight, fragUv);
 
-    average_indirect_light = indirect_light.rgb - indirect_light.w;
+    global_illumination = indirect_light.rgb;
+    ambient_occlusion = indirect_light.w;
   #endif
 
   #if USE_INDIRECT_SKY_LIGHT == 1
@@ -70,7 +73,7 @@ void main() {
     indirect_sky_light = fragment_albedo * getIndirectSkyLightContribution(fragment_normal);
   #endif
 
-  vec3 composite_color = fragment_albedo * emissivity + average_indirect_light + indirect_sky_light;
+  vec3 composite_color = (fragment_albedo * emissivity + global_illumination + indirect_sky_light) * (1.0 - ambient_occlusion);
 
   out_color_and_depth = vec4(composite_color, frag_color_and_depth.w);
 }
