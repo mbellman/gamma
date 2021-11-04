@@ -167,15 +167,19 @@ void main() {
   denoising_sum += df1;
 
   // Sample the previous frame's global illumination/ambient occlusion
-  // result over a small area to yield smoother blending. Since each
-  // frame is temporally denoised using the frame prior, successive
-  // frames will converge upon a smooth image.
+  // result over an area to yield smoother blending. Since each frame
+  // is temporally denoised using the frame prior, successive frames
+  // will converge upon a smooth image.
   //
-  // @todo since motion disrupts the convergence, we'll eventually need
-  // a way to reduce the contribution of samples dislocated from the
-  // current frame's fragment position, e.g. from camera or object movement
-  for (int i = -1; i <= 1; i++) {
-    for (int j = -1; j <= 1; j++) {
+  // @todo if indirect skylight is disabled, blurred global illumination
+  // is the only contribution to surfaces not directly affected by lights.
+  // this results in noticeable over-smoothing and low-fidelity detail
+  // resolution compared to directly lit surfaces. not a bug, but an
+  // unsightly visual quirk that may need addressing.
+  const int range = 5;
+
+  for (int i = -range; i <= range; i += range) {
+    for (int j = -range; j <= range; j += range) {
       vec2 sample_uv = fragUv_t1 + vec2(float(i), float(j)) * texel_size;
 
       if (!isOffScreen(sample_uv, 0.001)) {
