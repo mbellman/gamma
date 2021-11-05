@@ -67,11 +67,11 @@ namespace Gamma {
     std::vector<Light> directionalShadowcasters;
     std::vector<Light> spotLights;
     std::vector<Light> spotShadowcasters;
-    Matrix4f projection;
-    Matrix4f inverseProjection;
-    Matrix4f view;
-    Matrix4f inverseView;
-    Matrix4f previousViews[2];
+    Matrix4f matProjection;
+    Matrix4f matInverseProjection;
+    Matrix4f matView;
+    Matrix4f matInverseView;
+    Matrix4f matPreviousView;
     OpenGLFrameBuffer* accumulationSource = nullptr;
     OpenGLFrameBuffer* accumulationTarget = nullptr;
     // @todo target (fbo)
