@@ -7,14 +7,12 @@ uniform vec2 screenSize;
 uniform sampler2D colorAndDepth;
 uniform sampler2D normalAndEmissivity;
 uniform sampler2D indirectLightT1;
-uniform sampler2D indirectLightT2;
 uniform vec3 cameraPosition;
 uniform mat4 view;
 uniform mat4 inverseView;
 uniform mat4 projection;
 uniform mat4 inverseProjection;
 uniform mat4 viewT1;
-uniform mat4 viewT2;
 uniform float time;
 
 noperspective in vec2 fragUv;
@@ -85,7 +83,7 @@ float getScreenSpaceAmbientOcclusionContribution(float fragment_depth, vec3 frag
     }
   }
 
-  return 1.5 * sqrt(occlusion / float(TOTAL_SAMPLES));
+  return 2.0 * sqrt(occlusion / float(TOTAL_SAMPLES));
 }
 
 vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fragment_position, vec3 fragment_normal) {

@@ -846,12 +846,8 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderIndirectLight() {
-    // @todo rewrite this a bit less awkwardly
-    #define WRAP(index) (index) < 0 ? 3 + (index) : index
-
-    auto& currentIndirectLightBuffer = buffers.indirectLight[frame % 3];
-    auto& indirectLightBufferT1 = buffers.indirectLight[WRAP(int(frame) % 3 - 1)];
-    auto& indirectLightBufferT2 = buffers.indirectLight[WRAP(int(frame) % 3 - 2)];
+    auto& currentIndirectLightBuffer = buffers.indirectLight[frame % 2];
+    auto& previousIndirectLightBuffer = buffers.indirectLight[(frame + 1) % 2];
 
     if (
       Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION) ||
@@ -865,8 +861,7 @@ namespace Gamma {
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 3);
       glGenerateMipmap(GL_TEXTURE_2D);
 
-      indirectLightBufferT1.read();
-      indirectLightBufferT2.read(1);
+      previousIndirectLightBuffer.read();
       currentIndirectLightBuffer.write();
 
       glClear(GL_COLOR_BUFFER_BIT);
@@ -883,14 +878,12 @@ namespace Gamma {
       shaders.indirectLight.setInt("colorAndDepth", 0);
       shaders.indirectLight.setInt("normalAndEmissivity", 1);
       shaders.indirectLight.setInt("indirectLightT1", 2);
-      shaders.indirectLight.setInt("indirectLightT2", 3);
       shaders.indirectLight.setVec3f("cameraPosition", Camera::active->position);
       shaders.indirectLight.setMatrix4f("projection", ctx.projection);
       shaders.indirectLight.setMatrix4f("view", ctx.view);
       shaders.indirectLight.setMatrix4f("inverseProjection", ctx.inverseProjection);
       shaders.indirectLight.setMatrix4f("inverseView", ctx.inverseView);
       shaders.indirectLight.setMatrix4f("viewT1", ctx.previousViews[0]);
-      shaders.indirectLight.setMatrix4f("viewT2", ctx.previousViews[1]);
       shaders.indirectLight.setFloat("time", AbstractScene::active->getRunningTime());
 
       OpenGLScreenQuad::render();

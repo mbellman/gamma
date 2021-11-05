@@ -13,7 +13,6 @@ namespace Gamma {
     buffers.gBuffer.addDepthStencilAttachment();
     buffers.gBuffer.bindColorAttachments();
 
-    // @todo loop
     buffers.indirectLight[0].init();
     buffers.indirectLight[0].setSize({ internalResolution.width / 2, internalResolution.height / 2 });
     buffers.indirectLight[0].addColorAttachment(ColorFormat::RGBA16, 2);  // (RGB) Color
@@ -23,12 +22,6 @@ namespace Gamma {
     buffers.indirectLight[1].setSize({ internalResolution.width / 2, internalResolution.height / 2 });
     buffers.indirectLight[1].addColorAttachment(ColorFormat::RGBA16, 2);  // (RGB) Color
     buffers.indirectLight[1].bindColorAttachments();
-
-    // @todo we no longer need a third buffer
-    buffers.indirectLight[2].init();
-    buffers.indirectLight[2].setSize({ internalResolution.width / 2, internalResolution.height / 2 });
-    buffers.indirectLight[2].addColorAttachment(ColorFormat::RGBA16, 2);  // (RGB) Color
-    buffers.indirectLight[2].bindColorAttachments();
 
     buffers.reflections.init();
     buffers.reflections.setSize(internalResolution);
@@ -189,10 +182,8 @@ namespace Gamma {
 
   void Gm_DestroyRendererResources(RendererBuffers& buffers, RendererShaders& shaders) {
     buffers.gBuffer.destroy();
-    // @todo loop
     buffers.indirectLight[0].destroy();
     buffers.indirectLight[1].destroy();
-    buffers.indirectLight[2].destroy();
     buffers.reflections.destroy();
     buffers.accumulation1.destroy();
     buffers.accumulation2.destroy();
