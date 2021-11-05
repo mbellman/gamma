@@ -10,13 +10,13 @@
 vec3 getWorldPosition(float depth, vec2 frag_uv, mat4 inverse_projection, mat4 inverse_view) {
   float z = depth * 2.0 - 1.0;
   vec4 clip = vec4(frag_uv * 2.0 - 1.0, z, 1.0);
-  vec4 view = inverse_projection * clip;
+  vec4 view_position = inverse_projection * clip;
 
-  view /= view.w;
+  view_position /= view_position.w;
 
-  vec4 world = inverse_view * view;
+  vec4 world_position = inverse_view * view_position;
 
-  return glVec3(world.xyz);
+  return glVec3(world_position.xyz);
 }
 
 /**

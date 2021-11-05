@@ -15,8 +15,8 @@ uniform sampler2D colorAndDepth;
 uniform sampler2D normalAndEmissivity;
 uniform samplerCube shadowMap;
 uniform vec3 cameraPosition;
-uniform mat4 inverseProjection;
-uniform mat4 inverseView;
+uniform mat4 matInverseProjection;
+uniform mat4 matInverseView;
 
 noperspective in vec2 fragUv;
 flat in Light light;

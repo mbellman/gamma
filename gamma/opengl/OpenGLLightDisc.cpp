@@ -101,14 +101,14 @@ namespace Gamma {
     // @todo
   }
 
-  void OpenGLLightDisc::configureDisc(Disc& disc, const Light& light, const Matrix4f& projection, const Matrix4f& view, float resolutionAspectRatio) {
-    Vec3f localLightPosition = (view * light.position).toVec3f();
+  void OpenGLLightDisc::configureDisc(Disc& disc, const Light& light, const Matrix4f& matProjection, const Matrix4f& matView, float resolutionAspectRatio) {
+    Vec3f localLightPosition = (matView * light.position).toVec3f();
 
     disc.light = light;
 
     if (localLightPosition.z > 0.1f) {
       // Light source in front of the camera
-      Vec3f screenLightPosition = (projection * localLightPosition).toVec3f() / localLightPosition.z;
+      Vec3f screenLightPosition = (matProjection * localLightPosition).toVec3f() / localLightPosition.z;
 
       disc.offset = Vec2f(screenLightPosition.x, screenLightPosition.y);
       // @todo use 1 + log(light.power) or similar for scaling term
@@ -130,14 +130,14 @@ namespace Gamma {
     auto& disc = discs[0];
     auto& camera = *Camera::active;
     float aspectRatio = (float)resolution.width / (float)resolution.height;
-    Matrix4f projection = Matrix4f::glPerspective(resolution, 90.0f * 0.5f, 1.0f, 10000.0f);
+    Matrix4f matProjection = Matrix4f::glPerspective(resolution, 90.0f * 0.5f, 1.0f, 10000.0f);
 
-    Matrix4f view = (
+    Matrix4f matView = (
       Matrix4f::rotation(camera.orientation.toVec3f().invert()) *
       Matrix4f::translation(camera.position.invert())
     );
 
-    configureDisc(disc, light, projection, view, aspectRatio);
+    configureDisc(disc, light, matProjection, matView, aspectRatio);
 
     glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::DISC]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Disc), discs, GL_DYNAMIC_DRAW);
@@ -151,9 +151,9 @@ namespace Gamma {
     Disc* discs = new Disc[lights.size()];
     auto& camera = *Camera::active;
     float aspectRatio = (float)resolution.width / (float)resolution.height;
-    Matrix4f projection = Matrix4f::glPerspective(resolution, 90.0f * 0.5f, 1.0f, 10000.0f);
+    Matrix4f matProjection = Matrix4f::glPerspective(resolution, 90.0f * 0.5f, 1.0f, 10000.0f);
 
-    Matrix4f view = (
+    Matrix4f matView = (
       Matrix4f::rotation(camera.orientation.toVec3f().invert()) *
       Matrix4f::translation(camera.position.invert())
     );
@@ -162,7 +162,7 @@ namespace Gamma {
       auto& light = lights[i];
       auto& disc = discs[i];
 
-      configureDisc(disc, light, projection, view, aspectRatio);
+      configureDisc(disc, light, matProjection, matView, aspectRatio);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::DISC]);

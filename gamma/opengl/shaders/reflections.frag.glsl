@@ -3,10 +3,10 @@
 uniform sampler2D colorAndDepth;
 uniform sampler2D normalAndEmissivity;
 uniform vec3 cameraPosition;
-uniform mat4 view;
-uniform mat4 inverseView;
-uniform mat4 projection;
-uniform mat4 inverseProjection;
+uniform mat4 matView;
+uniform mat4 matInverseView;
+uniform mat4 matProjection;
+uniform mat4 matInverseProjection;
 
 noperspective in vec2 fragUv;
 
@@ -62,7 +62,7 @@ float getReflectionIntensity(vec2 uv) {
  * tip of the ray itself.
  */
 float getRayDistance(vec3 test_ray) {
-  vec2 test_uv = getScreenCoordinates(test_ray, projection);
+  vec2 test_uv = getScreenCoordinates(test_ray, matProjection);
   vec4 test_sample = texture(colorAndDepth, test_uv);
   float test_depth = getLinearizedDepth(test_sample.w);
 
@@ -121,7 +121,7 @@ Reflection getRefinedReflection(
     // Decrease step size by half and advance the ray
     ray_step *= 0.5;
     ray += ray_step;
-    refined_uv = getScreenCoordinates(ray, projection);
+    refined_uv = getScreenCoordinates(ray, matProjection);
 
     vec4 test = texture(colorAndDepth, refined_uv);
 
@@ -174,7 +174,7 @@ Reflection getReflection(
 
     ray += ray_step;
 
-    vec2 uv = getScreenCoordinates(ray, projection);
+    vec2 uv = getScreenCoordinates(ray, matProjection);
 
     if (isOffScreen(uv, 0.0) || ray.z >= z_far) {
       // Bail if the ray goes offscreen or beyond the far plane
@@ -222,13 +222,13 @@ Reflection getReflection(
 void main() {
   vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
   vec4 frag_normal_and_emissivity = texture(normalAndEmissivity, fragUv);
-  vec3 frag_world_position = getWorldPosition(frag_color_and_depth.w, fragUv, inverseProjection, inverseView);
+  vec3 frag_world_position = getWorldPosition(frag_color_and_depth.w, fragUv, matInverseProjection, matInverseView);
   vec3 camera_to_fragment = frag_world_position - cameraPosition;
   vec3 normalized_camera_to_fragment = normalize(camera_to_fragment);
   vec3 frag_world_normal = frag_normal_and_emissivity.rgb;
 
-  vec4 frag_view_position = glVec4(view * glVec4(frag_world_position));
-  vec4 frag_view_normal = glVec4(transpose(inverseView) * glVec4(frag_world_normal));
+  vec4 frag_view_position = glVec4(matView * glVec4(frag_world_position));
+  vec4 frag_view_normal = glVec4(transpose(matInverseView) * glVec4(frag_world_normal));
   vec3 world_reflection_vector = reflect(normalized_camera_to_fragment, frag_world_normal);
   vec3 normalized_view_reflection_ray = reflect(normalize(frag_view_position.xyz), frag_view_normal.xyz);
 

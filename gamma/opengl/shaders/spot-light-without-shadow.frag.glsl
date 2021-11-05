@@ -12,8 +12,8 @@ struct Light {
 uniform sampler2D colorAndDepth;
 uniform sampler2D normalAndEmissivity;
 uniform vec3 cameraPosition;
-uniform mat4 inverseProjection;
-uniform mat4 inverseView;
+uniform mat4 matInverseProjection;
+uniform mat4 matInverseView;
 
 // @todo pass in as a uniform
 const float indirect_light_factor = 0.01;

@@ -144,9 +144,9 @@ namespace Gamma {
     frustumCenter = (texelMatrix.inverse() * frustumCenter).homogenize();
 
     // Compute final light view matrix for rendering the shadow map
-    Matrix4f projection = Matrix4f::orthographic(radius, -radius, -radius, radius, -radius - 1000.0f, radius);
-    Matrix4f view = Matrix4f::lookAt(frustumCenter.gl(), lightDirection.invert().gl(), Vec3f(0.0f, 1.0f, 0.0f));
+    Matrix4f matProjection = Matrix4f::orthographic(radius, -radius, -radius, radius, -radius - 1000.0f, radius);
+    Matrix4f matView = Matrix4f::lookAt(frustumCenter.gl(), lightDirection.invert().gl(), Vec3f(0.0f, 1.0f, 0.0f));
 
-    return (projection * view).transpose();
+    return (matProjection * matView).transpose();
   }
 }

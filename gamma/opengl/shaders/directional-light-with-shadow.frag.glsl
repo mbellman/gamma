@@ -19,8 +19,8 @@ struct Cascade {
 uniform sampler2D colorAndDepth;
 uniform sampler2D normalAndEmissivity;
 uniform vec3 cameraPosition;
-uniform mat4 inverseProjection;
-uniform mat4 inverseView;
+uniform mat4 matInverseProjection;
+uniform mat4 matInverseView;
 uniform sampler2D shadowMaps[3];
 uniform mat4 lightMatrices[3];
 uniform DirectionalLight light;
@@ -121,7 +121,7 @@ void main() {
   vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
   vec4 frag_normal_and_emissivity = texture(normalAndEmissivity, fragUv);
   vec3 color = frag_color_and_depth.rgb;
-  vec3 position = getWorldPosition(frag_color_and_depth.w, fragUv, inverseProjection, inverseView);
+  vec3 position = getWorldPosition(frag_color_and_depth.w, fragUv, matInverseProjection, matInverseView);
   vec3 normal = frag_normal_and_emissivity.xyz;
   float emissivity = frag_normal_and_emissivity.w;
 

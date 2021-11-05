@@ -8,11 +8,11 @@ uniform sampler2D colorAndDepth;
 uniform sampler2D normalAndEmissivity;
 uniform sampler2D indirectLightT1;
 uniform vec3 cameraPosition;
-uniform mat4 view;
-uniform mat4 inverseView;
-uniform mat4 projection;
-uniform mat4 inverseProjection;
-uniform mat4 viewT1;
+uniform mat4 matView;
+uniform mat4 matInverseView;
+uniform mat4 matProjection;
+uniform mat4 matInverseProjection;
+uniform mat4 matViewT1;
 uniform float time;
 
 noperspective in vec2 fragUv;
@@ -70,8 +70,8 @@ float getScreenSpaceAmbientOcclusionContribution(float fragment_depth, vec3 frag
   for (int i = 0; i < TOTAL_SAMPLES; i++) {
     vec3 sample_offset = tbn * ssao_sample_points[i];
     vec3 world_sample_position = fragment_position + sample_offset * radius;
-    vec3 view_sample_position = glVec3(view * glVec4(world_sample_position));
-    vec2 screen_sample_position = getScreenCoordinates(view_sample_position, projection);
+    vec3 view_sample_position = glVec3(matView * glVec4(world_sample_position));
+    vec2 screen_sample_position = getScreenCoordinates(view_sample_position, matProjection);
     float sample_depth = textureLod(colorAndDepth, screen_sample_position, 3).w;
     float linear_sample_depth = getLinearizedDepth(sample_depth);
 
@@ -100,8 +100,8 @@ vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fra
   vec3 camera_to_fragment = normalize(fragment_position - cameraPosition);
   vec3 reflection_vector = reflect(camera_to_fragment, fragment_normal);
   vec3 world_bounce_ray = fragment_position + reflection_vector * 10.0;
-  vec3 view_bounce_ray = glVec3(view * glVec4(world_bounce_ray));
-  vec2 bounce_ray_coords = getScreenCoordinates(view_bounce_ray, projection);
+  vec3 view_bounce_ray = glVec3(matView * glVec4(world_bounce_ray));
+  vec2 bounce_ray_coords = getScreenCoordinates(view_bounce_ray, matProjection);
 
   for (int i = 0; i < TOTAL_SAMPLES; i++) {
     vec2 offset = texel_size * radius * rotatedVogelDisc(TOTAL_SAMPLES, i);
@@ -122,7 +122,7 @@ vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fra
 
     // Diminish illumination where the sample emits
     // less incident bounce light onto the fragment
-    vec3 sample_position = getWorldPosition(sample_color_and_depth.w, fragUv + offset, inverseProjection, inverseView);
+    vec3 sample_position = getWorldPosition(sample_color_and_depth.w, fragUv + offset, matInverseProjection, matInverseView);
     float sample_distance = distance(fragment_position, sample_position);
     vec3 normalized_fragment_to_sample = (sample_position - fragment_position) / sample_distance;
     float incidence_factor = max(0.0, dot(fragment_normal, normalized_fragment_to_sample));
@@ -138,7 +138,7 @@ vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fra
 
 void main() {
   vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
-  vec3 fragment_position = getWorldPosition(frag_color_and_depth.w, fragUv, inverseProjection, inverseView);
+  vec3 fragment_position = getWorldPosition(frag_color_and_depth.w, fragUv, matInverseProjection, matInverseView);
   vec3 fragment_normal = texture(normalAndEmissivity, fragUv).xyz;
   vec3 global_illumination = vec3(0.0);
   float ambient_occlusion = 0.0;
@@ -152,8 +152,8 @@ void main() {
   #endif
 
   // Prepare for temporal denoising using the previous frame
-  vec3 view_fragment_position_t1 = glVec3(viewT1 * glVec4(fragment_position));
-  vec2 fragUv_t1 = getScreenCoordinates(view_fragment_position_t1.xyz, projection);
+  vec3 view_fragment_position_t1 = glVec3(matViewT1 * glVec4(fragment_position));
+  vec2 fragUv_t1 = getScreenCoordinates(view_fragment_position_t1.xyz, matProjection);
   float denoising_sum = 0.0;
 
   // Same-frame contribution factor

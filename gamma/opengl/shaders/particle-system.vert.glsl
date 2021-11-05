@@ -20,8 +20,8 @@ struct ParticlePath {
   bool is_circuit;
 };
 
-uniform mat4 projection;
-uniform mat4 view;
+uniform mat4 matProjection;
+uniform mat4 matView;
 uniform float time;
 uniform ParticleSystem particles;
 uniform ParticlePath path;
@@ -160,7 +160,7 @@ void main() {
   // @todo make size oscillation rate configurable
   float scale = particles.median_size + particles.size_variation * sin(time * 3.0 + r * 500.0);
 
-  gl_Position = projection * view * glVec4(position);
+  gl_Position = matProjection * matView * glVec4(position);
   gl_PointSize = scale;
 
   fragUv = vertexUv;

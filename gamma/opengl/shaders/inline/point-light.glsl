@@ -1,5 +1,5 @@
 vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
-vec3 position = getWorldPosition(frag_color_and_depth.w, fragUv, inverseProjection, inverseView);
+vec3 position = getWorldPosition(frag_color_and_depth.w, fragUv, matInverseProjection, matInverseView);
 vec3 surface_to_light = light.position - position;
 float light_distance = length(surface_to_light);
 

@@ -11,8 +11,8 @@ struct DirectionalLight {
 uniform sampler2D colorAndDepth;
 uniform sampler2D normalAndEmissivity;
 uniform vec3 cameraPosition;
-uniform mat4 inverseProjection;
-uniform mat4 inverseView;
+uniform mat4 matInverseProjection;
+uniform mat4 matInverseView;
 uniform DirectionalLight lights[10];
 
 noperspective in vec2 fragUv;
@@ -24,7 +24,7 @@ layout (location = 0) out vec4 out_colorAndDepth;
 void main() {
   vec4 frag_colorAndDepth = texture(colorAndDepth, fragUv);
   vec4 frag_normalAndEmissivity = texture(normalAndEmissivity, fragUv);
-  vec3 position = getWorldPosition(frag_colorAndDepth.w, fragUv, inverseProjection, inverseView);
+  vec3 position = getWorldPosition(frag_colorAndDepth.w, fragUv, matInverseProjection, matInverseView);
   vec3 normal = frag_normalAndEmissivity.xyz;
   vec3 color = frag_colorAndDepth.rgb;
   float emissivity = frag_normalAndEmissivity.w;

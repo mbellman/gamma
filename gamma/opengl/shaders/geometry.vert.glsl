@@ -1,7 +1,7 @@
 #version 460 core
 
-uniform mat4 projection;
-uniform mat4 view;
+uniform mat4 matProjection;
+uniform mat4 matView;
 
 layout (location = 0) in vec3 vertexPosition;
 layout (location = 1) in vec3 vertexNormal;
@@ -48,7 +48,7 @@ void main() {
   vec4 world_position = glMat4(modelMatrix) * vec4(vertexPosition, 1.0);
   mat3 normal_matrix = transpose(inverse(mat3(modelMatrix)));
 
-  gl_Position = projection * view * world_position;
+  gl_Position = matProjection * matView * world_position;
 
   fragColor = unpack(modelColor);
   fragPosition = glVec3(world_position);

@@ -1,7 +1,7 @@
 #version 460 core
 
 uniform vec2 screenSize;
-uniform mat4 projection;
+uniform mat4 matProjection;
 uniform sampler2D color_and_depth;
 
 layout (location = 2) out vec4 out_color_and_depth;
@@ -17,5 +17,5 @@ void main() {
   vec4 base_color = texture(color_and_depth, getPixelCoords());
 
   out_color_and_depth = vec4(vec3(1, 0, 1) * base_color.rgb, gl_FragCoord.z);
-  gl_FragDepth = getFragDepth(linearized_depth + 1.0, projection);
+  gl_FragDepth = getFragDepth(linearized_depth + 1.0, matProjection);
 }

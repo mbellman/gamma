@@ -31,6 +31,6 @@ namespace Gamma {
      */
     GLuint buffers[2];
 
-    void configureDisc(Disc& disc, const Light& light, const Matrix4f& projection, const Matrix4f& view, float resolutionAspectRatio);
+    void configureDisc(Disc& disc, const Light& light, const Matrix4f& matProjection, const Matrix4f& matView, float resolutionAspectRatio);
   };
 }

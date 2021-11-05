@@ -2,10 +2,10 @@
 
 uniform vec2 screenSize;
 uniform sampler2D colorAndDepth;
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 inverseProjection;
-uniform mat4 inverseView;
+uniform mat4 matProjection;
+uniform mat4 matView;
+uniform mat4 matInverseProjection;
+uniform mat4 matInverseView;
 uniform vec3 cameraPosition;
 
 flat in vec3 fragColor;
@@ -28,15 +28,15 @@ vec2 getPixelCoords() {
 void main() {
   const float REFRACTION_INTENSITY = 4.0;
 
-  vec3 position = getWorldPosition(gl_FragCoord.z, getPixelCoords(), inverseProjection, inverseView);
+  vec3 position = getWorldPosition(gl_FragCoord.z, getPixelCoords(), matInverseProjection, matInverseView);
   vec3 color = vec3(1.0);
   vec3 normal = normalize(fragNormal);
   vec3 normalized_fragment_to_camera = normalize(cameraPosition - position);
 
   vec3 refraction_ray = refract(normalized_fragment_to_camera, normal, 0.7);
   vec3 world_refraction_ray = position + refraction_ray * REFRACTION_INTENSITY;
-  vec3 view_refraction_ray = glVec4(view * glVec4(world_refraction_ray)).xyz;
-  vec2 refracted_color_coords = getScreenCoordinates(view_refraction_ray, projection);
+  vec3 view_refraction_ray = glVec3(matView * glVec4(world_refraction_ray));
+  vec2 refracted_color_coords = getScreenCoordinates(view_refraction_ray, matProjection);
   float sample_depth = texture(colorAndDepth, getPixelCoords()).w;
 
   if (sample_depth < 1.0 && isOffScreen(refracted_color_coords, 0.0)) {

@@ -433,8 +433,8 @@ namespace Gamma {
     glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
 
     shaders.geometry.use();
-    shaders.geometry.setMatrix4f("projection", ctx.matProjection);
-    shaders.geometry.setMatrix4f("view", ctx.matView);
+    shaders.geometry.setMatrix4f("matProjection", ctx.matProjection);
+    shaders.geometry.setMatrix4f("matView", ctx.matView);
     shaders.geometry.setInt("meshTexture", 0);
     shaders.geometry.setInt("meshNormalMap", 1);
 
@@ -481,8 +481,8 @@ namespace Gamma {
       glStencilMask(0xFF);
 
       shaders.probeReflector.use();
-      shaders.probeReflector.setMatrix4f("projection", ctx.matProjection);
-      shaders.probeReflector.setMatrix4f("view", ctx.matView);
+      shaders.probeReflector.setMatrix4f("matProjection", ctx.matProjection);
+      shaders.probeReflector.setMatrix4f("matView", ctx.matView);
       shaders.probeReflector.setInt("meshTexture", 0);
       shaders.probeReflector.setInt("meshNormalMap", 1);
       shaders.probeReflector.setInt("probeMap", 3);
@@ -524,9 +524,9 @@ namespace Gamma {
 
       for (uint32 cascade = 0; cascade < 3; cascade++) {
         glShadowMap.buffer.writeToAttachment(cascade);
-        Matrix4f lightView = Gm_CreateCascadedLightViewMatrixGL(cascade, light.direction, camera);
+        Matrix4f matLightView = Gm_CreateCascadedLightViewMatrixGL(cascade, light.direction, camera);
 
-        shader.setMatrix4f("lightView", lightView);
+        shader.setMatrix4f("matLightView", matLightView);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -567,9 +567,10 @@ namespace Gamma {
         auto& direction = CUBE_MAP_DIRECTIONS[i];
         auto& upDirection = CUBE_MAP_UP_DIRECTIONS[i];
 
-        Matrix4f projection = Matrix4f::glPerspective({ 1024, 1024 }, 90.0f, 1.0f, light.radius);
-        Matrix4f view = Matrix4f::lookAt(light.position.gl(), direction, upDirection);
-        Matrix4f lightMatrix = (projection * view).transpose();
+        // @optimize matLightProjection can be precomputed
+        Matrix4f matLightProjection = Matrix4f::glPerspective({ 1024, 1024 }, 90.0f, 1.0f, light.radius);
+        Matrix4f matLightView = Matrix4f::lookAt(light.position.gl(), direction, upDirection);
+        Matrix4f lightMatrix = (matLightProjection * matLightView).transpose();
 
         shader.setMatrix4f("lightMatrices[" + std::to_string(i) + "]", lightMatrix);
       }
@@ -607,9 +608,10 @@ namespace Gamma {
         continue;
       }
 
-      Matrix4f lightProjection = Matrix4f::glPerspective({ 1024, 1024 }, 120.0f, 1.0f, light.radius);
-      Matrix4f lightView = Matrix4f::lookAt(light.position.gl(), light.direction.invert().gl(), Vec3f(0.0f, 1.0f, 0.0f));
-      Matrix4f lightMatrix = (lightProjection * lightView).transpose();
+      // @optimize matLightProjection can be precomputed
+      Matrix4f matLightProjection = Matrix4f::glPerspective({ 1024, 1024 }, 120.0f, 1.0f, light.radius);
+      Matrix4f matLightView = Matrix4f::lookAt(light.position.gl(), light.direction.invert().gl(), Vec3f(0.0f, 1.0f, 0.0f));
+      Matrix4f lightMatrix = (matLightProjection * matLightView).transpose();
 
       glShadowMap.buffer.write();
 
@@ -678,8 +680,8 @@ namespace Gamma {
     shader.setInt("colorAndDepth", 0);
     shader.setInt("normalAndEmissivity", 1);
     shader.setVec3f("cameraPosition", camera.position);
-    shader.setMatrix4f("inverseProjection", ctx.matInverseProjection);
-    shader.setMatrix4f("inverseView", ctx.matInverseView);
+    shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
+    shader.setMatrix4f("matInverseView", ctx.matInverseView);
 
     lightDisc.draw(ctx.pointLights, internalResolution);
   }
@@ -696,8 +698,8 @@ namespace Gamma {
     shader.setInt("normalAndEmissivity", 1);
     shader.setInt("shadowMap", 3);
     shader.setVec3f("cameraPosition", camera.position);
-    shader.setMatrix4f("inverseProjection", ctx.matInverseProjection);
-    shader.setMatrix4f("inverseView", ctx.matInverseView);
+    shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
+    shader.setMatrix4f("matInverseView", ctx.matInverseView);
 
     for (uint32 i = 0; i < ctx.pointShadowCasters.size(); i++) {
       auto& glShadowMap = *glPointShadowMaps[i];
@@ -720,8 +722,8 @@ namespace Gamma {
     shader.setInt("colorAndDepth", 0);
     shader.setInt("normalAndEmissivity", 1);
     shader.setVec3f("cameraPosition", camera.position);
-    shader.setMatrix4f("inverseProjection", ctx.matInverseProjection);
-    shader.setMatrix4f("inverseView", ctx.matInverseView);
+    shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
+    shader.setMatrix4f("matInverseView", ctx.matInverseView);
 
     // @todo limit to MAX_DIRECTIONAL_LIGHTS
     for (uint32 i = 0; i < ctx.directionalLights.size(); i++) {
@@ -762,8 +764,8 @@ namespace Gamma {
       shader.setMatrix4f("lightMatrices[1]", Gm_CreateCascadedLightViewMatrixGL(1, light.direction, camera));
       shader.setMatrix4f("lightMatrices[2]", Gm_CreateCascadedLightViewMatrixGL(2, light.direction, camera));
       shader.setVec3f("cameraPosition", camera.position);
-      shader.setMatrix4f("inverseProjection", ctx.matInverseProjection);
-      shader.setMatrix4f("inverseView", ctx.matInverseView);
+      shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
+      shader.setMatrix4f("matInverseView", ctx.matInverseView);
       shader.setVec3f("light.color", light.color);
       shader.setFloat("light.power", light.power);
       shader.setVec3f("light.direction", light.direction);
@@ -783,8 +785,8 @@ namespace Gamma {
     shader.setInt("colorAndDepth", 0);
     shader.setInt("normalAndEmissivity", 1);
     shader.setVec3f("cameraPosition", camera.position);
-    shader.setMatrix4f("inverseProjection", ctx.matInverseProjection);
-    shader.setMatrix4f("inverseView", ctx.matInverseView);
+    shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
+    shader.setMatrix4f("matInverseView", ctx.matInverseView);
 
     lightDisc.draw(ctx.spotLights, internalResolution);
   }
@@ -801,8 +803,8 @@ namespace Gamma {
     shader.setInt("normalAndEmissivity", 1);
     shader.setInt("shadowMap", 3);
     shader.setVec3f("cameraPosition", camera.position);
-    shader.setMatrix4f("inverseProjection", ctx.matInverseProjection);
-    shader.setMatrix4f("inverseView", ctx.matInverseView);
+    shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
+    shader.setMatrix4f("matInverseView", ctx.matInverseView);
     shader.setFloat("time", AbstractScene::active->getRunningTime());
 
     for (uint32 i = 0; i < ctx.spotShadowcasters.size(); i++) {
@@ -878,11 +880,11 @@ namespace Gamma {
       shaders.indirectLight.setInt("normalAndEmissivity", 1);
       shaders.indirectLight.setInt("indirectLightT1", 2);
       shaders.indirectLight.setVec3f("cameraPosition", Camera::active->position);
-      shaders.indirectLight.setMatrix4f("projection", ctx.matProjection);
-      shaders.indirectLight.setMatrix4f("view", ctx.matView);
-      shaders.indirectLight.setMatrix4f("inverseProjection", ctx.matInverseProjection);
-      shaders.indirectLight.setMatrix4f("inverseView", ctx.matInverseView);
-      shaders.indirectLight.setMatrix4f("viewT1", ctx.matPreviousView);
+      shaders.indirectLight.setMatrix4f("matProjection", ctx.matProjection);
+      shaders.indirectLight.setMatrix4f("matView", ctx.matView);
+      shaders.indirectLight.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
+      shaders.indirectLight.setMatrix4f("matInverseView", ctx.matInverseView);
+      shaders.indirectLight.setMatrix4f("matViewT1", ctx.matPreviousView);
       shaders.indirectLight.setFloat("time", AbstractScene::active->getRunningTime());
 
       OpenGLScreenQuad::render();
@@ -928,8 +930,8 @@ namespace Gamma {
     shaders.skybox.use();
     shaders.skybox.setVec4f("transform", FULL_SCREEN_TRANSFORM);
     shaders.skybox.setVec3f("cameraPosition", Camera::active->position);
-    shaders.skybox.setMatrix4f("inverseProjection", ctx.matInverseProjection);
-    shaders.skybox.setMatrix4f("inverseView", ctx.matInverseView);
+    shaders.skybox.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
+    shaders.skybox.setMatrix4f("matInverseView", ctx.matInverseView);
 
     OpenGLScreenQuad::render();
   }
@@ -945,8 +947,8 @@ namespace Gamma {
     glStencilMask(0xFF);
 
     shaders.particles.use();
-    shaders.particles.setMatrix4f("projection", ctx.matProjection);
-    shaders.particles.setMatrix4f("view", ctx.matView);
+    shaders.particles.setMatrix4f("matProjection", ctx.matProjection);
+    shaders.particles.setMatrix4f("matView", ctx.matView);
     shaders.particles.setFloat("time", AbstractScene::active->getRunningTime());
 
     for (auto& glMesh : glMeshes) {
@@ -1014,8 +1016,8 @@ namespace Gamma {
       #endif
 
       shaders.refractivePrepass.setInt("color_and_depth", 0);
-      shaders.refractivePrepass.setMatrix4f("projection", ctx.matProjection);
-      shaders.refractivePrepass.setMatrix4f("view", ctx.matView);
+      shaders.refractivePrepass.setMatrix4f("matProjection", ctx.matProjection);
+      shaders.refractivePrepass.setMatrix4f("matView", ctx.matView);
 
       for (auto* glMesh : glMeshes) {
         if (glMesh->isMeshType(MeshType::REFRACTIVE)) {
@@ -1043,10 +1045,10 @@ namespace Gamma {
     shaders.reflections.setInt("colorAndDepth", 0);
     shaders.reflections.setInt("normalAndEmissivity", 1);
     shaders.reflections.setVec3f("cameraPosition", camera.position);
-    shaders.reflections.setMatrix4f("view", ctx.matView);
-    shaders.reflections.setMatrix4f("inverseView", ctx.matInverseView);
-    shaders.reflections.setMatrix4f("projection", ctx.matProjection);
-    shaders.reflections.setMatrix4f("inverseProjection", ctx.matInverseProjection);
+    shaders.reflections.setMatrix4f("matView", ctx.matView);
+    shaders.reflections.setMatrix4f("matInverseView", ctx.matInverseView);
+    shaders.reflections.setMatrix4f("matProjection", ctx.matProjection);
+    shaders.reflections.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
 
     OpenGLScreenQuad::render();
 
@@ -1101,10 +1103,10 @@ namespace Gamma {
     #endif
 
     shaders.refractiveGeometry.setInt("colorAndDepth", 0);
-    shaders.refractiveGeometry.setMatrix4f("projection", ctx.matProjection);
-    shaders.refractiveGeometry.setMatrix4f("inverseProjection", ctx.matInverseProjection);
-    shaders.refractiveGeometry.setMatrix4f("view", ctx.matView);
-    shaders.refractiveGeometry.setMatrix4f("inverseView", ctx.matInverseView);
+    shaders.refractiveGeometry.setMatrix4f("matProjection", ctx.matProjection);
+    shaders.refractiveGeometry.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
+    shaders.refractiveGeometry.setMatrix4f("matView", ctx.matView);
+    shaders.refractiveGeometry.setMatrix4f("matInverseView", ctx.matInverseView);
     shaders.refractiveGeometry.setVec3f("cameraPosition", camera.position);
 
     for (auto* glMesh : glMeshes) {
@@ -1264,21 +1266,21 @@ namespace Gamma {
       probeCamera.orientation.face(direction, upDirection);
 
       Camera::active = &probeCamera;
-      Matrix4f projection = Matrix4f::glPerspective({ 1024, 1024 }, 90.0f, 1.0f, farDistance).transpose();
+      Matrix4f matProjection = Matrix4f::glPerspective({ 1024, 1024 }, 90.0f, 1.0f, farDistance).transpose();
 
       if (i == 2 || i == 3) {
         // @hack @todo there may be a bug in Orientation::face()
         probeCamera.orientation.yaw += (3.141592f / 2.0f);
       }
 
-      Matrix4f view = (
+      Matrix4f matView = (
         Matrix4f::rotation(probeCamera.orientation.toVec3f()) *
         Matrix4f::translation(probeCamera.position.invert().gl())
       ).transpose();
 
-      ctx.matProjection = projection;
-      ctx.matView = view;
-      ctx.matPreviousView = view;
+      ctx.matProjection = matProjection;
+      ctx.matView = matView;
+      ctx.matPreviousView = matView;
 
       ctx.matInverseProjection = ctx.matProjection.inverse();
       ctx.matInverseView = ctx.matView.inverse();
