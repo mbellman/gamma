@@ -1,4 +1,4 @@
-vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
+vec4 frag_color_and_depth = texture(texColorAndDepth, fragUv);
 vec3 position = getWorldPosition(frag_color_and_depth.w, fragUv, matInverseProjection, matInverseView);
 
 if (length(light.position - position) > light.radius) {
@@ -23,7 +23,7 @@ float cone_edge_range = 1.0 - cone_edge_alignment;
 float cone_edge_proximity = fragment_alignment - cone_edge_alignment;
 float spot_factor = sqrt(cone_edge_proximity / cone_edge_range);
 
-vec4 frag_normal_and_emissivity = texture(normalAndEmissivity, fragUv);
+vec4 frag_normal_and_emissivity = texture(texNormalAndEmissivity, fragUv);
 vec3 normal = frag_normal_and_emissivity.xyz;
 vec3 color = frag_color_and_depth.rgb;
 

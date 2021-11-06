@@ -1,7 +1,7 @@
 #version 460 core
 
 uniform vec2 screenSize;
-uniform sampler2D colorAndDepth;
+uniform sampler2D texColorAndDepth;
 uniform mat4 matProjection;
 uniform mat4 matView;
 uniform mat4 matInverseProjection;
@@ -37,7 +37,7 @@ void main() {
   vec3 world_refraction_ray = position + refraction_ray * REFRACTION_INTENSITY;
   vec3 view_refraction_ray = glVec3(matView * glVec4(world_refraction_ray));
   vec2 refracted_color_coords = getScreenCoordinates(view_refraction_ray, matProjection);
-  float sample_depth = texture(colorAndDepth, getPixelCoords()).w;
+  float sample_depth = texture(texColorAndDepth, getPixelCoords()).w;
 
   if (sample_depth < 1.0 && isOffScreen(refracted_color_coords, 0.0)) {
     // If the fragment has a depth closer than the far plane,
@@ -55,7 +55,7 @@ void main() {
     discard;
   }
 
-  vec4 refracted_color_and_depth = texture(colorAndDepth, refracted_color_coords);
+  vec4 refracted_color_and_depth = texture(texColorAndDepth, refracted_color_coords);
 
   if (refracted_color_and_depth.w == 1.0) {
     // Skybox

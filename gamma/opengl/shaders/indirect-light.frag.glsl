@@ -4,9 +4,9 @@
 #define USE_SCREEN_SPACE_GLOBAL_ILLUMINATION 1
 
 uniform vec2 screenSize;
-uniform sampler2D colorAndDepth;
-uniform sampler2D normalAndEmissivity;
-uniform sampler2D indirectLightT1;
+uniform sampler2D texColorAndDepth;
+uniform sampler2D texNormalAndEmissivity;
+uniform sampler2D texIndirectLightT1;
 uniform vec3 cameraPosition;
 uniform mat4 matView;
 uniform mat4 matInverseView;
@@ -72,7 +72,7 @@ float getScreenSpaceAmbientOcclusionContribution(float fragment_depth, vec3 frag
     vec3 world_sample_position = fragment_position + sample_offset * radius;
     vec3 view_sample_position = glVec3(matView * glVec4(world_sample_position));
     vec2 screen_sample_position = getScreenCoordinates(view_sample_position, matProjection);
-    float sample_depth = textureLod(colorAndDepth, screen_sample_position, 3).w;
+    float sample_depth = textureLod(texColorAndDepth, screen_sample_position, 3).w;
     float linear_sample_depth = getLinearizedDepth(sample_depth);
 
     if (linear_sample_depth < view_sample_position.z) {
@@ -111,7 +111,7 @@ vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fra
       continue;
     }
 
-    vec4 sample_color_and_depth = textureLod(colorAndDepth, coords, 3);
+    vec4 sample_color_and_depth = textureLod(texColorAndDepth, coords, 3);
 
     // @todo why is this necessary? why are certain sample
     // color components < 0? note: this is to do with
@@ -137,9 +137,9 @@ vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fra
 }
 
 void main() {
-  vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
+  vec4 frag_color_and_depth = texture(texColorAndDepth, fragUv);
   vec3 fragment_position = getWorldPosition(frag_color_and_depth.w, fragUv, matInverseProjection, matInverseView);
-  vec3 fragment_normal = texture(normalAndEmissivity, fragUv).xyz;
+  vec3 fragment_normal = texture(texNormalAndEmissivity, fragUv).xyz;
   vec3 global_illumination = vec3(0.0);
   float ambient_occlusion = 0.0;
 
@@ -181,7 +181,7 @@ void main() {
       vec2 sample_uv = fragUv_t1 + vec2(float(i), float(j)) * texel_size;
 
       if (!isOffScreen(sample_uv, 0.001)) {
-        vec4 sample_t1 = texture(indirectLightT1, sample_uv);
+        vec4 sample_t1 = texture(texIndirectLightT1, sample_uv);
 
         out_gi_and_ao += sample_t1 * df2;
         denoising_sum += df2;

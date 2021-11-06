@@ -8,8 +8,8 @@ struct DirectionalLight {
   vec3 direction;
 };
 
-uniform sampler2D colorAndDepth;
-uniform sampler2D normalAndEmissivity;
+uniform sampler2D texColorAndDepth;
+uniform sampler2D texNormalAndEmissivity;
 uniform vec3 cameraPosition;
 uniform mat4 matInverseProjection;
 uniform mat4 matInverseView;
@@ -22,12 +22,12 @@ layout (location = 0) out vec4 out_colorAndDepth;
 #include "utils/conversion.glsl";
 
 void main() {
-  vec4 frag_colorAndDepth = texture(colorAndDepth, fragUv);
-  vec4 frag_normalAndEmissivity = texture(normalAndEmissivity, fragUv);
-  vec3 position = getWorldPosition(frag_colorAndDepth.w, fragUv, matInverseProjection, matInverseView);
-  vec3 normal = frag_normalAndEmissivity.xyz;
-  vec3 color = frag_colorAndDepth.rgb;
-  float emissivity = frag_normalAndEmissivity.w;
+  vec4 frag_color_and_depth = texture(texColorAndDepth, fragUv);
+  vec4 frag_normal_and_emissivity = texture(texNormalAndEmissivity, fragUv);
+  vec3 position = getWorldPosition(frag_color_and_depth.w, fragUv, matInverseProjection, matInverseView);
+  vec3 normal = frag_normal_and_emissivity.xyz;
+  vec3 color = frag_color_and_depth.rgb;
+  float emissivity = frag_normal_and_emissivity.w;
   vec3 accumulatedColor = vec3(0.0);
 
   for (int i = 0; i < MAX_DIRECTIONAL_LIGHTS; i++) {
@@ -38,5 +38,5 @@ void main() {
     accumulatedColor += illuminated_color;
   }
 
-  out_colorAndDepth = vec4(accumulatedColor * (1.0 - emissivity), frag_colorAndDepth.w);
+  out_colorAndDepth = vec4(accumulatedColor * (1.0 - emissivity), frag_color_and_depth.w);
 }

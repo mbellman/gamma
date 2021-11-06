@@ -16,12 +16,12 @@ struct Cascade {
   float occluder_sweep_radius;
 };
 
-uniform sampler2D colorAndDepth;
-uniform sampler2D normalAndEmissivity;
+uniform sampler2D texColorAndDepth;
+uniform sampler2D texNormalAndEmissivity;
+uniform sampler2D texShadowMaps[3];
 uniform vec3 cameraPosition;
 uniform mat4 matInverseProjection;
 uniform mat4 matInverseView;
-uniform sampler2D shadowMaps[3];
 uniform mat4 lightMatrices[3];
 uniform DirectionalLight light;
 
@@ -91,10 +91,10 @@ float getLightIntensity(Cascade cascade, vec4 transform) {
     return 1.0;
   }
 
-  vec2 shadow_map_texel_size = 1.0 / textureSize(shadowMaps[cascade.index], 0);
+  vec2 shadow_map_texel_size = 1.0 / textureSize(texShadowMaps[cascade.index], 0);
 
   #if USE_VARIABLE_PENUMBRA_SIZE == 1
-    float closest_occluder = getClosestOccluder(shadowMaps[cascade.index], shadow_map_texel_size, transform, cascade.occluder_sweep_radius);
+    float closest_occluder = getClosestOccluder(texShadowMaps[cascade.index], shadow_map_texel_size, transform, cascade.occluder_sweep_radius);
     float spread = 1.0 + cascade.spread_factor * pow(distance(transform.z, closest_occluder), 2);
   #else
     float spread = cascade.spread_factor / 500.0;
@@ -106,7 +106,7 @@ float getLightIntensity(Cascade cascade, vec4 transform) {
   for (int i = 0; i < TOTAL_SAMPLES; i++) {
     vec2 texel_offset = spread * rotatedVogelDisc(TOTAL_SAMPLES, i) * shadow_map_texel_size;
     vec2 texel_coords = transform.xy + texel_offset;
-    float shadow_map_depth = texture(shadowMaps[cascade.index], texel_coords).r;
+    float shadow_map_depth = texture(texShadowMaps[cascade.index], texel_coords).r;
 
     // @todo base bias on incidence
     if (shadow_map_depth > transform.z - (cascade.bias + spread * 0.00025)) {
@@ -118,8 +118,8 @@ float getLightIntensity(Cascade cascade, vec4 transform) {
 }
 
 void main() {
-  vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
-  vec4 frag_normal_and_emissivity = texture(normalAndEmissivity, fragUv);
+  vec4 frag_color_and_depth = texture(texColorAndDepth, fragUv);
+  vec4 frag_normal_and_emissivity = texture(texNormalAndEmissivity, fragUv);
   vec3 color = frag_color_and_depth.rgb;
   vec3 position = getWorldPosition(frag_color_and_depth.w, fragUv, matInverseProjection, matInverseView);
   vec3 normal = frag_normal_and_emissivity.xyz;

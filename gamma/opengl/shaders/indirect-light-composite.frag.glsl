@@ -5,9 +5,9 @@
 #define USE_INDIRECT_SKY_LIGHT 1
 
 uniform vec2 screenSize;
-uniform sampler2D colorAndDepth;
-uniform sampler2D normalAndEmissivity;
-uniform sampler2D indirectLight;
+uniform sampler2D texColorAndDepth;
+uniform sampler2D texNormalAndEmissivity;
+uniform sampler2D texIndirectLight;
 
 noperspective in vec2 fragUv;
 
@@ -45,8 +45,8 @@ vec3 getIndirectSkyLightContribution(vec3 fragment_normal) {
 }
 
 void main() {
-  vec4 frag_normal_and_emissivity = texture(normalAndEmissivity, fragUv);
-  vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
+  vec4 frag_normal_and_emissivity = texture(texNormalAndEmissivity, fragUv);
+  vec4 frag_color_and_depth = texture(texColorAndDepth, fragUv);
   vec3 fragment_albedo = frag_color_and_depth.rgb;
   float linear_fragment_depth = getLinearizedDepth(frag_color_and_depth.w);
   vec3 fragment_normal = frag_normal_and_emissivity.xyz;
@@ -57,7 +57,7 @@ void main() {
   vec3 indirect_sky_light = vec3(0);
 
   #if USE_AVERAGE_INDIRECT_LIGHT == 1
-    vec4 indirect_light = texture(indirectLight, fragUv);
+    vec4 indirect_light = texture(texIndirectLight, fragUv);
 
     global_illumination = indirect_light.rgb;
     ambient_occlusion = indirect_light.w;

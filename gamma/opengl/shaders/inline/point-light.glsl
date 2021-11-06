@@ -1,4 +1,4 @@
-vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
+vec4 frag_color_and_depth = texture(texColorAndDepth, fragUv);
 vec3 position = getWorldPosition(frag_color_and_depth.w, fragUv, matInverseProjection, matInverseView);
 vec3 surface_to_light = light.position - position;
 float light_distance = length(surface_to_light);
@@ -7,7 +7,7 @@ if (light_distance > light.radius) {
   discard;
 }
 
-vec4 frag_normal_and_emissivity = texture(normalAndEmissivity, fragUv);
+vec4 frag_normal_and_emissivity = texture(texNormalAndEmissivity, fragUv);
 vec3 normal = frag_normal_and_emissivity.xyz;
 vec3 color = frag_color_and_depth.rgb;
 

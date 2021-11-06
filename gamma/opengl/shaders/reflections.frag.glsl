@@ -1,7 +1,7 @@
 #version 460 core
 
-uniform sampler2D colorAndDepth;
-uniform sampler2D normalAndEmissivity;
+uniform sampler2D texColorAndDepth;
+uniform sampler2D texNormalAndEmissivity;
 uniform vec3 cameraPosition;
 uniform mat4 matView;
 uniform mat4 matInverseView;
@@ -10,7 +10,7 @@ uniform mat4 matInverseProjection;
 
 noperspective in vec2 fragUv;
 
-layout (location = 0) out vec4 out_ColorAndDepth;
+layout (location = 0) out vec4 out_color_and_depth;
 
 struct Reflection {
   vec3 color;
@@ -63,7 +63,7 @@ float getReflectionIntensity(vec2 uv) {
  */
 float getRayDistance(vec3 test_ray) {
   vec2 test_uv = getScreenCoordinates(test_ray, matProjection);
-  vec4 test_sample = texture(colorAndDepth, test_uv);
+  vec4 test_sample = texture(texColorAndDepth, test_uv);
   float test_depth = getLinearizedDepth(test_sample.w);
 
   return test_depth - test_ray.z;
@@ -123,7 +123,7 @@ Reflection getRefinedReflection(
     ray += ray_step;
     refined_uv = getScreenCoordinates(ray, matProjection);
 
-    vec4 test = texture(colorAndDepth, refined_uv);
+    vec4 test = texture(texColorAndDepth, refined_uv);
 
     test_depth = getLinearizedDepth(test.w);
     refined_color = test.rgb;
@@ -181,7 +181,7 @@ Reflection getReflection(
       break;
     }
 
-    vec4 test = texture(colorAndDepth, uv);
+    vec4 test = texture(texColorAndDepth, uv);
     float test_depth = getLinearizedDepth(test.w);
     float ray_to_geometry_distance = abs(ray.z - test_depth);
 
@@ -220,8 +220,8 @@ Reflection getReflection(
 }
 
 void main() {
-  vec4 frag_color_and_depth = texture(colorAndDepth, fragUv);
-  vec4 frag_normal_and_emissivity = texture(normalAndEmissivity, fragUv);
+  vec4 frag_color_and_depth = texture(texColorAndDepth, fragUv);
+  vec4 frag_normal_and_emissivity = texture(texNormalAndEmissivity, fragUv);
   vec3 frag_world_position = getWorldPosition(frag_color_and_depth.w, fragUv, matInverseProjection, matInverseView);
   vec3 camera_to_fragment = frag_world_position - cameraPosition;
   vec3 normalized_camera_to_fragment = normalize(camera_to_fragment);
@@ -241,5 +241,5 @@ void main() {
   vec3 reflectionColor = reflection.color * reflection.screen_edge_visibility * reflection_factor;
   vec3 skyColor = getSkyColor(world_reflection_vector) * reflection_factor * (1.0 - reflection.screen_edge_visibility);
 
-  out_ColorAndDepth = vec4(baseColor + reflectionColor + skyColor, frag_color_and_depth.w);
+  out_color_and_depth = vec4(baseColor + reflectionColor + skyColor, frag_color_and_depth.w);
 }

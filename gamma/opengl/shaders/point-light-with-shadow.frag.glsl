@@ -11,9 +11,9 @@ struct Light {
   float fov;
 };
 
-uniform sampler2D colorAndDepth;
-uniform sampler2D normalAndEmissivity;
-uniform samplerCube shadowMap;
+uniform sampler2D texColorAndDepth;
+uniform sampler2D texNormalAndEmissivity;
+uniform samplerCube texShadowMap;
 uniform vec3 cameraPosition;
 uniform mat4 matInverseProjection;
 uniform mat4 matInverseView;
@@ -50,7 +50,7 @@ float getLightFactor(vec3 light_to_surface, float light_distance, float incidenc
 
   for (int i = 0; i < TOTAL_SAMPLES; i++) {
     vec3 sample_offset = spread * rotatedVogelDisc(TOTAL_SAMPLES, i);
-    float shadow_map_depth = texture(shadowMap, glVec3(light_to_surface + sample_offset)).r * light.radius;
+    float shadow_map_depth = texture(texShadowMap, glVec3(light_to_surface + sample_offset)).r * light.radius;
     float bias = spread + pow(1.0 - incidence, 3) * 5.0;
 
     factor += shadow_map_depth > light_distance - bias ? 1.0 : 0.0;

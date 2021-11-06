@@ -11,9 +11,9 @@ struct Light {
   float fov;
 };
 
-uniform sampler2D colorAndDepth;
-uniform sampler2D normalAndEmissivity;
-uniform sampler2D shadowMap;
+uniform sampler2D texColorAndDepth;
+uniform sampler2D texNormalAndEmissivity;
+uniform sampler2D texShadowMap;
 uniform vec3 cameraPosition;
 uniform mat4 matInverseProjection;
 uniform mat4 matInverseView;
@@ -63,7 +63,7 @@ float getLightFactor(vec3 position, float incidence, float light_distance) {
   for (int i = 0; i < TOTAL_SAMPLES; i++) {
     vec2 texel_offset = spread * rotatedVogelDisc(TOTAL_SAMPLES, i) * shadow_map_texel_size;
     vec2 texel_coords = transform.xy + texel_offset;
-    float occluder_distance = texture(shadowMap, texel_coords).r;
+    float occluder_distance = texture(texShadowMap, texel_coords).r;
 
     if (occluder_distance > transform.z - bias) {
       factor += 1.0;

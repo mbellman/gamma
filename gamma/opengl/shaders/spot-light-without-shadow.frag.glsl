@@ -9,8 +9,8 @@ struct Light {
   float fov;
 };
 
-uniform sampler2D colorAndDepth;
-uniform sampler2D normalAndEmissivity;
+uniform sampler2D texColorAndDepth;
+uniform sampler2D texNormalAndEmissivity;
 uniform vec3 cameraPosition;
 uniform mat4 matInverseProjection;
 uniform mat4 matInverseView;

@@ -1,7 +1,7 @@
 #version 460 core
 
-uniform sampler2D colorAndDepth;
-uniform sampler2D normalAndEmissivity;
+uniform sampler2D texColorAndDepth;
+uniform sampler2D texNormalAndEmissivity;
 
 noperspective in vec2 fragUv;
 
@@ -23,26 +23,26 @@ void main() {
   if (fragUv.x < 0.25) {
     // Albedo
     vec2 uv = fragUv * vec2(4.0, 1.0);
-    vec4 colorAndDepthSample = texture(colorAndDepth, uv);
+    vec4 color_and_depth = texture(texColorAndDepth, uv);
 
-    out_color = colorAndDepthSample.rgb;
+    out_color = color_and_depth.rgb;
   } else if (fragUv.x < 0.5) {
     // Depth (adjusted for clarity)
     vec2 uv = (fragUv - vec2(0.25, 0.0)) * vec2(4.0, 1.0);
-    vec4 colorAndDepthSample = texture(colorAndDepth, uv);
+    vec4 color_and_depth = texture(texColorAndDepth, uv);
 
-    out_color = vec3(sqrt(getLinearizedDepth(colorAndDepthSample.w) / Z_FAR));
+    out_color = vec3(sqrt(getLinearizedDepth(color_and_depth.w) / Z_FAR));
   } else if (fragUv.x < 0.75) {
     // Normal
     vec2 uv = (fragUv - vec2(0.5, 0.0)) * vec2(4.0, 1.0);
-    vec4 normalAndEmissivitySample = texture(normalAndEmissivity, uv);
+    vec4 normal_and_emissivity = texture(texNormalAndEmissivity, uv);
 
-    out_color = normalAndEmissivitySample.rgb;
+    out_color = normal_and_emissivity.rgb;
   } else {
     // Specularity
     vec2 uv = (fragUv - vec2(0.75, 0.0)) * vec2(4.0, 1.0);
-    vec4 normalAndEmissivitySample = texture(normalAndEmissivity, uv);
+    vec4 normal_and_emissivity = texture(texNormalAndEmissivity, uv);
 
-    out_color = vec3(normalAndEmissivitySample.w);
+    out_color = vec3(normal_and_emissivity.w);
   }
 }

@@ -664,7 +664,7 @@ namespace Gamma {
 
     shader.use();
     shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-    shader.setInt("color_and_depth", 0);
+    shader.setInt("texColorAndDepth", 0);
 
     OpenGLScreenQuad::render();
   }
@@ -677,8 +677,8 @@ namespace Gamma {
     auto& shader = shaders.pointLight;
 
     shader.use();
-    shader.setInt("colorAndDepth", 0);
-    shader.setInt("normalAndEmissivity", 1);
+    shader.setInt("texColorAndDepth", 0);
+    shader.setInt("texNormalAndEmissivity", 1);
     shader.setVec3f("cameraPosition", camera.position);
     shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
     shader.setMatrix4f("matInverseView", ctx.matInverseView);
@@ -694,9 +694,9 @@ namespace Gamma {
     auto& shader = shaders.pointShadowcaster;
 
     shader.use();
-    shader.setInt("colorAndDepth", 0);
-    shader.setInt("normalAndEmissivity", 1);
-    shader.setInt("shadowMap", 3);
+    shader.setInt("texColorAndDepth", 0);
+    shader.setInt("texNormalAndEmissivity", 1);
+    shader.setInt("texShadowMap", 3);
     shader.setVec3f("cameraPosition", camera.position);
     shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
     shader.setMatrix4f("matInverseView", ctx.matInverseView);
@@ -719,8 +719,8 @@ namespace Gamma {
 
     shader.use();
     shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-    shader.setInt("colorAndDepth", 0);
-    shader.setInt("normalAndEmissivity", 1);
+    shader.setInt("texColorAndDepth", 0);
+    shader.setInt("texNormalAndEmissivity", 1);
     shader.setVec3f("cameraPosition", camera.position);
     shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
     shader.setMatrix4f("matInverseView", ctx.matInverseView);
@@ -755,11 +755,11 @@ namespace Gamma {
 
       shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
       // @todo define an enum for reserved color attachment indexes
-      shader.setInt("colorAndDepth", 0);
-      shader.setInt("normalAndEmissivity", 1);
-      shader.setInt("shadowMaps[0]", 3);
-      shader.setInt("shadowMaps[1]", 4);
-      shader.setInt("shadowMaps[2]", 5);
+      shader.setInt("texColorAndDepth", 0);
+      shader.setInt("texNormalAndEmissivity", 1);
+      shader.setInt("texShadowMaps[0]", 3);
+      shader.setInt("texShadowMaps[1]", 4);
+      shader.setInt("texShadowMaps[2]", 5);
       shader.setMatrix4f("lightMatrices[0]", Gm_CreateCascadedLightViewMatrixGL(0, light.direction, camera));
       shader.setMatrix4f("lightMatrices[1]", Gm_CreateCascadedLightViewMatrixGL(1, light.direction, camera));
       shader.setMatrix4f("lightMatrices[2]", Gm_CreateCascadedLightViewMatrixGL(2, light.direction, camera));
@@ -782,8 +782,8 @@ namespace Gamma {
     auto& shader = shaders.spotLight;
 
     shader.use();
-    shader.setInt("colorAndDepth", 0);
-    shader.setInt("normalAndEmissivity", 1);
+    shader.setInt("texColorAndDepth", 0);
+    shader.setInt("texNormalAndEmissivity", 1);
     shader.setVec3f("cameraPosition", camera.position);
     shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
     shader.setMatrix4f("matInverseView", ctx.matInverseView);
@@ -799,9 +799,9 @@ namespace Gamma {
     auto& shader = shaders.spotShadowcaster;
 
     shader.use();
-    shader.setInt("colorAndDepth", 0);
-    shader.setInt("normalAndEmissivity", 1);
-    shader.setInt("shadowMap", 3);
+    shader.setInt("texColorAndDepth", 0);
+    shader.setInt("texNormalAndEmissivity", 1);
+    shader.setInt("texShadowMap", 3);
     shader.setVec3f("cameraPosition", camera.position);
     shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
     shader.setMatrix4f("matInverseView", ctx.matInverseView);
@@ -834,7 +834,7 @@ namespace Gamma {
 
     shader.use();
     shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-    shader.setInt("colorAndDepth", 0);
+    shader.setInt("texColorAndDepth", 0);
 
     OpenGLScreenQuad::render();
 
@@ -876,9 +876,9 @@ namespace Gamma {
       #endif
 
       shaders.indirectLight.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-      shaders.indirectLight.setInt("colorAndDepth", 0);
-      shaders.indirectLight.setInt("normalAndEmissivity", 1);
-      shaders.indirectLight.setInt("indirectLightT1", 2);
+      shaders.indirectLight.setInt("texColorAndDepth", 0);
+      shaders.indirectLight.setInt("texNormalAndEmissivity", 1);
+      shaders.indirectLight.setInt("texIndirectLightT1", 2);
       shaders.indirectLight.setVec3f("cameraPosition", Camera::active->position);
       shaders.indirectLight.setMatrix4f("matProjection", ctx.matProjection);
       shaders.indirectLight.setMatrix4f("matView", ctx.matView);
@@ -908,9 +908,9 @@ namespace Gamma {
     #endif
 
     shaders.indirectLightComposite.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-    shaders.indirectLightComposite.setInt("colorAndDepth", 0);
-    shaders.indirectLightComposite.setInt("normalAndEmissivity", 1);
-    shaders.indirectLightComposite.setInt("indirectLight", 2);
+    shaders.indirectLightComposite.setInt("texColorAndDepth", 0);
+    shaders.indirectLightComposite.setInt("texNormalAndEmissivity", 1);
+    shaders.indirectLightComposite.setInt("texIndirectLight", 2);
 
     glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ZERO, GL_ONE);
 
@@ -1015,7 +1015,7 @@ namespace Gamma {
         shaders.refractivePrepass.setVec2f("screenSize", screenSize);
       #endif
 
-      shaders.refractivePrepass.setInt("color_and_depth", 0);
+      shaders.refractivePrepass.setInt("texColorAndDepth", 0);
       shaders.refractivePrepass.setMatrix4f("matProjection", ctx.matProjection);
       shaders.refractivePrepass.setMatrix4f("matView", ctx.matView);
 
@@ -1042,8 +1042,8 @@ namespace Gamma {
 
     shaders.reflections.use();
     shaders.reflections.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-    shaders.reflections.setInt("colorAndDepth", 0);
-    shaders.reflections.setInt("normalAndEmissivity", 1);
+    shaders.reflections.setInt("texColorAndDepth", 0);
+    shaders.reflections.setInt("texNormalAndEmissivity", 1);
     shaders.reflections.setVec3f("cameraPosition", camera.position);
     shaders.reflections.setMatrix4f("matView", ctx.matView);
     shaders.reflections.setMatrix4f("matInverseView", ctx.matInverseView);
@@ -1064,7 +1064,7 @@ namespace Gamma {
     #endif
 
     shaders.reflectionsDenoise.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-    shaders.reflectionsDenoise.setInt("colorAndDepth", 0);
+    shaders.reflectionsDenoise.setInt("texColorAndDepth", 0);
 
     OpenGLScreenQuad::render();
   }
@@ -1102,7 +1102,7 @@ namespace Gamma {
       shaders.refractiveGeometry.setVec2f("screenSize", screenSize);
     #endif
 
-    shaders.refractiveGeometry.setInt("colorAndDepth", 0);
+    shaders.refractiveGeometry.setInt("texColorAndDepth", 0);
     shaders.refractiveGeometry.setMatrix4f("matProjection", ctx.matProjection);
     shaders.refractiveGeometry.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
     shaders.refractiveGeometry.setMatrix4f("matView", ctx.matView);
@@ -1131,7 +1131,7 @@ namespace Gamma {
 
     shaders.copyFrame.use();
     shaders.copyFrame.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-    shaders.copyFrame.setInt("colorAndDepth", 0);
+    shaders.copyFrame.setInt("texColorAndDepth", 0);
 
     OpenGLScreenQuad::render();
   }
@@ -1149,7 +1149,7 @@ namespace Gamma {
 
     post.debanding.use();
     post.debanding.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-    post.debanding.setInt("color", 0);
+    post.debanding.setInt("texColor", 0);
 
     OpenGLScreenQuad::render();
   }
@@ -1161,8 +1161,8 @@ namespace Gamma {
     buffers.gBuffer.read();
 
     shaders.gBufferDev.use();
-    shaders.gBufferDev.setInt("colorAndDepth", 0);
-    shaders.gBufferDev.setInt("normalAndEmissivity", 1);
+    shaders.gBufferDev.setInt("texColorAndDepth", 0);
+    shaders.gBufferDev.setInt("texNormalAndEmissivity", 1);
     shaders.gBufferDev.setVec4f("transform", { 0.53f, 0.82f, 0.43f, 0.11f });
 
     OpenGLScreenQuad::render();
@@ -1173,9 +1173,9 @@ namespace Gamma {
       glDirectionalShadowMaps[i]->buffer.read();
 
       shaders.directionalShadowMapDev.use();
-      shaders.directionalShadowMapDev.setInt("cascade0", 3);
-      shaders.directionalShadowMapDev.setInt("cascade1", 4);
-      shaders.directionalShadowMapDev.setInt("cascade2", 5);
+      shaders.directionalShadowMapDev.setInt("texCascade0", 3);
+      shaders.directionalShadowMapDev.setInt("texCascade1", 4);
+      shaders.directionalShadowMapDev.setInt("texCascade2", 5);
       shaders.directionalShadowMapDev.setVec4f("transform", { 0.695f, yOffset, 0.266f, 0.15f });
 
       OpenGLScreenQuad::render();
@@ -1292,7 +1292,7 @@ namespace Gamma {
 
       shaders.copyFrame.use();
       shaders.copyFrame.setVec4f("transform", { 0.0f, 0.0f, -1.0f, 1.0f });
-      shaders.copyFrame.setInt("colorAndDepth", 0);
+      shaders.copyFrame.setInt("texColorAndDepth", 0);
 
       OpenGLScreenQuad::render();
     }
