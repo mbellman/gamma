@@ -224,6 +224,12 @@ namespace Gamma {
     } else if (Gm_FlagWasDisabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)) {
       shaders.indirectLightComposite.define("USE_INDIRECT_SKY_LIGHT", "0");
     }
+
+    if (Gm_FlagWasEnabled(GammaFlags::ENABLE_DENOISING)) {
+      shaders.indirectLight.define("USE_DENOISING", "1");
+    } else if (Gm_FlagWasDisabled(GammaFlags::ENABLE_DENOISING)) {
+      shaders.indirectLight.define("USE_DENOISING", "0");
+    }
   }
 
   /**

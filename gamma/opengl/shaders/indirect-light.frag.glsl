@@ -2,6 +2,7 @@
 
 #define USE_SCREEN_SPACE_AMBIENT_OCCLUSION 1
 #define USE_SCREEN_SPACE_GLOBAL_ILLUMINATION 1
+#define USE_DENOISING 1
 
 uniform vec2 screenSize;
 uniform sampler2D texColorAndDepth;
@@ -151,43 +152,40 @@ void main() {
     ambient_occlusion = getScreenSpaceAmbientOcclusionContribution(frag_color_and_depth.w, fragment_position, fragment_normal);
   #endif
 
-  // Prepare for temporal denoising using the previous frame
-  vec3 view_fragment_position_t1 = glVec3(matViewT1 * glVec4(fragment_position));
-  vec2 fragUv_t1 = getScreenCoordinates(view_fragment_position_t1.xyz, matProjection);
-  float denoising_sum = 0.0;
+  float sample_sum = 0.0;
 
-  // Same-frame contribution factor
-  float df1 = 1.0;
-  // Temporal sample contribution factor
-  float df2 = 4.0;
+  out_gi_and_ao = vec4(global_illumination, ambient_occlusion);
+  sample_sum += 1.0;
 
-  out_gi_and_ao = vec4(global_illumination, ambient_occlusion) * df1;
-  denoising_sum += df1;
+  #if USE_DENOISING == 1
+    // Sample the previous frame's global illumination/ambient occlusion
+    // result over an area to yield smoother blending. Since each frame
+    // is temporally denoised using the frame prior, successive frames
+    // will converge upon a smooth image.
+    //
+    // @todo if indirect skylight is disabled, blurred global illumination
+    // is the only contribution to surfaces not directly affected by lights.
+    // this results in noticeable over-smoothing and low-fidelity detail
+    // resolution compared to directly lit surfaces. not a bug, but an
+    // unsightly visual quirk that may need addressing.
+    const int radius = 5;
+    const float temporal_sample_weight = 4.0;
+    vec3 view_fragment_position_t1 = glVec3(matViewT1 * glVec4(fragment_position));
+    vec2 frag_uv_t1 = getScreenCoordinates(view_fragment_position_t1.xyz, matProjection);
 
-  // Sample the previous frame's global illumination/ambient occlusion
-  // result over an area to yield smoother blending. Since each frame
-  // is temporally denoised using the frame prior, successive frames
-  // will converge upon a smooth image.
-  //
-  // @todo if indirect skylight is disabled, blurred global illumination
-  // is the only contribution to surfaces not directly affected by lights.
-  // this results in noticeable over-smoothing and low-fidelity detail
-  // resolution compared to directly lit surfaces. not a bug, but an
-  // unsightly visual quirk that may need addressing.
-  const int range = 5;
+    for (int i = -radius; i <= radius; i += radius) {
+      for (int j = -radius; j <= radius; j += radius) {
+        vec2 sample_uv = frag_uv_t1 + vec2(float(i), float(j)) * texel_size;
 
-  for (int i = -range; i <= range; i += range) {
-    for (int j = -range; j <= range; j += range) {
-      vec2 sample_uv = fragUv_t1 + vec2(float(i), float(j)) * texel_size;
+        if (!isOffScreen(sample_uv, 0.001)) {
+          vec4 sample_t1 = texture(texIndirectLightT1, sample_uv);
 
-      if (!isOffScreen(sample_uv, 0.001)) {
-        vec4 sample_t1 = texture(texIndirectLightT1, sample_uv);
-
-        out_gi_and_ao += sample_t1 * df2;
-        denoising_sum += df2;
+          out_gi_and_ao += sample_t1 * temporal_sample_weight;
+          sample_sum += temporal_sample_weight;
+        }
       }
     }
-  }
+  #endif
 
-  out_gi_and_ao /= denoising_sum;
+  out_gi_and_ao /= sample_sum;
 }

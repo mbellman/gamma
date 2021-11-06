@@ -18,9 +18,10 @@ namespace Gamma {
     RENDER_REFRACTIVE_GEOMETRY_WITHIN_REFLECTIONS = 1 << 6,
     RENDER_SHADOWS = 1 << 7,
     RENDER_AMBIENT_OCCLUSION = 1 << 8,
-    RENDER_GLOBAL_ILLUMINATION = 1 << 9,  // @todo
+    RENDER_GLOBAL_ILLUMINATION = 1 << 9,
     RENDER_INDIRECT_SKY_LIGHT = 1 << 10,
-    RENDER_DEV_BUFFERS = 1 << 11
+    RENDER_DEV_BUFFERS = 1 << 11,
+    ENABLE_DENOISING = 1 << 12
   };
 
   void Gm_DisableFlags(GammaFlags flags);

@@ -18,7 +18,8 @@ namespace Gamma {
     { "gi", "Global illumination", GammaFlags::RENDER_GLOBAL_ILLUMINATION },
     { "skylight", "Indirect sky light", GammaFlags::RENDER_INDIRECT_SKY_LIGHT },
     { "dev buffers", "Dev buffers", GammaFlags::RENDER_DEV_BUFFERS },
-    { "wireframe", "Wireframe mode", GammaFlags::WIREFRAME_MODE }
+    { "wireframe", "Wireframe mode", GammaFlags::WIREFRAME_MODE },
+    { "denoising", "Denoising", GammaFlags::ENABLE_DENOISING }
   };
 
   Commander::Commander() {

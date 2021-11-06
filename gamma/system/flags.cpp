@@ -9,7 +9,8 @@ namespace Gamma {
     GammaFlags::RENDER_AMBIENT_OCCLUSION |
     GammaFlags::RENDER_INDIRECT_SKY_LIGHT |
     GammaFlags::RENDER_GLOBAL_ILLUMINATION |
-    GammaFlags::RENDER_DEV_BUFFERS;
+    GammaFlags::RENDER_DEV_BUFFERS |
+    GammaFlags::ENABLE_DENOISING;
 
   static uint32 previousFlags = internalFlags;
 
