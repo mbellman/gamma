@@ -34,6 +34,7 @@ vec3 getIndirectSkyLightContribution(vec3 fragment_normal) {
   vec3 contribution = vec3(0);
 
   for (int i = 0; i < 7; i++) {
+    // @todo use roughness to determine sample offset range
     vec3 direction = normalize(1.1 * fragment_normal + sky_sample_offsets[i]);
     float incidence = max(0, dot(fragment_normal, direction));
 

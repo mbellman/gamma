@@ -126,7 +126,7 @@ void main() {
   float emissivity = frag_normal_and_emissivity.w;
 
   // @todo store roughness in a third 'material' G-Buffer channel
-  const float roughness = 0.7;
+  const float roughness = 0.6;
 
   #include "inline/directional-light.glsl";
 
@@ -139,5 +139,5 @@ void main() {
 
   float light_intensity = getLightIntensity(cascade, shadow_map_transform);
 
-  out_color_and_depth = vec4(illuminated_color * light_intensity * (1.0 - emissivity) + fresnel_term * roughness, frag_color_and_depth.w);
+  out_color_and_depth = vec4(illuminated_color * light_intensity * (1.0 - emissivity) + fresnel_term, frag_color_and_depth.w);
 }
