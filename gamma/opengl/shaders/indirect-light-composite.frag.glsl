@@ -37,8 +37,9 @@ vec3 getIndirectSkyLightContribution(vec3 fragment_normal) {
 
   for (int i = 0; i < 7; i++) {
     vec3 direction = normalize(1.1 * fragment_normal + sky_sample_offsets[i]);
+    float incidence = max(0, dot(fragment_normal, direction));
 
-    contribution += getSkyColor(direction) * indirect_sky_light_intensity * directional_factor;
+    contribution += getSkyColor(direction) * incidence * indirect_sky_light_intensity * directional_factor;
   }
 
   return contribution / 7.0;
