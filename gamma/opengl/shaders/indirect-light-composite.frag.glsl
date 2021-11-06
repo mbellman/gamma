@@ -31,15 +31,13 @@ const vec3 sky_sample_offsets[] = {
 vec3 getIndirectSkyLightContribution(vec3 fragment_normal) {
   // @todo pass in as a uniform
   const float indirect_sky_light_intensity = 0.5;
-  const vec3 up = vec3(0, 1, 0);
   vec3 contribution = vec3(0);
-  float directional_factor = 0.6 + 0.5 * dot(fragment_normal, up);
 
   for (int i = 0; i < 7; i++) {
     vec3 direction = normalize(1.1 * fragment_normal + sky_sample_offsets[i]);
     float incidence = max(0, dot(fragment_normal, direction));
 
-    contribution += getSkyColor(direction) * incidence * indirect_sky_light_intensity * directional_factor;
+    contribution += getSkyColor(direction) * incidence * indirect_sky_light_intensity;
   }
 
   return contribution / 7.0;
@@ -54,7 +52,6 @@ void main() {
   float emissivity = frag_normal_and_emissivity.w;
   vec3 global_illumination = vec3(0);
   float ambient_occlusion = 0.0;
-  vec3 average_indirect_light = vec3(0);
   vec3 indirect_sky_light = vec3(0);
 
   #if USE_AVERAGE_INDIRECT_LIGHT == 1

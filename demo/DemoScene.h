@@ -13,4 +13,5 @@ private:
   void addCenterCubesExhibit();
   void addRainbowCubesExhibit();
   void addStatuesExhibit();
+  void addChessExhibit();
 };

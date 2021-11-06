@@ -15,6 +15,7 @@ void DemoScene::init() {
   addCenterCubesExhibit();
   addRainbowCubesExhibit();
   addStatuesExhibit();
+  addChessExhibit();
 
   // addMesh("daVinci", 1, Mesh::Model("./demo/assets/models/da-vinci.obj"));
   // addMesh("particles", 10000, Mesh::Particles());
@@ -162,6 +163,7 @@ void DemoScene::update(float dt) {
   // useLodByDistance(mesh("rabbit"), 100.0f);
   useLodByDistance(mesh("dragon"), 200.0f);
   useLodByDistance(mesh("lucy"), 100.0f);
+  useLodByDistance(mesh("pawn"), 150.0f);
 
   for (auto& cube : mesh("cat-cube").objects) {
     cube.rotation += Vec3f(0.5f * dt);
@@ -354,4 +356,48 @@ void DemoScene::addStatuesExhibit() {
   // lucyLight2.position = lucy.position + Vec3f(0.0f, 30.0f, 10.0f);
   // lucyLight2.color = Vec3f(1.0f);
   // lucyLight2.radius = 50.0f;
+}
+
+void DemoScene::addChessExhibit() {
+  Vec3f location = Vec3f(0, 0, 250.0f);
+
+  addMesh("pawn", 16, Mesh::Model({
+    "./demo/assets/models/chess-pawn.obj",
+    "./demo/assets/models/chess-pawn-lod.obj"
+  }));
+
+  addMesh("reflection-plane", 1, Mesh::Plane(3, true));
+
+  mesh("reflection-plane").type = MeshType::REFLECTIVE;
+  mesh("reflection-plane").texture = "./demo/assets/images/checkerboard.png";
+  // mesh("reflection-plane").normalMap = "./demo/assets/images/metal-normal-map.png";
+
+  // Create reflective floor
+  auto& floor = createObjectFrom("reflection-plane");
+
+  floor.position = location + Vec3f(-8.6f, 1.0f, 17.0f);
+  floor.scale = 69.0f;
+
+  commit(floor);
+
+  // Create white pieces
+  for (uint32 i = 0; i < 8; i++) {
+    auto& pawn = createObjectFrom("pawn");
+
+    pawn.scale = 4.5f;
+    pawn.position = location + Vec3f(-38.5f + 8.6f * i, 1.0f, -4.5f);
+
+    commit(pawn);
+  }
+
+  // Create black pieces
+  for (uint32 i = 0; i < 8; i++) {
+    auto& pawn = createObjectFrom("pawn");
+
+    pawn.scale = 4.5f;
+    pawn.position = location + Vec3f(-38.5f + 8.6f * i, 1.0f, 38.6f);
+    pawn.color = pVec4(50, 50, 50);
+
+    commit(pawn);
+  }
 }

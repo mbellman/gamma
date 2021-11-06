@@ -134,6 +134,7 @@ namespace Gamma {
             uint32 frameTimeBudget = uint32(100.0f * (float)averageFrameTime / 16667.0f);
 
             // @todo write a little helper for generating labels less repetitively
+            // @todo display lowest FPS/frame time
             std::string fpsLabel = "FPS: " + std::to_string(fpsAverager.average()) + " (V-Sync " + (renderStats.isVSynced ? "ON" : "OFF") + ")";
             std::string frameTimeLabel = "Frame time: " + std::to_string(averageFrameTime) + "us (" + std::to_string(frameTimeBudget) + "%)";
             std::string resolutionLabel = "Resolution: " + std::to_string(resolution.width) + " x " + std::to_string(resolution.height);
