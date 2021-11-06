@@ -28,6 +28,10 @@ void main() {
   vec3 normal = frag_normal_and_emissivity.xyz;
   vec3 color = frag_color_and_depth.rgb;
   float emissivity = frag_normal_and_emissivity.w;
+
+  // @todo store roughness in a third 'material' G-Buffer channel
+  const float roughness = 0.7;
+
   vec3 accumulatedColor = vec3(0.0);
 
   for (int i = 0; i < MAX_DIRECTIONAL_LIGHTS; i++) {
@@ -35,7 +39,7 @@ void main() {
 
     #include "inline/directional-light.glsl";
 
-    accumulatedColor += illuminated_color;
+    accumulatedColor += illuminated_color + fresnel_term * roughness;
   }
 
   out_colorAndDepth = vec4(accumulatedColor * (1.0 - emissivity), frag_color_and_depth.w);
