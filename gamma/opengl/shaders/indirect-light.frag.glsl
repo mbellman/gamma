@@ -168,6 +168,11 @@ void main() {
     // this results in noticeable over-smoothing and low-fidelity detail
     // resolution compared to directly lit surfaces. not a bug, but an
     // unsightly visual quirk that may need addressing.
+    //
+    // @todo AO completely breaks (and GI becomes almost unnoticeable)
+    // on moving objects, since any granular detail is all but lost in the
+    // denoising/reprojection process. eventually, we may need to use
+    // same-frame convergence without temporal denoising.
     const int radius = 5;
     const float temporal_sample_weight = 4.0;
     vec3 view_fragment_position_t1 = glVec3(matViewT1 * glVec4(fragment_position));

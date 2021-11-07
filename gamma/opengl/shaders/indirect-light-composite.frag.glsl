@@ -19,7 +19,6 @@ layout (location = 0) out vec4 out_color_and_depth;
 #include "utils/conversion.glsl";
 
 const vec3 sky_sample_offsets[] = {
-  vec3(0),
   vec3(1, 0, 0),
   vec3(-1, 0, 0),
   vec3(0, 1, 0),
@@ -33,15 +32,15 @@ vec3 getIndirectSkyLightContribution(vec3 fragment_normal) {
   const float indirect_sky_light_intensity = 0.5;
   vec3 contribution = vec3(0);
 
-  for (int i = 0; i < 7; i++) {
+  for (int i = 0; i < 6; i++) {
     // @todo use roughness to determine sample offset range
-    vec3 direction = normalize(1.1 * fragment_normal + sky_sample_offsets[i]);
+    vec3 direction = normalize(0.2 * fragment_normal + sky_sample_offsets[i]);
     float incidence = max(0, dot(fragment_normal, direction));
 
-    contribution += getSkyColor(direction) * incidence * indirect_sky_light_intensity;
+    contribution += getSkyColor(direction) * indirect_sky_light_intensity;
   }
 
-  return contribution / 7.0;
+  return contribution / 6.0;
 }
 
 void main() {
