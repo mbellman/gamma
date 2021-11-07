@@ -71,7 +71,10 @@ void main() {
     indirect_sky_light = fragment_albedo * getIndirectSkyLightContribution(fragment_normal);
   #endif
 
-  vec3 composite_color = (fragment_albedo * emissivity + global_illumination + indirect_sky_light) * (1.0 - ambient_occlusion);
+  vec3 composite_color = fragment_albedo * emissivity + global_illumination + indirect_sky_light;
+
+  // @bug green colors are over-darkened by doing this
+  composite_color -= ambient_occlusion;
 
   out_color_and_depth = vec4(composite_color, frag_color_and_depth.w);
 }

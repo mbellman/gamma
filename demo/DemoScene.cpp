@@ -164,6 +164,7 @@ void DemoScene::update(float dt) {
   useLodByDistance(mesh("dragon"), 200.0f);
   useLodByDistance(mesh("lucy"), 100.0f);
   useLodByDistance(mesh("pawn"), 150.0f);
+  useLodByDistance(mesh("rook"), 150.0f);
 
   for (auto& cube : mesh("cat-cube").objects) {
     cube.rotation += Vec3f(0.5f * dt);
@@ -366,6 +367,11 @@ void DemoScene::addChessExhibit() {
     "./demo/assets/models/chess-pawn-lod.obj"
   }));
 
+  addMesh("rook", 4, Mesh::Model({
+    "./demo/assets/models/chess-rook.obj",
+    "./demo/assets/models/chess-rook-lod.obj"
+  }));
+
   addMesh("reflection-plane", 1, Mesh::Plane(3, true));
 
   mesh("reflection-plane").type = MeshType::REFLECTIVE;
@@ -380,7 +386,7 @@ void DemoScene::addChessExhibit() {
 
   commit(floor);
 
-  // Create white pieces
+  // Create white pawns
   for (uint32 i = 0; i < 8; i++) {
     auto& pawn = createObjectFrom("pawn");
 
@@ -390,7 +396,22 @@ void DemoScene::addChessExhibit() {
     commit(pawn);
   }
 
-  // Create black pieces
+  // Create white rooks
+  auto& wRook1 = createObjectFrom("rook");
+  auto& wRook2 = createObjectFrom("rook");
+
+  wRook1.position = location + Vec3f(-38.5f, 1.0f, -13.5f);
+  wRook1.scale = 4.5f;
+
+  constexpr float c = -38.5f + 7.0f * 8.6f;
+
+  wRook2.position = location + Vec3f(21.7f, 1.0f, -13.5f);
+  wRook2.scale = 4.5f;
+
+  commit(wRook1);
+  commit(wRook2);
+
+  // Create black pawns
   for (uint32 i = 0; i < 8; i++) {
     auto& pawn = createObjectFrom("pawn");
 
@@ -400,4 +421,19 @@ void DemoScene::addChessExhibit() {
 
     commit(pawn);
   }
+
+  // Create black rooks
+  auto& bRook1 = createObjectFrom("rook");
+  auto& bRook2 = createObjectFrom("rook");
+
+  bRook1.position = location + Vec3f(-38.5f, 1.0f, 47.25f);
+  bRook1.scale = 4.5f;
+  bRook1.color = pVec4(50, 50, 50);
+
+  bRook2.position = location + Vec3f(21.7f, 1.0f, 47.25f);
+  bRook2.scale = 4.5f;
+  bRook2.color = pVec4(50, 50, 50);
+
+  commit(bRook1);
+  commit(bRook2);
 }

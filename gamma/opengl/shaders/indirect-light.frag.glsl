@@ -84,7 +84,7 @@ float getScreenSpaceAmbientOcclusionContribution(float fragment_depth, vec3 frag
     }
   }
 
-  return 2.0 * sqrt(occlusion / float(TOTAL_SAMPLES));
+  return occlusion / float(TOTAL_SAMPLES);
 }
 
 vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fragment_position, vec3 fragment_normal) {
