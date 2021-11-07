@@ -161,10 +161,14 @@ void DemoScene::destroy() {}
 
 void DemoScene::update(float dt) {
   // useLodByDistance(mesh("rabbit"), 100.0f);
-  useLodByDistance(mesh("dragon"), 200.0f);
+  useLodByDistance(mesh("dragon"), 150.0f);
   useLodByDistance(mesh("lucy"), 100.0f);
   useLodByDistance(mesh("pawn"), 150.0f);
-  useLodByDistance(mesh("rook"), 150.0f);
+  useLodByDistance(mesh("rook"), 100.0f);
+  useLodByDistance(mesh("knight"), 100.0f);
+  useLodByDistance(mesh("bishop"), 100.0f);
+  useLodByDistance(mesh("king"), 100.0f);
+  useLodByDistance(mesh("queen"), 100.0f);
 
   for (auto& cube : mesh("cat-cube").objects) {
     cube.rotation += Vec3f(0.5f * dt);
@@ -372,6 +376,26 @@ void DemoScene::addChessExhibit() {
     "./demo/assets/models/chess-rook-lod.obj"
   }));
 
+  addMesh("knight", 4, Mesh::Model({
+    "./demo/assets/models/chess-knight.obj",
+    "./demo/assets/models/chess-knight-lod.obj"
+  }));
+
+  addMesh("bishop", 4, Mesh::Model({
+    "./demo/assets/models/chess-bishop.obj",
+    "./demo/assets/models/chess-bishop-lod.obj"
+  }));
+
+  addMesh("king", 2, Mesh::Model({
+    "./demo/assets/models/chess-king.obj",
+    "./demo/assets/models/chess-king-lod.obj"
+  }));
+
+  addMesh("queen", 2, Mesh::Model({
+    "./demo/assets/models/chess-queen.obj",
+    "./demo/assets/models/chess-queen-lod.obj"
+  }));
+
   addMesh("reflection-plane", 1, Mesh::Plane(3, true));
 
   mesh("reflection-plane").type = MeshType::REFLECTIVE;
@@ -403,13 +427,54 @@ void DemoScene::addChessExhibit() {
   wRook1.position = location + Vec3f(-38.5f, 1.0f, -13.5f);
   wRook1.scale = 4.5f;
 
-  constexpr float c = -38.5f + 7.0f * 8.6f;
-
   wRook2.position = location + Vec3f(21.7f, 1.0f, -13.5f);
   wRook2.scale = 4.5f;
 
   commit(wRook1);
   commit(wRook2);
+
+  // Create white knights
+  auto& wKnight1 = createObjectFrom("knight");
+  auto& wKnight2 = createObjectFrom("knight");
+
+  wKnight1.position = location + Vec3f(-29.9f, 1.0f, -13.5f);
+  wKnight1.scale = 4.5f;
+  wKnight1.rotation = Vec3f(0, M_PI, 0);
+
+  wKnight2.position = location + Vec3f(13.1f, 1.0f, -13.5f);
+  wKnight2.scale = 4.5f;
+  wKnight2.rotation =  Vec3f(0, M_PI, 0);
+
+  commit(wKnight1);
+  commit(wKnight2);
+
+  // Create white bishops
+  auto& wBishop1 = createObjectFrom("bishop");
+  auto& wBishop2 = createObjectFrom("bishop");
+
+  wBishop1.position = location + Vec3f(-21.3f, 1.0f, -13.5f);
+  wBishop1.scale = 4.5f;
+  wBishop1.rotation = Vec3f(0, M_PI, 0);
+
+  wBishop2.position = location + Vec3f(4.5f, 1.0f, -13.5f);
+  wBishop2.scale = 4.5f;
+  wBishop2.rotation =  Vec3f(0, M_PI, 0);
+
+  commit(wBishop1);
+  commit(wBishop2);
+
+  // Create white king + queen
+  auto& wKing = createObjectFrom("king");
+  auto& wQueen = createObjectFrom("queen");
+
+  wKing.position = location + Vec3f(-4.1f, 1.0f, -13.5f);
+  wKing.scale = 4.5f;
+
+  wQueen.position = location + Vec3f(-12.7f, 1.0f, -13.5f);
+  wQueen.scale = 4.5f;
+
+  commit(wKing);
+  commit(wQueen);
 
   // Create black pawns
   for (uint32 i = 0; i < 8; i++) {
@@ -436,4 +501,49 @@ void DemoScene::addChessExhibit() {
 
   commit(bRook1);
   commit(bRook2);
+
+  // Create black knights
+  auto& bKnight1 = createObjectFrom("knight");
+  auto& bKnight2 = createObjectFrom("knight");
+
+  bKnight1.position = location + Vec3f(-29.9f, 1.0f, 47.25f);
+  bKnight1.scale = 4.5f;
+  bKnight1.color = pVec4(50, 50, 50);
+
+  bKnight2.position = location + Vec3f(13.1f, 1.0f, 47.25f);
+  bKnight2.scale = 4.5f;
+  bKnight2.color = pVec4(50, 50, 50);
+
+  commit(bKnight1);
+  commit(bKnight2);
+
+  // Create black bishops
+  auto& bBishop1 = createObjectFrom("bishop");
+  auto& bBishop2 = createObjectFrom("bishop");
+
+  bBishop1.position = location + Vec3f(-21.3f, 1.0f, 47.25f);
+  bBishop1.scale = 4.5f;
+  bBishop1.color = pVec4(50, 50, 50);
+
+  bBishop2.position = location + Vec3f(4.5f, 1.0f, 47.25f);
+  bBishop2.scale = 4.5f;
+  bBishop2.color = pVec4(50, 50, 50);
+
+  commit(bBishop1);
+  commit(bBishop2);
+
+  // Create black king + queen
+  auto& bKing = createObjectFrom("king");
+  auto& bQueen = createObjectFrom("queen");
+
+  bKing.position = location + Vec3f(-4.1f, 1.0f, 47.25f);
+  bKing.scale = 4.5f;
+  bKing.color = pVec4(50, 50, 50);
+
+  bQueen.position = location + Vec3f(-12.7f, 1.0f, 47.25f);
+  bQueen.scale = 4.5f;
+  bQueen.color = pVec4(50, 50, 50);
+
+  commit(bKing);
+  commit(bQueen);
 }
