@@ -396,19 +396,19 @@ void DemoScene::addChessExhibit() {
     "./demo/assets/models/chess-queen-lod.obj"
   }));
 
-  addMesh("reflection-plane", 1, Mesh::Plane(3, true));
+  addMesh("chess-board", 1, Mesh::Plane(2, false));
 
-  mesh("reflection-plane").type = MeshType::REFLECTIVE;
-  mesh("reflection-plane").texture = "./demo/assets/images/checkerboard.png";
-  // mesh("reflection-plane").normalMap = "./demo/assets/images/metal-normal-map.png";
+  mesh("chess-board").type = MeshType::REFLECTIVE;
+  mesh("chess-board").texture = "./demo/assets/images/chess-board.png";
+  mesh("chess-board").normalMap = "./demo/assets/images/chess-board-normal-map.png";
 
-  // Create reflective floor
-  auto& floor = createObjectFrom("reflection-plane");
+  // Create chess board
+  auto& chessBoard = createObjectFrom("chess-board");
 
-  floor.position = location + Vec3f(-8.6f, 1.0f, 17.0f);
-  floor.scale = 69.0f;
+  chessBoard.position = location + Vec3f(-8.6f, 1.0f, 17.0f);
+  chessBoard.scale = 69.0f;
 
-  commit(floor);
+  commit(chessBoard);
 
   // Create white pawns
   for (uint32 i = 0; i < 8; i++) {

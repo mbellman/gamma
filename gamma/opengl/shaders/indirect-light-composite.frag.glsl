@@ -35,7 +35,6 @@ vec3 getIndirectSkyLightContribution(vec3 fragment_normal) {
   for (int i = 0; i < 6; i++) {
     // @todo use roughness to determine sample offset range
     vec3 direction = normalize(0.2 * fragment_normal + sky_sample_offsets[i]);
-    float incidence = max(0, dot(fragment_normal, direction));
 
     contribution += getSkyColor(direction) * indirect_sky_light_intensity;
   }
@@ -73,7 +72,9 @@ void main() {
 
   vec3 composite_color = fragment_albedo * emissivity + global_illumination + indirect_sky_light;
 
-  // @bug green colors are over-darkened by doing this
+  // @bug this tints occluded regions correctly, but
+  // produces excessive darkening in certain areas,
+  // invariant with distance
   composite_color -= ambient_occlusion;
 
   out_color_and_depth = vec4(composite_color, frag_color_and_depth.w);
