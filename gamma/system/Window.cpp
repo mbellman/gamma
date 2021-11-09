@@ -133,16 +133,26 @@ namespace Gamma {
             uint64 averageFrameTime = frameTimeAverager.average();
             uint32 frameTimeBudget = uint32(100.0f * (float)averageFrameTime / 16667.0f);
 
-            // @todo write a little helper for generating labels less repetitively
-            // @todo display lowest FPS/frame time
-            std::string fpsLabel = "FPS: " + std::to_string(fpsAverager.average()) + " (V-Sync " + (renderStats.isVSynced ? "ON" : "OFF") + ")";
-            std::string frameTimeLabel = "Frame time: " + std::to_string(averageFrameTime) + "us (" + std::to_string(frameTimeBudget) + "%)";
+            std::string fpsLabel = "FPS: "
+              + std::to_string(fpsAverager.average())
+              + ", low "
+              + std::to_string(fpsAverager.low())
+              + " (V-Sync " + (renderStats.isVSynced ? "ON" : "OFF") + ")";
+
+            std::string frameTimeLabel = "Frame time: "
+              + std::to_string(averageFrameTime)
+              + "us, high "
+              + std::to_string(frameTimeAverager.high())
+              + " ("
+              + std::to_string(frameTimeBudget)
+              + "%)";
+
             std::string resolutionLabel = "Resolution: " + std::to_string(resolution.width) + " x " + std::to_string(resolution.height);
-            // @todo count verts/tris properly, considering actually rendered LODs
             std::string vertsLabel = "Verts: " + std::to_string(sceneStats.verts);
             std::string trisLabel = "Tris: " + std::to_string(sceneStats.tris);
             std::string memoryLabel = "GPU Memory: " + std::to_string(renderStats.gpuMemoryUsed) + "MB / " + std::to_string(renderStats.gpuMemoryTotal) + "MB";
 
+            // @todo write a little helper for rendering labels less repetitively
             renderer->renderText(font_OpenSans_sm, fpsLabel.c_str(), 25, 25);
             renderer->renderText(font_OpenSans_sm, frameTimeLabel.c_str(), 25, 50);
             renderer->renderText(font_OpenSans_sm, resolutionLabel.c_str(), 25, 75);
