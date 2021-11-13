@@ -6,25 +6,25 @@
 #include "system/type_aliases.h"
 
 namespace Gamma {
-  struct YamlStructure;
+  struct YamlObject;
 
   struct YamlProperty {
     /**
      * For plain data values, the value of the property.
      * Remains nullptr otherwise.
      */
-    void* rawValue = nullptr;
+    void* plainValue = nullptr;
     /**
-     * For YamlStructure properties, the nested structure.
+     * For YamlObject properties, the nested object.
      * Remains nullptr otherwise.
      */
-    YamlStructure* structure = nullptr;
+    YamlObject* object = nullptr;
   };
 
-  struct YamlStructure {
+  struct YamlObject {
     std::map<std::string, YamlProperty> properties;
   };
 
-  YamlStructure& Gm_ParseYamlFile(const char* path);
-  void Gm_FreeYamlStructure(YamlStructure* structure);
+  YamlObject& Gm_ParseYamlFile(const char* path);
+  void Gm_FreeYamlObject(YamlObject* object);
 }

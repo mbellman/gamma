@@ -1,5 +1,6 @@
 #include <vector>
 
+#include "system/assert.h"
 #include "system/file.h"
 #include "system/yaml_parser.h"
 
@@ -48,13 +49,15 @@ namespace Gamma {
    * Gm_ParseYamlFile
    * ----------------
    *
-   * @todo make fully functional
+   * @todo parse plain data values
    */
-  YamlStructure& Gm_ParseYamlFile(const char* path) {
+  YamlObject& Gm_ParseYamlFile(const char* path) {
     std::string fileContents = Gm_LoadFileContents(path);
     auto lines = Gm_SplitString(fileContents, "\n");
-    uint32 depth = 0;
-    auto* structure = new YamlStructure();
+    auto* root = new YamlObject();
+    std::vector<YamlObject*> objectStack;
+
+    objectStack.push_back(root);
 
     for (auto& line : lines) {
       // @optimize we can walk through each character in the file contents
@@ -62,37 +65,52 @@ namespace Gamma {
       // routine, rather than splitting first and trimming here
       auto trimmed = Gm_TrimString(line);
 
-      if (trimmed == "{") {
-        depth++;
-      } else if (trimmed == "}") {
-        depth--;
+      if (trimmed[0] == '}') {
+        // End of object
+        objectStack.pop_back();
       } else if (trimmed.find(":") != std::string::npos) {
-        // @todo if the property name is followed by {,
-        // we need to create a new YamlStructure() and
-        // add the inner fields to that, recursively
-        auto propertyName = trimmed.substr(0, trimmed.find(":"));
+        // Property declaration
         YamlProperty property;
+        auto propertyName = trimmed.substr(0, trimmed.find(":"));
+        auto* currentObject = objectStack.back();
 
-        structure->properties[propertyName] = property;
+        // Add the property to the current object
+        currentObject->properties[propertyName] = property;
+
+        if (trimmed.back() == '{') {
+          // If the property defines a nested object,
+          // create it and push it onto the stack
+          auto* nestedObject = new YamlObject();
+
+          objectStack.push_back(nestedObject);
+
+          // Assign the property to the nested object
+          currentObject->properties[propertyName].object = nestedObject;
+        }
       }
     }
 
-    return *structure;
+    // Remove the root object from the stack
+    objectStack.pop_back();
+
+    assert(objectStack.size() == 0, "Malformed YAML file");
+
+    return *root;
   }
 
   /**
-   * Gm_FreeYamlStructure
+   * Gm_FreeYamlObject
    * --------------------
    */
-  void Gm_FreeYamlStructure(YamlStructure* structure) {
-    for (auto& [ key, value ] : structure->properties) {
-      if (value.structure != nullptr) {
-        Gm_FreeYamlStructure(value.structure);
+  void Gm_FreeYamlObject(YamlObject* object) {
+    for (auto& [ key, value ] : object->properties) {
+      if (value.object != nullptr) {
+        Gm_FreeYamlObject(value.object);
       }
     }
 
-    structure->properties.clear();
+    object->properties.clear();
 
-    delete structure;
+    delete object;
   }
 }

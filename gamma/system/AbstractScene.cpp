@@ -235,10 +235,10 @@ namespace Gamma {
   void AbstractScene::useSceneFile(const char* filename) {
     auto& scene = Gm_ParseYamlFile(filename);
 
-    for (auto& [ key, property ] : scene.properties) {
+    for (auto& [ key, property ] : scene.properties["meshes"].object->properties) {
       printf("Property: %s\n", key.c_str());
     }
 
-    Gm_FreeYamlStructure(&scene);
+    Gm_FreeYamlObject(&scene);
   }
 }
