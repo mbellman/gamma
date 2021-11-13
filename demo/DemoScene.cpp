@@ -11,6 +11,8 @@ void DemoScene::init() {
   camera.position.z = -300.0f;
   camera.position.y = 20.0f;
 
+  useSceneFile("./demo/scene.yml");
+
   addFloor();
   addCenterCubesExhibit();
   addRainbowCubesExhibit();

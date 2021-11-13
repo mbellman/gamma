@@ -46,6 +46,7 @@ namespace Gamma {
     void storeObject(std::string, Object& object);
     virtual void update(float dt) {};
     void useLodByDistance(Mesh& mesh, float distance);
+    void useSceneFile(const char* filename);
 
   private:
     std::vector<Mesh*> meshes;

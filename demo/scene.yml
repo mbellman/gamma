@@ -1,0 +1,19 @@
+{
+  meshes: {
+    pawn: {
+      max: 16,
+      model: [
+        './demo/assets/models/chess-pawn.obj',
+        './demo/assets/models/chess-pawn-lod.obj'
+      ]
+    },
+    chess-board: {
+      max: 1,
+      plane: {
+        size: 2,
+        loop: false
+      },
+      texture: './demo/assets/images/chess-board.png'
+    }
+  }
+}

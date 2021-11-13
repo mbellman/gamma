@@ -1,7 +1,9 @@
 #include "system/AbstractScene.h"
 #include "system/assert.h"
 #include "system/console.h"
+#include "system/file.h"
 #include "system/flags.h"
+#include "system/SceneLoader.h"
 
 namespace Gamma {
   /**
@@ -229,5 +231,13 @@ namespace Gamma {
         mesh.lods[lodIndex].instanceCount = (uint32)mesh.objects.total() - instanceOffset;
       }
     }
+  }
+
+  void AbstractScene::useSceneFile(const char* filename) {
+    auto contents = Gm_LoadFileContents(filename);
+
+    printf("%s", contents);
+
+    // @todo
   }
 }
