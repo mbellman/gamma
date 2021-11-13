@@ -149,6 +149,7 @@
     <ClCompile Include="gamma\system\ObjLoader.cpp" />
     <ClCompile Include="gamma\system\packed_data.cpp" />
     <ClCompile Include="gamma\system\Window.cpp" />
+    <ClCompile Include="gamma\system\yaml_parser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="demo\benchmarks\matrix_multiplication.h" />
@@ -286,6 +287,7 @@
     <ClInclude Include="gamma\system\traits.h" />
     <ClInclude Include="gamma\system\type_aliases.h" />
     <ClInclude Include="gamma\system\Window.h" />
+    <ClInclude Include="gamma\system\yaml_parser.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

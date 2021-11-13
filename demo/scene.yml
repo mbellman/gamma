@@ -11,7 +11,7 @@
       max: 1,
       plane: {
         size: 2,
-        loop: false
+        useLoopingTexture: false
       },
       texture: './demo/assets/images/chess-board.png'
     }

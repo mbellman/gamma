@@ -1,9 +1,8 @@
 #include "system/AbstractScene.h"
 #include "system/assert.h"
 #include "system/console.h"
-#include "system/file.h"
 #include "system/flags.h"
-#include "system/SceneLoader.h"
+#include "system/yaml_parser.h"
 
 namespace Gamma {
   /**
@@ -234,10 +233,12 @@ namespace Gamma {
   }
 
   void AbstractScene::useSceneFile(const char* filename) {
-    auto contents = Gm_LoadFileContents(filename);
+    auto& scene = Gm_ParseYamlFile(filename);
 
-    printf("%s", contents);
+    for (auto& [ key, property ] : scene.properties) {
+      printf("Property: %s\n", key.c_str());
+    }
 
-    // @todo
+    Gm_FreeYamlStructure(&scene);
   }
 }

@@ -120,6 +120,9 @@
     <ClCompile Include="gamma\system\packed_data.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gamma\system\yaml_parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\glew\include\eglew.h">
@@ -525,6 +528,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gamma\system\packed_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\system\yaml_parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
