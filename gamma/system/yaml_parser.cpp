@@ -1,61 +1,46 @@
+#include <cctype>
 #include <vector>
 
 #include "system/assert.h"
 #include "system/file.h"
+#include "system/string_helpers.h"
 #include "system/yaml_parser.h"
 
 namespace Gamma {
   /**
-   * Gm_SplitString
-   * --------------
+   * Gm_ParsePrimitiveValue
+   * ----------------------
    *
    * @todo description
-   * @todo create string_helpers.h/cpp
    */
-  static std::vector<std::string> Gm_SplitString(const std::string& str, const std::string& delimiter) {
-    std::vector<std::string> values;
-    uint32 offset = 0;
-    uint32 found = 0;
-
-    while ((found = str.find(delimiter, offset)) != std::string::npos) {
-      values.push_back(str.substr(offset, found - offset));
-
-      offset = found + delimiter.size();
+  static void* Gm_ParsePrimitiveValue(const std::string& str) {
+    // Check for boolean literals
+    if (str == "true") {
+      return new bool(true);
+    } else if (str == "false") {
+      return new bool(false);
     }
 
-    return values;
-  }
+    // Check for numbers
+    bool isNumber = std::isdigit(str[0]);
 
-  /**
-   * Gm_TrimString
-   * -------------
-   *
-   * @todo description
-   * @todo create string_helpers.h/cpp
-   */
-  static std::string Gm_TrimString(const std::string& str) {
-    std::string trimmed;
-
-    for (uint32 i = 0; i < str.size(); i++) {
-      if (str[i] != ' ' && str[i] != ' ') {
-        trimmed += str[i];
-      }
+    if (isNumber) {
+      return new int(std::stoi(str));
     }
 
-    return trimmed;
+    // Fall back to string
+    return new std::string(str);
   }
 
   /**
    * Gm_ParseYamlFile
    * ----------------
-   *
-   * @todo parse plain data values
    */
   YamlObject& Gm_ParseYamlFile(const char* path) {
+    std::vector<YamlObject*> objectStack;
     std::string fileContents = Gm_LoadFileContents(path);
     auto lines = Gm_SplitString(fileContents, "\n");
     auto* root = new YamlObject();
-    std::vector<YamlObject*> objectStack;
 
     objectStack.push_back(root);
 
@@ -63,30 +48,37 @@ namespace Gamma {
       // @optimize we can walk through each character in the file contents
       // and skip over whitespace + chunk each line into a vector in a combined
       // routine, rather than splitting first and trimming here
-      auto trimmed = Gm_TrimString(line);
+      auto trimmedLine = Gm_TrimString(line);
 
-      if (trimmed[0] == '}') {
+      if (trimmedLine[0] == '}') {
         // End of object
         objectStack.pop_back();
-      } else if (trimmed.find(":") != std::string::npos) {
+      } else if (trimmedLine.find(":") != std::string::npos) {
         // Property declaration
         YamlProperty property;
-        auto propertyName = trimmed.substr(0, trimmed.find(":"));
-        auto* currentObject = objectStack.back();
+        auto propertyName = trimmedLine.substr(0, trimmedLine.find(":"));
+        auto& currentObject = *objectStack.back();
 
-        // Add the property to the current object
-        currentObject->properties[propertyName] = property;
-
-        if (trimmed.back() == '{') {
-          // If the property defines a nested object,
-          // create it and push it onto the stack
+        if (trimmedLine.back() == '{') {
+          // Nested object property
           auto* nestedObject = new YamlObject();
 
           objectStack.push_back(nestedObject);
 
-          // Assign the property to the nested object
-          currentObject->properties[propertyName].object = nestedObject;
+          property.object = nestedObject;
+        } else if (trimmedLine.back() == '[') {
+          // Array property
+          // @todo
+        } else {
+          // Primitive property (string, number, or boolean)
+          uint32 vStart = trimmedLine.find(":") + 1;
+          uint32 vLength = trimmedLine.find(",") - vStart;
+          auto value = Gm_TrimString(trimmedLine.substr(vStart, vLength));
+
+          property.primitive = Gm_ParsePrimitiveValue(value);
         }
+
+        currentObject[propertyName] = property;
       }
     }
 
@@ -103,13 +95,17 @@ namespace Gamma {
    * --------------------
    */
   void Gm_FreeYamlObject(YamlObject* object) {
-    for (auto& [ key, value ] : object->properties) {
+    for (auto& [ key, value ] : *object) {
       if (value.object != nullptr) {
+        // Recursively delete nested objects
         Gm_FreeYamlObject(value.object);
+      } else if (value.primitive != nullptr) {
+        // Delete primitives
+        delete value.primitive;
       }
     }
 
-    object->properties.clear();
+    object->clear();
 
     delete object;
   }

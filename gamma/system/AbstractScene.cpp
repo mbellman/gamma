@@ -235,9 +235,13 @@ namespace Gamma {
   void AbstractScene::useSceneFile(const char* filename) {
     auto& scene = Gm_ParseYamlFile(filename);
 
-    for (auto& [ key, property ] : scene.properties["meshes"].object->properties) {
-      printf("Property: %s\n", key.c_str());
+    for (auto& [ key, property ] : *scene["meshes"].object) {
+      printf("Mesh: %s\n", key.c_str());
     }
+
+    auto texture = Gm_ReadYamlProperty<std::string>(scene, "meshes.chess-board.texture");
+
+    printf("Test: %s\n", texture.c_str());
 
     Gm_FreeYamlObject(&scene);
   }

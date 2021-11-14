@@ -2,8 +2,8 @@ meshes: {
   pawn: {
     max: 16,
     model: [
-      './demo/assets/models/chess-pawn.obj',
-      './demo/assets/models/chess-pawn-lod.obj'
+      ./demo/assets/models/chess-pawn.obj,
+      ./demo/assets/models/chess-pawn-lod.obj
     ]
   },
   chess-board: {
@@ -12,6 +12,6 @@ meshes: {
       size: 2,
       useLoopingTexture: false
     },
-    texture: './demo/assets/images/chess-board.png'
+    texture: ./demo/assets/images/chess-board.png
   }
 }

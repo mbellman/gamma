@@ -3,17 +3,20 @@
 #include <string>
 #include <map>
 
+#include "system/string_helpers.h"
 #include "system/type_aliases.h"
 
 namespace Gamma {
-  struct YamlObject;
+  struct YamlProperty;
+
+  typedef std::map<std::string, YamlProperty> YamlObject;
 
   struct YamlProperty {
     /**
      * For plain data values, the value of the property.
      * Remains nullptr otherwise.
      */
-    void* plainValue = nullptr;
+    void* primitive = nullptr;
     /**
      * For YamlObject properties, the nested object.
      * Remains nullptr otherwise.
@@ -21,10 +24,37 @@ namespace Gamma {
     YamlObject* object = nullptr;
   };
 
-  struct YamlObject {
-    std::map<std::string, YamlProperty> properties;
-  };
-
+  /**
+   * Gm_ParseYamlFile
+   * ----------------
+   *
+   * @todo description
+   */
   YamlObject& Gm_ParseYamlFile(const char* path);
+
+  /**
+   * Gm_ReadYamlProperty
+   * -------------------
+   *
+   * @todo description
+   */
+  template<typename T>
+  T Gm_ReadYamlProperty(const YamlObject& object, const std::string& propertyChain) {
+    auto properties = Gm_SplitString(propertyChain, ".");
+    auto* currentObject = &object;
+
+    for (uint32 i = 0; i < properties.size() - 1; i++) {
+      currentObject = currentObject->at(properties[i]).object;
+    }
+
+    return *(T*)currentObject->at(properties.back()).primitive;
+  }
+
+  /**
+   * Gm_FreeYamlObject
+   * -----------------
+   *
+   * @todo description
+   */
   void Gm_FreeYamlObject(YamlObject* object);
 }
