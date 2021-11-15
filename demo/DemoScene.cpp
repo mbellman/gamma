@@ -243,16 +243,16 @@ void DemoScene::addRainbowCubesExhibit() {
   const float pi = 3.141592f;
   Vec3f location = Vec3f(-150.0f, 0.0f, 12.0f);
 
-  addMesh("cube", 16, Mesh::Cube());
-  addMesh("ball", 1, Mesh::Model("./demo/assets/models/ball.obj"));
+  addMesh("rainbow-cube", 16, Mesh::Cube());
+  addMesh("probe-ball", 1, Mesh::Model("./demo/assets/models/ball.obj"));
 
-  mesh("cube").texture = "./demo/assets/images/marble.png";
-  mesh("cube").normalMap = "./demo/assets/images/marble-normal-map.png";
+  mesh("rainbow-cube").texture = "./demo/assets/images/marble.png";
+  mesh("rainbow-cube").normalMap = "./demo/assets/images/marble-normal-map.png";
 
-  mesh("ball").type = MeshType::PROBE_REFLECTOR;
-  mesh("ball").probe = "ball-probe";
+  mesh("probe-ball").type = MeshType::PROBE_REFLECTOR;
+  mesh("probe-ball").probe = "ball-probe";
 
-  auto& ball = createObjectFrom("ball");
+  auto& ball = createObjectFrom("probe-ball");
 
   ball.scale = 16.0f;
   ball.position = location + Vec3f(-10.0f, 35.0f, -10.0f); 
@@ -271,7 +271,7 @@ void DemoScene::addRainbowCubesExhibit() {
 
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 4; j++) {
-      auto& cube = createObjectFrom("cube");
+      auto& cube = createObjectFrom("rainbow-cube");
 
       cube.position = location + Vec3f(
         20.0f * (i - 2.0f),

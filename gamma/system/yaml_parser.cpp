@@ -23,6 +23,7 @@ namespace Gamma {
 
     // Check for numbers
     if (std::isdigit(str[0])) {
+      // @todo use std::stof if the string contains a '.'
       return new int(std::stoi(str));
     }
 
@@ -60,7 +61,7 @@ namespace Gamma {
           auto array = new YamlArray<void*>();
           auto incomingLine = Gm_TrimString(lines[++i]);
 
-          while (incomingLine.find("]") == std::string::npos) {
+          while (incomingLine != "]") {
             // Iterate over and parse new lines into values
             // until we reach the end of the array
             array->push_back(Gm_ParsePrimitiveValue(incomingLine));

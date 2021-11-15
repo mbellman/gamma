@@ -1,9 +1,86 @@
 meshes: {
+  floor: {
+    max: 1,
+    plane: {
+      size: 30,
+      useLoopingTexture: true
+    }
+  },
+  cat-cube: {
+    max: 3,
+    cube: true,
+    texture: ./demo/assets/images/cat.png
+  },
+  rainbow-cube: {
+    max: 16,
+    cube: true,
+    texture: ./demo/assets/images/marble.png,
+    normalMap: ./demo/assets/images/marble-normal-map.png
+  },
+  probe-ball: {
+    max: 1,
+    model: ./demo/assets/models/ball.obj,
+    type: PROBE_REFLECTOR,
+    probe: ball-probe
+  },
+  statue-wall: {
+    max: 4,
+    cube: true
+  },
+  lucy: {
+    max: 1,
+    model: [
+      ./demo/assets/models/lucy.obj,
+      ./demo/assets/models/lucy-lod.obj
+    ]
+  },
+  dragon: {
+    max: 1,
+    model: [
+      ./demo/assets/models/dragon.obj,
+      ./demo/assets/models/dragon-lod.obj
+    ]
+  },
   pawn: {
     max: 16,
     model: [
       ./demo/assets/models/chess-pawn.obj,
       ./demo/assets/models/chess-pawn-lod.obj
+    ]
+  },
+  rook: {
+    max: 4,
+    model: [
+      ./demo/assets/models/chess-rook.obj,
+      ./demo/assets/models/chess-rook-lod.obj
+    ]
+  },
+  knight: {
+    max: 4,
+    model: [
+      ./demo/assets/models/chess-knight.obj,
+      ./demo/assets/models/chess-knight-lod.obj
+    ]
+  },
+  bishop: {
+    max: 4,
+    model: [
+      ./demo/assets/models/chess-bishop.obj,
+      ./demo/assets/models/chess-bishop-lod.obj
+    ]
+  },
+  king: {
+    max: 2,
+    model: [
+      ./demo/assets/models/chess-king.obj,
+      ./demo/assets/models/chess-king-lod.obj
+    ]
+  },
+  queen: {
+    max: 2,
+    model: [
+      ./demo/assets/models/chess-queen.obj,
+      ./demo/assets/models/chess-queen-lod.obj
     ]
   },
   chess-board: {
@@ -12,6 +89,8 @@ meshes: {
       size: 2,
       useLoopingTexture: false
     },
-    texture: ./demo/assets/images/chess-board.png
+    type: REFLECTIVE,
+    texture: ./demo/assets/images/chess-board.png,
+    normalMap: ./demo/assets/images/chess-board-normal-map.png
   }
 }
