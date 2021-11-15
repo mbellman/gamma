@@ -45,9 +45,6 @@ namespace Gamma {
     objectStack.push_back(root);
 
     for (auto& line : lines) {
-      // @optimize we can walk through each character in the file contents
-      // and skip over whitespace + chunk each line into a vector in a combined
-      // routine, rather than splitting first and trimming here
       auto trimmedLine = Gm_TrimString(line);
 
       if (trimmedLine[0] == '}') {
@@ -56,16 +53,10 @@ namespace Gamma {
       } else if (trimmedLine.find(":") != std::string::npos) {
         // Property declaration
         YamlProperty property;
-        auto propertyName = trimmedLine.substr(0, trimmedLine.find(":"));
-        auto& currentObject = *objectStack.back();
 
         if (trimmedLine.back() == '{') {
           // Nested object property
-          auto* nestedObject = new YamlObject();
-
-          objectStack.push_back(nestedObject);
-
-          property.object = nestedObject;
+          property.object = new YamlObject();
         } else if (trimmedLine.back() == '[') {
           // Array property
           // @todo
@@ -78,7 +69,17 @@ namespace Gamma {
           property.primitive = Gm_ParsePrimitiveValue(value);
         }
 
+        // Assign the property to the current object
+        auto propertyName = trimmedLine.substr(0, trimmedLine.find(":"));
+        auto& currentObject = *objectStack.back();
+
         currentObject[propertyName] = property;
+
+        if (property.object != nullptr) {
+          // Push nested objects onto the stack so they can
+          // represent the current object on the next cycle
+          objectStack.push_back(property.object);
+        }
       }
     }
 
