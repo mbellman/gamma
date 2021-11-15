@@ -22,9 +22,7 @@ namespace Gamma {
     }
 
     // Check for numbers
-    bool isNumber = std::isdigit(str[0]);
-
-    if (isNumber) {
+    if (std::isdigit(str[0])) {
       return new int(std::stoi(str));
     }
 
@@ -44,8 +42,8 @@ namespace Gamma {
 
     objectStack.push_back(root);
 
-    for (auto& line : lines) {
-      auto trimmedLine = Gm_TrimString(line);
+    for (uint32 i = 0; i < lines.size(); i++) {
+      auto trimmedLine = Gm_TrimString(lines[i]);
 
       if (trimmedLine[0] == '}') {
         // End of object
@@ -58,15 +56,26 @@ namespace Gamma {
           // Nested object property
           property.object = new YamlObject();
         } else if (trimmedLine.back() == '[') {
-          // Array property
-          // @todo
+          // Specialization for array leaf properties
+          auto array = new YamlArray<void*>();
+          auto incomingLine = Gm_TrimString(lines[++i]);
+
+          while (incomingLine.find("]") == std::string::npos) {
+            // Iterate over and parse new lines into values
+            // until we reach the end of the array
+            array->push_back(Gm_ParsePrimitiveValue(incomingLine));
+
+            incomingLine = Gm_TrimString(lines[++i]);
+          }
+
+          property.value = array;
         } else {
-          // Primitive property (string, number, or boolean)
+          // Other leaf properties (strings, numbers, or booleans)
           uint32 vStart = trimmedLine.find(":") + 1;
           uint32 vLength = trimmedLine.find(",") - vStart;
           auto value = Gm_TrimString(trimmedLine.substr(vStart, vLength));
 
-          property.primitive = Gm_ParsePrimitiveValue(value);
+          property.value = Gm_ParsePrimitiveValue(value);
         }
 
         // Assign the property to the current object
@@ -96,13 +105,13 @@ namespace Gamma {
    * --------------------
    */
   void Gm_FreeYamlObject(YamlObject* object) {
-    for (auto& [ key, value ] : *object) {
-      if (value.object != nullptr) {
+    for (auto& [ key, property ] : *object) {
+      if (property.object != nullptr) {
         // Recursively delete nested objects
-        Gm_FreeYamlObject(value.object);
-      } else if (value.primitive != nullptr) {
-        // Delete primitives
-        delete value.primitive;
+        Gm_FreeYamlObject(property.object);
+      } else if (property.value != nullptr) {
+        // Delete leaf properties
+        delete property.value;
       }
     }
 

@@ -243,6 +243,10 @@ namespace Gamma {
 
     printf("Test: %s\n", texture.c_str());
 
+    auto pawnModels = Gm_ReadYamlProperty<YamlArray<std::string*>>(scene, "meshes.pawn.model");
+
+    printf("Test 2: %s\n", pawnModels[0]->c_str());
+
     Gm_FreeYamlObject(&scene);
   }
 }
