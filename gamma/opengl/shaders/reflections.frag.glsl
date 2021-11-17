@@ -153,12 +153,20 @@ Reflection getReflection(
   return Reflection(vec3(0), vec2(0), 0);
 }
 
-const float step_size_kernel[] = {
-  1.0, 0.92, 1.03, 0.95,
-  0.93, 0.98, 1.08, 1.02,
-  1.1, 1.03, 0.92, 0.9,
-  0.97, 0.94, 1.5, 0.99
-};
+float getInitialMarchStepSize() {
+  const float step_size_kernel[] = {
+    1.0, 0.92, 1.03, 0.95,
+    0.93, 0.98, 1.08, 1.02,
+    1.1, 1.03, 0.92, 0.9,
+    0.97, 0.94, 1.5, 0.99
+  };
+
+  int x = int(gl_FragCoord.x) % 4;
+  int y = int(gl_FragCoord.y) % 4;
+  int idx = y * 4 + x;
+
+  return step_size_kernel[idx];
+}
 
 void main() {
   vec4 frag_color_and_depth = texture(texColorAndDepth, fragUv);
@@ -172,12 +180,7 @@ void main() {
   vec4 frag_view_normal = glVec4(transpose(matInverseView) * glVec4(frag_world_normal));
   vec3 world_reflection_vector = reflect(normalized_camera_to_fragment, frag_world_normal);
   vec3 normalized_view_reflection_ray = reflect(normalize(frag_view_position.xyz), frag_view_normal.xyz);
-
-  int x = int(gl_FragCoord.x) % 4;
-  int y = int(gl_FragCoord.y) % 4;
-  int idx = y * 4 + x;
-
-  float march_step_size = step_size_kernel[idx];
+  float march_step_size = getInitialMarchStepSize();
 
   Reflection reflection = getReflection(frag_view_position.xyz, normalized_view_reflection_ray, march_step_size);
   vec3 baseColor = frag_color_and_depth.rgb * (1.0 - reflection_factor);
