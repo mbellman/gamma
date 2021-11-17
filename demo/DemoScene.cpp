@@ -196,11 +196,6 @@ void DemoScene::update(float dt) {
 }
 
 void DemoScene::addFloor() {
-  addMesh("floor", 1, Mesh::Plane(30, true));
-
-  mesh("floor").texture = "./demo/assets/images/checkerboard.png";
-  mesh("floor").normalMap = "./demo/assets/images/marble-normal-map.png";
-
   auto& floor = createObjectFrom("floor");
 
   floor.scale = Vec3f(1000.0f, 1.0f, 1000.0f);
@@ -210,10 +205,6 @@ void DemoScene::addFloor() {
 
 void DemoScene::addCenterCubesExhibit() {
   Vec3f location(0.0f);
-
-  addMesh("cat-cube", 3, Mesh::Cube());
-
-  mesh("cat-cube").texture = "./demo/assets/images/cat.png";
 
   auto& cube1 = createObjectFrom("cat-cube");
   auto& cube2 = createObjectFrom("cat-cube");
@@ -243,11 +234,7 @@ void DemoScene::addRainbowCubesExhibit() {
   const float pi = 3.141592f;
   Vec3f location = Vec3f(-150.0f, 0.0f, 12.0f);
 
-  addMesh("rainbow-cube", 16, Mesh::Cube());
   addMesh("probe-ball", 1, Mesh::Model("./demo/assets/models/ball.obj"));
-
-  mesh("rainbow-cube").texture = "./demo/assets/images/marble.png";
-  mesh("rainbow-cube").normalMap = "./demo/assets/images/marble-normal-map.png";
 
   mesh("probe-ball").type = MeshType::PROBE_REFLECTOR;
   mesh("probe-ball").probe = "ball-probe";
@@ -296,8 +283,6 @@ void DemoScene::addRainbowCubesExhibit() {
 
 void DemoScene::addStatuesExhibit() {
   Vec3f location(150.0f, 0.0f, 0.0f);
-
-  addMesh("statue-wall", 4, Mesh::Cube());
 
   addMesh("lucy", 1, Mesh::Model({
     "./demo/assets/models/lucy.obj",
@@ -397,12 +382,6 @@ void DemoScene::addChessExhibit() {
     "./demo/assets/models/chess-queen.obj",
     "./demo/assets/models/chess-queen-lod.obj"
   }));
-
-  addMesh("chess-board", 1, Mesh::Plane(2, false));
-
-  mesh("chess-board").type = MeshType::REFLECTIVE;
-  mesh("chess-board").texture = "./demo/assets/images/chess-board.png";
-  mesh("chess-board").normalMap = "./demo/assets/images/chess-board-normal-map.png";
 
   // Create chess board
   auto& chessBoard = createObjectFrom("chess-board");

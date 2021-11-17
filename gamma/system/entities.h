@@ -294,6 +294,8 @@ namespace Gamma {
     static Mesh* Model(std::initializer_list<const char*> paths);
     static Mesh* Particles();
     static Mesh* Plane(uint32 size, bool useLoopingTexture = false);
+    // @todo Sphere(uint32 divisions)
+    // @todo Cylinder(uint32 divisions)
   };
 
   /**

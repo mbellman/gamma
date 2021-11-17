@@ -80,6 +80,14 @@ namespace Gamma {
   }
 
   /**
+   * Gm_HasYamlProperty
+   * ------------------
+   *
+   * @todo description
+   */
+  bool Gm_HasYamlProperty(const YamlObject& object, const std::string& property);
+
+  /**
    * Gm_FreeYamlObject
    * -----------------
    *

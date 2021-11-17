@@ -4,7 +4,9 @@ meshes: {
     plane: {
       size: 30,
       useLoopingTexture: true
-    }
+    },
+    texture: ./demo/assets/images/checkerboard.png,
+    normalMap: ./demo/assets/images/marble-normal-map.png
   },
   cat-cube: {
     max: 3,

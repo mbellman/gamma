@@ -78,6 +78,8 @@ namespace Gamma {
   }
 
   Object& AbstractScene::createObjectFrom(std::string meshName) {
+    assert(meshMap.find(meshName) != meshMap.end(), "Mesh '" + meshName + "' not found");
+
     // @todo assert that mesh exists
     auto& mesh = *meshMap.at(meshName);
     auto& object = mesh.objects.createObject();
@@ -232,20 +234,63 @@ namespace Gamma {
     }
   }
 
+  /**
+   * Takes a scene .yml file and loads its various mesh
+   * and environmental detail configurations into the
+   * current scene.
+   */
   void AbstractScene::useSceneFile(const char* filename) {
     auto& scene = Gm_ParseYamlFile(filename);
 
+    // Load meshes
     for (auto& [ key, property ] : *scene["meshes"].object) {
-      printf("Mesh: %s\n", key.c_str());
+      auto& meshConfig = *property.object;
+      uint32 maxInstances = Gm_ReadYamlProperty<uint32>(scene, "meshes." + key + ".max");
+      Mesh* mesh = nullptr;
+
+      if (Gm_HasYamlProperty(meshConfig, "plane")) {
+        uint32 size = Gm_ReadYamlProperty<uint32>(meshConfig, "plane.size");
+        bool useLoopingTexture = Gm_ReadYamlProperty<uint32>(meshConfig, "plane.useLoopingTexture");
+
+        mesh = Mesh::Plane(size, useLoopingTexture);
+      } else if (Gm_HasYamlProperty(meshConfig, "cube")) {
+        mesh = Mesh::Cube();
+      } else if (Gm_HasYamlProperty(meshConfig, "model")) {
+        // @todo
+      } else if (Gm_HasYamlProperty(meshConfig, "particles")) {
+        // @todo
+      }
+
+      // if mesh == nullptr, report mesh name missing type
+
+      if (mesh != nullptr) {
+        if (Gm_HasYamlProperty(meshConfig, "texture")) {
+          mesh->texture = Gm_ReadYamlProperty<std::string>(meshConfig, "texture");
+        }
+
+        if (Gm_HasYamlProperty(meshConfig, "normalMap")) {
+          mesh->normalMap = Gm_ReadYamlProperty<std::string>(meshConfig, "normalMap");
+        }
+
+        if (Gm_HasYamlProperty(meshConfig, "type")) {
+          std::string type = Gm_ReadYamlProperty<std::string>(meshConfig, "type");
+
+          // @todo use a map
+          if (type == "REFRACTIVE") {
+            mesh->type = MeshType::REFRACTIVE;
+          } else if (type == "REFLECTIVE") {
+            mesh->type = MeshType::REFLECTIVE;
+          } else if (type == "PROBE_REFLECTOR") {
+            mesh->type = MeshType::PROBE_REFLECTOR;
+            mesh->probe = Gm_ReadYamlProperty<std::string>(meshConfig, "probe");
+          }
+        }
+
+        addMesh(key, maxInstances, mesh);
+      }
     }
 
-    auto texture = Gm_ReadYamlProperty<std::string>(scene, "meshes.chess-board.texture");
-
-    printf("Test: %s\n", texture.c_str());
-
-    auto pawnModels = Gm_ReadYamlProperty<YamlArray<std::string*>>(scene, "meshes.pawn.model");
-
-    printf("Test 2: %s\n", pawnModels[0]->c_str());
+    // @todo skybox settings, what else?
 
     Gm_FreeYamlObject(&scene);
   }

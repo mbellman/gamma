@@ -102,16 +102,22 @@ namespace Gamma {
   }
 
   /**
+   * Gm_HasYamlProperty
+   * ------------------
+   */
+  bool Gm_HasYamlProperty(const YamlObject& object, const std::string& property) {
+    return object.find(property) != object.end();
+  }
+
+  /**
    * Gm_FreeYamlObject
    * --------------------
    */
   void Gm_FreeYamlObject(YamlObject* object) {
     for (auto& [ key, property ] : *object) {
       if (property.object != nullptr) {
-        // Recursively delete nested objects
         Gm_FreeYamlObject(property.object);
       } else if (property.value != nullptr) {
-        // Delete leaf properties
         delete property.value;
       }
     }
