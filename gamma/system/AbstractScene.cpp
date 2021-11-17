@@ -256,7 +256,14 @@ namespace Gamma {
       } else if (Gm_HasYamlProperty(meshConfig, "cube")) {
         mesh = Mesh::Cube();
       } else if (Gm_HasYamlProperty(meshConfig, "model")) {
-        // @todo
+        std::vector<std::string> filepaths;
+        auto& paths = Gm_ReadYamlProperty<YamlArray<std::string*>>(meshConfig, "model");
+
+        for (auto* path : paths) {
+          filepaths.push_back(*path);
+        }
+
+        mesh = Mesh::Model(filepaths);
       } else if (Gm_HasYamlProperty(meshConfig, "particles")) {
         // @todo
       }

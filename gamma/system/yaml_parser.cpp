@@ -28,6 +28,7 @@ namespace Gamma {
     }
 
     // Fall back to string
+    // @todo strip leading/trailing quotes
     return new std::string(str);
   }
 
@@ -61,9 +62,15 @@ namespace Gamma {
           auto array = new YamlArray<void*>();
           auto incomingLine = Gm_TrimString(lines[++i]);
 
-          while (incomingLine != "]") {
-            // Iterate over and parse new lines into values
-            // until we reach the end of the array
+          // Iterate over and parse new lines into values
+          // until we reach the end of the array
+          while (incomingLine[0] != ']') {
+            if (incomingLine.back() == ',') {
+              incomingLine = incomingLine.substr(0, incomingLine.size() - 1);
+            }
+
+            // @todo strip leading/trailing quotes
+
             array->push_back(Gm_ParsePrimitiveValue(incomingLine));
 
             incomingLine = Gm_TrimString(lines[++i]);

@@ -233,12 +233,6 @@ void DemoScene::addCenterCubesExhibit() {
 void DemoScene::addRainbowCubesExhibit() {
   const float pi = 3.141592f;
   Vec3f location = Vec3f(-150.0f, 0.0f, 12.0f);
-
-  addMesh("probe-ball", 1, Mesh::Model("./demo/assets/models/ball.obj"));
-
-  mesh("probe-ball").type = MeshType::PROBE_REFLECTOR;
-  mesh("probe-ball").probe = "ball-probe";
-
   auto& ball = createObjectFrom("probe-ball");
 
   ball.scale = 16.0f;
@@ -283,17 +277,6 @@ void DemoScene::addRainbowCubesExhibit() {
 
 void DemoScene::addStatuesExhibit() {
   Vec3f location(150.0f, 0.0f, 0.0f);
-
-  addMesh("lucy", 1, Mesh::Model({
-    "./demo/assets/models/lucy.obj",
-    "./demo/assets/models/lucy-lod.obj"
-  }));
-
-  addMesh("dragon", 1, Mesh::Model({
-    "./demo/assets/models/dragon.obj",
-    "./demo/assets/models/dragon-lod.obj"
-  }));
-
   auto& lucy = createObjectFrom("lucy");
 
   lucy.position = location;
@@ -352,36 +335,6 @@ void DemoScene::addStatuesExhibit() {
 
 void DemoScene::addChessExhibit() {
   Vec3f location = Vec3f(0, 0, 250.0f);
-
-  addMesh("pawn", 16, Mesh::Model({
-    "./demo/assets/models/chess-pawn.obj",
-    "./demo/assets/models/chess-pawn-lod.obj"
-  }));
-
-  addMesh("rook", 4, Mesh::Model({
-    "./demo/assets/models/chess-rook.obj",
-    "./demo/assets/models/chess-rook-lod.obj"
-  }));
-
-  addMesh("knight", 4, Mesh::Model({
-    "./demo/assets/models/chess-knight.obj",
-    "./demo/assets/models/chess-knight-lod.obj"
-  }));
-
-  addMesh("bishop", 4, Mesh::Model({
-    "./demo/assets/models/chess-bishop.obj",
-    "./demo/assets/models/chess-bishop-lod.obj"
-  }));
-
-  addMesh("king", 2, Mesh::Model({
-    "./demo/assets/models/chess-king.obj",
-    "./demo/assets/models/chess-king-lod.obj"
-  }));
-
-  addMesh("queen", 2, Mesh::Model({
-    "./demo/assets/models/chess-queen.obj",
-    "./demo/assets/models/chess-queen-lod.obj"
-  }));
 
   // Create chess board
   auto& chessBoard = createObjectFrom("chess-board");

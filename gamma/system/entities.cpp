@@ -428,13 +428,17 @@ namespace Gamma {
    * treating each consecutive model as a lower level
    * of detail.
    */
-  Mesh* Mesh::Model(std::initializer_list<const char*> paths) {
+  Mesh* Mesh::Model(const std::vector<std::string>& paths) {
+    if (paths.size() == 1) {
+      return Mesh::Model(paths[0].c_str());
+    }
+
     auto* mesh = new Mesh();
 
     mesh->lods.resize(paths.size());
 
     for (uint32 i = 0; i < paths.size(); i++) {
-      const char* path = *(paths.begin() + i);
+      const char* path = paths[i].c_str();
 
       ObjLoader obj(path);
 

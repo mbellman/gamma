@@ -21,7 +21,9 @@ meshes: {
   },
   probe-ball: {
     max: 1,
-    model: ./demo/assets/models/ball.obj,
+    model: [
+      ./demo/assets/models/ball.obj
+    ],
     type: PROBE_REFLECTOR,
     probe: ball-probe
   },

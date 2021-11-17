@@ -44,6 +44,12 @@ namespace Gamma {
      * For leaf properties (strings, numbers,
      * booleans, or arrays), the regular value.
      * Remains nullptr otherwise.
+     *
+     * @todo void* is risky with respect to
+     * Gm_ReadYamlProperty's cast + dereferencing,
+     * and makes variable type determination
+     * impossible. see if we can use a lightweight
+     * wrapper struct with type information instead.
      */
     void* value = nullptr;
     /**
