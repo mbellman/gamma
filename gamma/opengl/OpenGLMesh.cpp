@@ -79,6 +79,8 @@ namespace Gamma {
   void OpenGLMesh::checkAndLoadTexture(const std::string& path, OpenGLTexture*& texture, GLenum unit) {
     #if GAMMA_DEVELOPER_MODE
       if (texture != nullptr && texture->getPath() != path) {
+        Console::log("[Gamma] Destroying OpenGLTexture:", texture->getPath());
+
         delete texture;
 
         texture = nullptr;
@@ -88,6 +90,10 @@ namespace Gamma {
     if (path.size() > 0 && texture == nullptr) {
       // @todo use a texture factory/cache
       texture = new OpenGLTexture(path.c_str(), unit);
+
+      #if GAMMA_DEVELOPER_MODE
+        Console::log("[Gamma] OpenGLTexture created:", path);
+      #endif
     }
 
     if (texture != nullptr) {

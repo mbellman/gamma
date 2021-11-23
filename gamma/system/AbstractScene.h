@@ -1,9 +1,10 @@
 #pragma once
 
+#include <filesystem>
 #include <functional>
-#include <vector>
-#include <string>
 #include <map>
+#include <string>
+#include <vector>
 
 #include "system/camera.h"
 #include "system/entities.h"
@@ -16,6 +17,11 @@ namespace Gamma {
   struct SceneStats {
     uint32 verts = 0;
     uint32 tris = 0;
+  };
+
+  struct SceneFileRecord {
+    std::string path;
+    std::filesystem::file_time_type lastWriteTime;
   };
 
   class AbstractScene : public Initable, public Destroyable, public Signaler {
@@ -46,7 +52,7 @@ namespace Gamma {
     void storeObject(std::string, Object& object);
     virtual void update(float dt) {};
     void useLodByDistance(Mesh& mesh, float distance);
-    void useSceneFile(const char* filename);
+    void useSceneFile(const std::string& filename);
 
   private:
     std::vector<Mesh*> meshes;
@@ -54,6 +60,7 @@ namespace Gamma {
     std::map<std::string, Vec3f> probeMap;
     std::map<std::string, ObjectRecord> objectStore;
     std::vector<Light> lights;
+    std::vector<SceneFileRecord> sceneFileRecords;
     float runningTime = 0.0f;
     Vec3f freeCameraVelocity = Vec3f(0.0f);
     uint16 runningMeshId = 0;

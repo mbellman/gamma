@@ -1,3 +1,5 @@
+#include <filesystem>
+
 #include "system/AbstractScene.h"
 #include "system/assert.h"
 #include "system/console.h"
@@ -209,6 +211,41 @@ namespace Gamma {
 
     update(dt);
 
+    #if GAMMA_DEVELOPER_MODE
+      // @todo extract into its own method
+      for (auto& record : sceneFileRecords) {
+        auto& fsPath = std::filesystem::current_path() / record.path;
+        auto lastWriteTime = std::filesystem::last_write_time(fsPath);
+
+        if (lastWriteTime != record.lastWriteTime) {
+          auto& scene = Gm_ParseYamlFile(record.path.c_str());
+
+          record.lastWriteTime = lastWriteTime;
+
+          for (auto& [ key, property ] : *scene["meshes"].object) {
+            if (meshMap.find(key) == meshMap.end()) {
+              continue;
+            }
+
+            auto& meshConfig = *property.object;
+            auto& mesh = meshMap.at(key);
+
+            if (Gm_HasYamlProperty(meshConfig, "texture")) {
+              mesh->texture = Gm_ReadYamlProperty<std::string>(meshConfig, "texture");
+            } else {
+              mesh->texture = "";
+            }
+
+            if (Gm_HasYamlProperty(meshConfig, "normalMap")) {
+              mesh->normalMap = Gm_ReadYamlProperty<std::string>(meshConfig, "normalMap");
+            } else {
+              mesh->normalMap = "";
+            }
+          }
+        }
+      }
+    #endif
+
     runningTime += dt;
   }
 
@@ -239,13 +276,20 @@ namespace Gamma {
    * and environmental detail configurations into the
    * current scene.
    */
-  void AbstractScene::useSceneFile(const char* filename) {
-    auto& scene = Gm_ParseYamlFile(filename);
+  void AbstractScene::useSceneFile(const std::string& filename) {
+    auto& scene = Gm_ParseYamlFile(filename.c_str());
+    auto& fsPath = std::filesystem::current_path() / filename;
+    auto lastWriteTime = std::filesystem::last_write_time(fsPath);
+
+    sceneFileRecords.push_back({
+      filename,
+      lastWriteTime
+    });
 
     // Load meshes
     for (auto& [ key, property ] : *scene["meshes"].object) {
       auto& meshConfig = *property.object;
-      uint32 maxInstances = Gm_ReadYamlProperty<uint32>(scene, "meshes." + key + ".max");
+      uint32 maxInstances = Gm_ReadYamlProperty<uint32>(meshConfig, "max");
       Mesh* mesh = nullptr;
 
       if (Gm_HasYamlProperty(meshConfig, "plane")) {
