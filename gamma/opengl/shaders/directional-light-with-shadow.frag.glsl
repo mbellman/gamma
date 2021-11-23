@@ -108,13 +108,22 @@ float getLightIntensity(Cascade cascade, vec4 transform) {
     vec2 texel_coords = transform.xy + texel_offset;
     float shadow_map_depth = texture(texShadowMaps[cascade.index], texel_coords).r;
 
-    // @todo base bias on incidence
-    if (shadow_map_depth > transform.z - (cascade.bias + spread * 0.00025)) {
+    if (shadow_map_depth > transform.z - (cascade.bias + spread * 0.0005)) {
       light_intensity += 1.0;
     }
   }
 
   return light_intensity / float(TOTAL_SAMPLES);
+}
+
+vec4 getLightSpaceTransform(mat4 matLight, vec3 position) {
+  vec4 transform = matLight * glVec4(position);
+
+  transform.xyz /= transform.w;
+  transform.xyz *= 0.5;
+  transform.xyz += 0.5;
+
+  return transform;
 }
 
 void main() {
@@ -131,13 +140,8 @@ void main() {
   #include "inline/directional-light.glsl";
 
   Cascade cascade = getCascadeByDepth(getLinearizedDepth(frag_color_and_depth.w));
-  vec4 shadow_map_transform = lightMatrices[cascade.index] * glVec4(position);
-  
-  shadow_map_transform.xyz /= shadow_map_transform.w;
-  shadow_map_transform.xyz *= 0.5;
-  shadow_map_transform.xyz += 0.5;
-
-  float light_intensity = getLightIntensity(cascade, shadow_map_transform);
+  vec4 light_space_transform = getLightSpaceTransform(lightMatrices[cascade.index], position);
+  float light_intensity = getLightIntensity(cascade, light_space_transform);
 
   out_color_and_depth = vec4(illuminated_color * light_intensity * (1.0 - emissivity) + fresnel_term, frag_color_and_depth.w);
 }
