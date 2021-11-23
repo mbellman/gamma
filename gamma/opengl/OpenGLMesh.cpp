@@ -2,6 +2,7 @@
 #include "opengl/indirect_buffer.h"
 #include "opengl/OpenGLMesh.h"
 #include "system/console.h"
+#include "system/flags.h"
 
 #include "glew.h"
 
@@ -75,14 +76,22 @@ namespace Gamma {
     // @todo
   }
 
-  void OpenGLMesh::checkAndLoadTexture(std::string path, OpenGLTexture*& texture, GLenum unit) {
+  void OpenGLMesh::checkAndLoadTexture(const std::string& path, OpenGLTexture*& texture, GLenum unit) {
+    #if GAMMA_DEVELOPER_MODE
+      if (texture != nullptr && texture->getPath() != path) {
+        delete texture;
+
+        texture = nullptr;
+      }
+    #endif
+
     if (path.size() > 0 && texture == nullptr) {
       // @todo use a texture factory/cache
       texture = new OpenGLTexture(path.c_str(), unit);
     }
 
     if (texture != nullptr) {
-      texture->use();
+      texture->bind();
     }
   }
 

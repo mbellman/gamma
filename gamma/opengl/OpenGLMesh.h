@@ -37,6 +37,6 @@ namespace Gamma {
     OpenGLTexture* glSpecularityMap = nullptr;
     bool hasCreatedInstanceBuffers = false;
 
-    void checkAndLoadTexture(std::string path, OpenGLTexture*& texture, GLenum unit);
+    void checkAndLoadTexture(const std::string& path, OpenGLTexture*& texture, GLenum unit);
   };
 }
