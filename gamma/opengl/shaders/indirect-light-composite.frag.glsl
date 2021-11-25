@@ -70,11 +70,10 @@ void main() {
     indirect_sky_light = fragment_albedo * getIndirectSkyLightContribution(fragment_normal);
   #endif
 
-  vec3 composite_color = fragment_albedo * emissivity + global_illumination + indirect_sky_light;
+  vec3 composite_color = fragment_albedo * emissivity + global_illumination;
 
   // @bug this tints occluded regions correctly, but
-  // produces excessive darkening in certain areas,
-  // invariant with distance
+  // produces excessive darkening in certain areas
   composite_color -= ambient_occlusion;
 
   out_color_and_depth = vec4(composite_color, frag_color_and_depth.w);

@@ -154,7 +154,7 @@ void main() {
 
   float sample_sum = 0.0;
 
-  out_gi_and_ao = vec4(global_illumination, ambient_occlusion);
+  out_gi_and_ao = vec4(global_illumination * 0.75, ambient_occlusion);
   sample_sum += 1.0;
 
   #if USE_DENOISING == 1

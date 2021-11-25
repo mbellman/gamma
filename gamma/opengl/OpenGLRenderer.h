@@ -28,7 +28,7 @@ namespace Gamma {
     OpenGLShader geometry;
     OpenGLShader probeReflector;
     OpenGLShader particles;
-    OpenGLShader copyDepth;
+    OpenGLShader lightingPrepass;
     OpenGLShader pointLight;
     OpenGLShader directionalLight;
     OpenGLShader spotLight;
@@ -123,7 +123,7 @@ namespace Gamma {
     void renderPointShadowMaps();
     void renderSpotShadowMaps();
     void prepareLightingPass();
-    void copyDepthIntoAccumulationBuffer();
+    void renderLightingPrepass();
     void renderPointLights();
     void renderPointShadowcasters();
     void renderDirectionalLights();

@@ -75,10 +75,10 @@ namespace Gamma {
     shaders.particles.fragment("./gamma/opengl/shaders/particle-system.frag.glsl");
     shaders.particles.link();
 
-    shaders.copyDepth.init();
-    shaders.copyDepth.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    shaders.copyDepth.fragment("./gamma/opengl/shaders/copy-depth.frag.glsl");
-    shaders.copyDepth.link();
+    shaders.lightingPrepass.init();
+    shaders.lightingPrepass.vertex("./gamma/opengl/shaders/quad.vert.glsl");
+    shaders.lightingPrepass.fragment("./gamma/opengl/shaders/lighting-prepass.frag.glsl");
+    shaders.lightingPrepass.link();
 
     shaders.pointLight.init();
     shaders.pointLight.vertex("./gamma/opengl/shaders/light-disc.vert.glsl");
@@ -191,7 +191,7 @@ namespace Gamma {
     shaders.geometry.destroy();
     shaders.probeReflector.destroy();
     shaders.particles.destroy();
-    shaders.copyDepth.destroy();
+    shaders.lightingPrepass.destroy();
     shaders.pointLight.destroy();
     shaders.pointShadowcaster.destroy();
     shaders.pointShadowcasterView.destroy();

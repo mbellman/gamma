@@ -220,9 +220,9 @@ namespace Gamma {
     }
 
     if (Gm_FlagWasEnabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)) {
-      shaders.indirectLightComposite.define("USE_INDIRECT_SKY_LIGHT", "1");
+      shaders.lightingPrepass.define("USE_INDIRECT_SKY_LIGHT", "1");
     } else if (Gm_FlagWasDisabled(GammaFlags::RENDER_INDIRECT_SKY_LIGHT)) {
-      shaders.indirectLightComposite.define("USE_INDIRECT_SKY_LIGHT", "0");
+      shaders.lightingPrepass.define("USE_INDIRECT_SKY_LIGHT", "0");
     }
 
     if (Gm_FlagWasEnabled(GammaFlags::ENABLE_DENOISING)) {
@@ -348,19 +348,7 @@ namespace Gamma {
     }
 
     prepareLightingPass();
-
-    if (
-      ctx.directionalLights.size() == 0 &&
-      ctx.directionalShadowcasters.size() == 0 &&
-      (
-        ctx.hasReflectiveObjects ||
-        ctx.hasRefractiveObjects ||
-        Gm_IsFlagEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION) ||
-        Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)
-      )
-    ) {
-      copyDepthIntoAccumulationBuffer();
-    }
+    renderLightingPrepass();
 
     if (ctx.pointLights.size() > 0) {
       renderPointLights();
@@ -658,19 +646,16 @@ namespace Gamma {
   }
 
   /**
-   * When no directional lights/shadowcasters are available,
-   * we perform a screen pass to copy depth information for
-   * all on-screen geometry into the target accumulation buffer.
-   * If we don't do this, reflections and refractions will miss
-   * any surfaces which aren't directly illuminated, i.e. otherwise
-   * written to the accumulation buffer in the lighting passes.
+   * Applies indirect sky lighting if enabled, and copies depth
+   * information from the G-Buffer to the accumulation buffer.
    */
-  void OpenGLRenderer::copyDepthIntoAccumulationBuffer() {
-    auto& shader = shaders.copyDepth;
+  void OpenGLRenderer::renderLightingPrepass() {
+    auto& shader = shaders.lightingPrepass;
 
     shader.use();
     shader.setVec4f("transform", FULL_SCREEN_TRANSFORM);
     shader.setInt("texColorAndDepth", 0);
+    shader.setInt("texNormalAndEmissivity", 1);
 
     OpenGLScreenQuad::render();
   }
