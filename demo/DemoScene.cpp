@@ -163,14 +163,19 @@ void DemoScene::destroy() {}
 
 void DemoScene::update(float dt) {
   // useLodByDistance(mesh("rabbit"), 100.0f);
-  useLodByDistance(mesh("dragon"), 150.0f);
-  useLodByDistance(mesh("lucy"), 100.0f);
-  useLodByDistance(mesh("pawn"), 150.0f);
-  useLodByDistance(mesh("rook"), 100.0f);
-  useLodByDistance(mesh("knight"), 100.0f);
-  useLodByDistance(mesh("bishop"), 100.0f);
-  useLodByDistance(mesh("king"), 100.0f);
-  useLodByDistance(mesh("queen"), 100.0f);
+  useLodByDistance(150.0f, {
+    "dragon",
+    "pawn"
+  });
+
+  useLodByDistance(100.0f, {
+    "lucy",
+    "rook",
+    "knight",
+    "bishop",
+    "king",
+    "queen"
+  });
 
   for (auto& cube : mesh("cat-cube").objects) {
     cube.rotation += Vec3f(0.5f * dt);

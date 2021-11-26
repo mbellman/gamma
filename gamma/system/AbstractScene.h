@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <functional>
+#include <initializer_list>
 #include <map>
 #include <string>
 #include <vector>
@@ -40,18 +41,19 @@ namespace Gamma {
     virtual void updateScene(float dt) final;
 
   protected:
-    void addMesh(std::string meshName, uint16 maxInstances, Mesh* mesh);
-    void addProbe(std::string probeName, const Vec3f& position);
+    void addMesh(const std::string& meshName, uint16 maxInstances, Mesh* mesh);
+    void addProbe(const std::string& probeName, const Vec3f& position);
     void commit(const Object& object);
     Light& createLight(LightType type);
-    Object& createObjectFrom(std::string meshName);
+    Object& createObjectFrom(const std::string& meshName);
     void destroyLight(Light& light);
-    Object& getObject(std::string name);
-    Mesh& mesh(std::string meshName);
-    void removeMesh(std::string meshName);
-    void storeObject(std::string, Object& object);
+    Object& getObject(const std::string& name);
+    Mesh& mesh(const std::string& meshName);
+    void removeMesh(const std::string& meshName);
+    void storeObject(const std::string&, Object& object);
     virtual void update(float dt) {};
     void useLodByDistance(Mesh& mesh, float distance);
+    void useLodByDistance(float distance, const std::initializer_list<std::string>& meshNames);
     void useSceneFile(const std::string& filename);
 
   private:

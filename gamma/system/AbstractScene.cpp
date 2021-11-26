@@ -17,7 +17,7 @@ namespace Gamma {
     // @todo clear vectors + maps, free all resources
   }
 
-  void AbstractScene::addMesh(std::string meshName, uint16 maxInstances, Mesh* mesh) {
+  void AbstractScene::addMesh(const std::string& meshName, uint16 maxInstances, Mesh* mesh) {
     assert(meshMap.find(meshName) == meshMap.end(), "Mesh '" + meshName + "' already exists!");
 
     mesh->index = (uint16)meshes.size();
@@ -41,7 +41,7 @@ namespace Gamma {
     signal("mesh-created", mesh);
   }
 
-  void AbstractScene::addProbe(std::string probeName, const Vec3f& position) {
+  void AbstractScene::addProbe(const std::string& probeName, const Vec3f& position) {
     probeMap.emplace(probeName, position);
   }
 
@@ -79,7 +79,7 @@ namespace Gamma {
     return light;
   }
 
-  Object& AbstractScene::createObjectFrom(std::string meshName) {
+  Object& AbstractScene::createObjectFrom(const std::string& meshName) {
     assert(meshMap.find(meshName) != meshMap.end(), "Mesh '" + meshName + "' not found");
 
     // @todo assert that mesh exists
@@ -114,7 +114,7 @@ namespace Gamma {
     return lights;
   }
 
-  Object& AbstractScene::getObject(std::string name) {
+  Object& AbstractScene::getObject(const std::string& name) {
     auto& record = objectStore.at(name);
     auto* object = findObject(record);
 
@@ -179,13 +179,13 @@ namespace Gamma {
     }
   }
 
-  Mesh& AbstractScene::mesh(std::string meshName) {
+  Mesh& AbstractScene::mesh(const std::string& meshName) {
     assert(meshMap.find(meshName) != meshMap.end(), "Mesh '" + meshName + "' does not exist!");
 
     return *meshMap[meshName];
   }
 
-  void AbstractScene::removeMesh(std::string meshName) {
+  void AbstractScene::removeMesh(const std::string& meshName) {
     if (meshMap.find(meshName) == meshMap.end()) {
       return;
     }
@@ -200,7 +200,7 @@ namespace Gamma {
     // @todo remove/reset mesh by ID, recycle when next mesh is created
   }
 
-  void AbstractScene::storeObject(std::string name, Object& object) {
+  void AbstractScene::storeObject(const std::string& name, Object& object) {
     objectStore.emplace(name, object._record);
   }
 
@@ -268,6 +268,14 @@ namespace Gamma {
         // of objects beyond the last LoD distance threshold
         mesh.lods[lodIndex].instanceCount = (uint32)mesh.objects.total() - instanceOffset;
       }
+    }
+  }
+
+  void AbstractScene::useLodByDistance(float distance, const std::initializer_list<std::string>& meshNames) {
+    for (uint32 i = 0; i < meshNames.size(); i++) {
+      std::string meshName = *(meshNames.begin() + i);
+
+      useLodByDistance(mesh(meshName), distance);
     }
   }
 
