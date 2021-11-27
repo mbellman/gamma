@@ -141,8 +141,8 @@ namespace Gamma {
           stats.tris += (lod.elementCount / 3) * lod.instanceCount;
         }
       } else {
-        stats.verts += mesh->vertices.size() * mesh->objects.total();
-        stats.tris += (mesh->faceElements.size() / 3) * mesh->objects.total();
+        stats.verts += mesh->vertices.size() * mesh->objects.totalVisible();
+        stats.tris += (mesh->faceElements.size() / 3) * mesh->objects.totalVisible();
       }
     }
 
@@ -249,6 +249,10 @@ namespace Gamma {
     runningTime += dt;
   }
 
+  void AbstractScene::useFrustumCulling(Mesh& mesh) {
+    // @todo
+  }
+
   void AbstractScene::useLodByDistance(Mesh& mesh, float distance) {
     uint32 instanceOffset = 0;
 
@@ -266,7 +270,7 @@ namespace Gamma {
       } else {
         // The final LoD can just use the remaining set
         // of objects beyond the last LoD distance threshold
-        mesh.lods[lodIndex].instanceCount = (uint32)mesh.objects.total() - instanceOffset;
+        mesh.lods[lodIndex].instanceCount = (uint32)mesh.objects.totalVisible() - instanceOffset;
       }
     }
   }

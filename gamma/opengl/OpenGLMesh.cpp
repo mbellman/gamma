@@ -106,7 +106,7 @@ namespace Gamma {
   }
 
   uint16 OpenGLMesh::getObjectCount() const {
-    return sourceMesh->objects.total();
+    return sourceMesh->objects.totalActive();
   }
 
   const Mesh* OpenGLMesh::getSourceMesh() const {
@@ -125,10 +125,11 @@ namespace Gamma {
     return sourceMesh->type == type;
   }
 
+  // @todo provide a parameter to render total visible vs. total active
   void OpenGLMesh::render(GLenum primitiveMode, bool useLowestLevelOfDetail) {
     auto& mesh = *sourceMesh;
 
-    if (mesh.objects.total() == 0) {
+    if (mesh.objects.totalVisible() == 0) {
       return;
     }
 
@@ -147,10 +148,10 @@ namespace Gamma {
     if (!hasCreatedInstanceBuffers || mesh.type != MeshType::PARTICLE_SYSTEM) {
       // Buffer instance colors/matrices
       glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::COLOR]);
-      glBufferData(GL_ARRAY_BUFFER, mesh.objects.total() * sizeof(pVec4), mesh.objects.getColors(), GL_DYNAMIC_DRAW);
+      glBufferData(GL_ARRAY_BUFFER, mesh.objects.totalVisible() * sizeof(pVec4), mesh.objects.getColors(), GL_DYNAMIC_DRAW);
 
       glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::MATRIX]);
-      glBufferData(GL_ARRAY_BUFFER, mesh.objects.total() * sizeof(Matrix4f), mesh.objects.getMatrices(), GL_DYNAMIC_DRAW);
+      glBufferData(GL_ARRAY_BUFFER, mesh.objects.totalVisible() * sizeof(Matrix4f), mesh.objects.getMatrices(), GL_DYNAMIC_DRAW);
 
       hasCreatedInstanceBuffers = true;
     }
@@ -164,7 +165,7 @@ namespace Gamma {
         // Render all instances using the last LOD
         auto& lod = mesh.lods.back();
 
-        glDrawElementsInstanced(primitiveMode, lod.elementCount, GL_UNSIGNED_INT, (void*)(lod.elementOffset * sizeof(uint32)), mesh.objects.total());
+        glDrawElementsInstanced(primitiveMode, lod.elementCount, GL_UNSIGNED_INT, (void*)(lod.elementOffset * sizeof(uint32)), mesh.objects.totalVisible());
       } else {
         // Generate draw commands for mesh instances at each
         // level of detail, and dispatch them all together
@@ -196,11 +197,11 @@ namespace Gamma {
       // @todo description
       glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::VERTEX]);
 
-      glDrawArraysInstanced(GL_POINTS, 0, 1, mesh.objects.total());
+      glDrawArraysInstanced(GL_POINTS, 0, 1, mesh.objects.totalVisible());
     } else {
       // No distinct level of detail meshes defined;
       // draw all mesh instances together
-      glDrawElementsInstanced(primitiveMode, mesh.faceElements.size(), GL_UNSIGNED_INT, (void*)0, mesh.objects.total());
+      glDrawElementsInstanced(primitiveMode, mesh.faceElements.size(), GL_UNSIGNED_INT, (void*)0, mesh.objects.totalVisible());
     }
   }
 }

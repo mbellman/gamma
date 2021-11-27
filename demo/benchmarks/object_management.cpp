@@ -157,7 +157,7 @@ static uint64 benchmark_pool_object_matrices(uint32 iterations) {
     for (uint32 i = 0; i < TOTAL_MESHES; i++) {
       auto& pool = *pools[i];
 
-      for (uint32 j = 0; j < pool.total(); j++) {
+      for (uint32 j = 0; j < pool.totalActive(); j++) {
         auto& object = *pool.getById(j);
 
         object.position = Vec3f(1.0f, 0.5f, 0.25f);

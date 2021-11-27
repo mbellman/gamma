@@ -145,10 +145,6 @@ void DemoScene::init() {
       SDL_SetRelativeMouseMode(SDL_FALSE);
     }
 
-    if (key == Key::R) {
-      mesh("cube").objects.removeById(lastRemovedIndex++);
-    }
-
     if (key == Key::V) {
       if (Gm_IsFlagEnabled(GammaFlags::VSYNC)) {
         Gm_DisableFlags(GammaFlags::VSYNC);

@@ -32,7 +32,8 @@ namespace Gamma {
     void removeById(uint16 objectId);
     void reserve(uint16 size);
     void setColorById(uint16 objectId, const pVec4& color);
-    uint16 total() const;
+    uint16 totalActive() const;
+    uint16 totalVisible() const;
     void transformById(uint16 objectId, const Matrix4f& matrix);
 
   private:
@@ -45,6 +46,7 @@ namespace Gamma {
     uint16 indices[0xffff];
     uint16 maxObjects = 0;
     uint16 totalActiveObjects = 0;
+    uint16 totalVisibleObjects = 0;
     uint16 runningId = 0;
 
     void swapObjects(uint16 indexA, uint16 indexB);

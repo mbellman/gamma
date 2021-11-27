@@ -17,7 +17,7 @@ namespace Gamma {
   Object& ObjectPool::createObject() {
     uint16 id = runningId++;
 
-    assert(max() > total(), "Object Pool out of space: " + std::to_string(max()) + " objects allowed in this pool");
+    assert(max() > totalActive(), "Object Pool out of space: " + std::to_string(max()) + " objects allowed in this pool");
     // @todo cycle through indices until an unoccupied slot is found
     assert(indices[id] == UNUSED_OBJECT_INDEX, "Attempted to create an Object in an occupied slot");
 
@@ -36,6 +36,7 @@ namespace Gamma {
     indices[id] = index;
 
     totalActiveObjects++;
+    totalVisibleObjects++;
 
     return object;
   }
@@ -96,7 +97,7 @@ namespace Gamma {
 
   uint16 ObjectPool::partitionByDistance(uint16 start, float distance, const Vec3f& cameraPosition) {
     uint16 current = start;
-    uint16 end = total();
+    uint16 end = totalVisible();
 
     while (end > current) {
       float currentObjectDistance = (objects[current].position - cameraPosition).magnitude();
@@ -131,6 +132,7 @@ namespace Gamma {
     }
 
     totalActiveObjects--;
+    totalVisibleObjects--;
 
     uint16 lastIndex = totalActiveObjects;
 
@@ -149,6 +151,7 @@ namespace Gamma {
 
     maxObjects = size;
     totalActiveObjects = 0;
+    totalVisibleObjects = 0;
     objects = new Object[size];
     matrices = new Matrix4f[size];
     colors = new pVec4[size];
@@ -175,8 +178,12 @@ namespace Gamma {
     colors[indices[objectId]] = color;
   }
 
-  uint16 ObjectPool::total() const {
+  uint16 ObjectPool::totalActive() const {
     return totalActiveObjects;
+  }
+
+  uint16 ObjectPool::totalVisible() const {
+    return totalVisibleObjects;
   }
 
   void ObjectPool::transformById(uint16 objectId, const Matrix4f& matrix) {

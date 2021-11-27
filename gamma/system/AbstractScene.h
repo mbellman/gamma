@@ -52,6 +52,7 @@ namespace Gamma {
     void removeMesh(const std::string& meshName);
     void storeObject(const std::string&, Object& object);
     virtual void update(float dt) {};
+    void useFrustumCulling(Mesh& mesh);
     void useLodByDistance(Mesh& mesh, float distance);
     void useLodByDistance(float distance, const std::initializer_list<std::string>& meshNames);
     void useSceneFile(const std::string& filename);
