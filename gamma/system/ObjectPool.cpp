@@ -1,11 +1,11 @@
 #include "system/assert.h"
+#include "system/camera.h"
 #include "system/entities.h"
 #include "system/ObjectPool.h"
 
 #define UNUSED_OBJECT_INDEX 0xffff
 
 namespace Gamma {
-
   /**
    * ObjectPool
    * ----------
@@ -95,6 +95,7 @@ namespace Gamma {
     return maxObjects;
   }
 
+  // @todo consolidate logic in partitionByDistance/partitionByVisibility
   uint16 ObjectPool::partitionByDistance(uint16 start, float distance, const Vec3f& cameraPosition) {
     uint16 current = start;
     uint16 end = totalVisible();
@@ -122,6 +123,36 @@ namespace Gamma {
     }
 
     return current;
+  }
+
+  // @todo consolidate logic in partitionByDistance/partitionByVisibility
+  // @todo accept a distance threshold to avoid culling partially
+  // in-frame/partially out-of-frame objects
+  // @todo use camera FoV to determine dot product threshold
+  void ObjectPool::partitionByVisibility(const Camera& camera) {
+    uint16 current = 0;
+    uint16 end = totalActive();
+    Vec3f cameraDirection = camera.orientation.getDirection();
+
+    while (end > current) {
+      Vec3f objectUnitViewPosition = (objects[current].position - camera.position).unit();
+
+      if (Vec3f::dot(cameraDirection, objectUnitViewPosition) >= 0.7f) {
+        current++;
+      } else {
+        Vec3f endObjectUnitViewPosition;
+
+        do {
+          endObjectUnitViewPosition = (objects[--end].position - camera.position).unit();
+        } while (Vec3f::dot(cameraDirection, endObjectUnitViewPosition) < 0.7f && end > current);
+
+        if (current != end) {
+          swapObjects(current, end);
+        }
+      }
+    }
+
+    totalVisibleObjects = current;
   }
 
   void ObjectPool::removeById(uint16 objectId) {

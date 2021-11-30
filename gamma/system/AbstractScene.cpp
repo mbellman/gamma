@@ -249,8 +249,9 @@ namespace Gamma {
     runningTime += dt;
   }
 
+  // @todo define an initializer list overload for multiple meshes by name
   void AbstractScene::useFrustumCulling(Mesh& mesh) {
-    // @todo
+    mesh.objects.partitionByVisibility(camera);
   }
 
   void AbstractScene::useLodByDistance(Mesh& mesh, float distance) {

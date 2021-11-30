@@ -7,6 +7,7 @@
 namespace Gamma {
   struct Object;
   struct ObjectRecord;
+  struct Camera;
 
   /**
    * ObjectPool
@@ -29,6 +30,7 @@ namespace Gamma {
     Matrix4f* getMatrices() const;
     uint16 max() const;
     uint16 partitionByDistance(uint16 start, float distance, const Vec3f& cameraPosition);
+    void partitionByVisibility(const Camera& camera);
     void removeById(uint16 objectId);
     void reserve(uint16 size);
     void setColorById(uint16 objectId, const pVec4& color);

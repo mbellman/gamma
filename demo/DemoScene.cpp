@@ -159,6 +159,15 @@ void DemoScene::destroy() {}
 
 void DemoScene::update(float dt) {
   // useLodByDistance(mesh("rabbit"), 100.0f);
+  useFrustumCulling(mesh("pawn"));
+  useFrustumCulling(mesh("dragon"));
+  useFrustumCulling(mesh("lucy"));
+  useFrustumCulling(mesh("rook"));
+  useFrustumCulling(mesh("knight"));
+  useFrustumCulling(mesh("bishop"));
+  useFrustumCulling(mesh("king"));
+  useFrustumCulling(mesh("queen"));
+
   useLodByDistance(150.0f, {
     "dragon",
     "pawn"
