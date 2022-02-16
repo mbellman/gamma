@@ -143,9 +143,6 @@
     <ClInclude Include="external\glew\include\wglew.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="external\glut\include\glut.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="external\sdl2\include\begin_code.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -453,9 +450,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gamma\system\AbstractScene.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="gamma\system\object.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gamma\system\entities.h">

@@ -40,6 +40,7 @@ namespace Gamma {
     uint32 type = LightType::POINT;
     bool isStatic = false;
     int id = UNUSED_LIGHT_INDEX;
+    // @todo std::vector<uint32> shadowMapMeshes (?)
   };
 
   /**
@@ -50,6 +51,8 @@ namespace Gamma {
    * to be looked up on the appropriate Mesh and at its
    * corresponding index, with ID checks for referential
    * integrity.
+   *
+   * @size 8 bytes
    */
   struct ObjectRecord {
     uint16 meshIndex = 0;
@@ -67,6 +70,8 @@ namespace Gamma {
    * Objects are derived from Meshes, defining individual
    * instances of a Mesh distributed throughout a scene,
    * each with its own transformations.
+   *
+   * @size 48 bytes
    */
   struct Object {
     ObjectRecord _record;

@@ -179,6 +179,18 @@ namespace Gamma {
     }
   }
 
+  void AbstractScene::lookAt(const Object& object) {
+    lookAt(object.position);
+  }
+
+  void AbstractScene::lookAt(const Vec3f& position) {
+    Vec3f forward = position - camera.position;
+    Vec3f sideways = Vec3f::cross(forward, Vec3f(0, 1.0f, 0));
+    Vec3f up = Vec3f::cross(sideways, forward);
+
+    camera.orientation.face(forward, up);
+  }
+
   Mesh& AbstractScene::mesh(const std::string& meshName) {
     assert(meshMap.find(meshName) != meshMap.end(), "Mesh '" + meshName + "' does not exist!");
 

@@ -67,23 +67,6 @@ namespace Gamma {
     // Initialize global buffers
     Gm_InitDrawIndirectBuffer();
 
-    #ifndef GAMMA_DEVELOPER_MODE
-      // Set uniform shader constants upfront, since
-      // shaders won't change during runtime
-      //
-      // @todo these will need to be updated if the
-      // internal resolution setting is changed
-      Vec2f screenSize((float)internalResolution.width, (float)internalResolution.height);
-
-      shaders.indirectLight.setVec2f("screenSize", screenSize);
-      shaders.indirectLightComposite.setVec2f("screenSize", screenSize);
-      shaders.reflectionsDenoise.setVec2f("screenSize", screenSize);
-      shaders.refractivePrepass.setVec2f("screenSize", screenSize);
-      shaders.refractiveGeometry.setVec2f("screenSize", screenSize);
-
-      // @todo set sampler2D texture units
-    #endif
-
     // Initialize screen texture
     glGenTextures(1, &screenTexture);
     glBindTexture(GL_TEXTURE_2D, screenTexture);
@@ -109,6 +92,27 @@ namespace Gamma {
 
     // Enable default OpenGL settings
     glEnable(GL_PROGRAM_POINT_SIZE);
+
+    #if !GAMMA_DEVELOPER_MODE
+      // Set uniform shader constants upfront, since
+      // shaders won't change during runtime
+      //
+      // @todo these will need to be updated if the
+      // internal resolution setting is changed
+      Vec2f screenSize((float)internalResolution.width, (float)internalResolution.height);
+
+      shaders.indirectLight.use();
+      shaders.indirectLight.setVec2f("screenSize", screenSize);
+
+      shaders.indirectLightComposite.use();
+      shaders.indirectLightComposite.setVec2f("screenSize", screenSize);
+
+      shaders.reflectionsDenoise.setVec2f("screenSize", screenSize);
+      shaders.refractivePrepass.setVec2f("screenSize", screenSize);
+      shaders.refractiveGeometry.setVec2f("screenSize", screenSize);
+
+      // @todo set sampler2D texture units
+    #endif
   }
 
   void OpenGLRenderer::destroy() {
@@ -574,6 +578,7 @@ namespace Gamma {
 
       // @todo glMultiDrawElementsIndirect for static world geometry
       // (will require a handful of other changes to mesh organization/data buffering)
+      // @todo allow specific meshes to be associated with point lights + rendered to shadow maps
       for (auto* glMesh : glMeshes) {
         auto* sourceMesh = glMesh->getSourceMesh();
 
@@ -615,6 +620,7 @@ namespace Gamma {
 
       // @todo glMultiDrawElementsIndirect for static world geometry
       // (will require a handful of other changes to mesh organization/data buffering)
+      // @todo allow specific meshes to be associated with spot lights + rendered to shadow maps
       for (auto* glMesh : glMeshes) {
         auto* sourceMesh = glMesh->getSourceMesh();
 

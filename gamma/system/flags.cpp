@@ -19,7 +19,7 @@ namespace Gamma {
   }
 
   void Gm_EnableFlags(GammaFlags flags) {
-    internalFlags |= flags;    
+    internalFlags |= flags;
   }
 
   bool Gm_FlagWasDisabled(GammaFlags flag) {

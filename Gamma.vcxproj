@@ -163,7 +163,6 @@
     <ClInclude Include="external\glew\include\glew.h" />
     <ClInclude Include="external\glew\include\glxew.h" />
     <ClInclude Include="external\glew\include\wglew.h" />
-    <ClInclude Include="external\glut\include\glut.h" />
     <ClInclude Include="external\sdl2\include\begin_code.h" />
     <ClInclude Include="external\sdl2\include\close_code.h" />
     <ClInclude Include="external\sdl2\include\SDL.h" />
@@ -282,7 +281,6 @@
     <ClInclude Include="gamma\system\flags.h" />
     <ClInclude Include="gamma\system\InputSystem.h" />
     <ClInclude Include="gamma\system\macros.h" />
-    <ClInclude Include="gamma\system\object.h" />
     <ClInclude Include="gamma\system\ObjectPool.h" />
     <ClInclude Include="gamma\system\ObjLoader.h" />
     <ClInclude Include="gamma\system\packed_data.h" />

@@ -32,8 +32,8 @@ namespace Gamma {
       SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI
     );
 
-    font_OpenSans_sm = TTF_OpenFont("./demo/assets/fonts/OpenSans-Regular.ttf", 16);
-    font_OpenSans_lg = TTF_OpenFont("./demo/assets/fonts/OpenSans-Regular.ttf", 22);
+    font_OpenSans_sm = TTF_OpenFont("./fonts/OpenSans-Regular.ttf", 16);
+    font_OpenSans_lg = TTF_OpenFont("./fonts/OpenSans-Regular.ttf", 22);
 
     Window::size = { 640, 480 };
   }
