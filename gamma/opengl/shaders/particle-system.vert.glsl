@@ -160,6 +160,7 @@ void main() {
   // @todo make size oscillation rate configurable
   float scale = particles.median_size + particles.size_variation * sin(time * 3.0 + r * 500.0);
 
+  // @hack invert Z
   gl_Position = matProjection * matView * glVec4(position);
   gl_PointSize = scale;
 

@@ -45,15 +45,16 @@ vec3 unpack(uint color) {
 }
 
 void main() {
-  vec4 world_position = glMat4(modelMatrix) * vec4(vertexPosition, 1.0);
+  // @hack invert Z
+  vec4 world_position = glVec4(modelMatrix * vec4(vertexPosition, 1.0));
   mat3 normal_matrix = transpose(inverse(mat3(modelMatrix)));
 
   gl_Position = matProjection * matView * world_position;
 
   fragColor = unpack(modelColor);
-  fragPosition = glVec3(world_position);
-  fragNormal = glVec3(normal_matrix * vertexNormal);
-  fragTangent = glVec3(normal_matrix * vertexTangent);
+  fragPosition = world_position.xyz;
+  fragNormal = normal_matrix * vertexNormal;
+  fragTangent = normal_matrix * vertexTangent;
   fragBitangent = getFragBitangent(fragNormal, fragTangent);
   fragUv = vertexUv;
 }

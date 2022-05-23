@@ -110,6 +110,10 @@ namespace Gamma {
     return mesh.objects.getByRecord(record);
   }
 
+  const uint32 AbstractScene::getFrame() const {
+    return frame;
+  }
+
   const std::vector<Light>& AbstractScene::getLights() const {
     return lights;
   }
@@ -179,14 +183,17 @@ namespace Gamma {
     }
   }
 
-  void AbstractScene::lookAt(const Object& object) {
-    lookAt(object.position);
+  void AbstractScene::lookAt(const Object& object, bool upsideDown) {
+    lookAt(object.position, upsideDown);
   }
 
-  void AbstractScene::lookAt(const Vec3f& position) {
-    Vec3f forward = position - camera.position;
+  void AbstractScene::lookAt(const Vec3f& position, bool upsideDown) {
+    Vec3f forward = (position - camera.position).unit();
     Vec3f sideways = Vec3f::cross(forward, Vec3f(0, 1.0f, 0));
-    Vec3f up = Vec3f::cross(sideways, forward);
+
+    Vec3f up = upsideDown
+      ? Vec3f::cross(forward, sideways)
+      : Vec3f::cross(sideways, forward);
 
     camera.orientation.face(forward, up);
   }
@@ -222,6 +229,8 @@ namespace Gamma {
     }
 
     update(dt);
+
+    frame++;
 
     #if GAMMA_DEVELOPER_MODE
       // @todo extract into its own method

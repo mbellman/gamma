@@ -145,6 +145,15 @@ namespace Gamma {
       checkAndLoadTexture(mesh.specularityMap, glSpecularityMap, GL_TEXTURE2);
     }
 
+    if (sourceMesh->transformedVertices.size() > 0) {
+      // Re-buffer geometry
+      auto& transformedVertices = sourceMesh->transformedVertices;
+
+      glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::VERTEX]);
+      // @todo glMapBuffer (?)
+      glBufferData(GL_ARRAY_BUFFER, transformedVertices.size() * sizeof(Vertex), transformedVertices.data(), GL_DYNAMIC_DRAW);
+    }
+
     if (!hasCreatedInstanceBuffers || mesh.type != MeshType::PARTICLE_SYSTEM) {
       // Buffer instance colors/matrices
       glBindBuffer(GL_ARRAY_BUFFER, buffers[GLBuffer::COLOR]);

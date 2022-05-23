@@ -176,6 +176,7 @@ void main() {
   vec3 normalized_camera_to_fragment = normalize(camera_to_fragment);
   vec3 frag_world_normal = frag_normal_and_emissivity.rgb;
 
+  // @hack invert Z
   vec4 frag_view_position = glVec4(matView * glVec4(frag_world_position));
   vec4 frag_view_normal = glVec4(transpose(matInverseView) * glVec4(frag_world_normal));
   vec3 world_reflection_vector = reflect(normalized_camera_to_fragment, frag_world_normal);

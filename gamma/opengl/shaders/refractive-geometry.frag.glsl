@@ -35,6 +35,7 @@ void main() {
 
   vec3 refraction_ray = refract(normalized_fragment_to_camera, normal, 0.7);
   vec3 world_refraction_ray = position + refraction_ray * REFRACTION_INTENSITY;
+  // @hack invert Z
   vec3 view_refraction_ray = glVec3(matView * glVec4(world_refraction_ray));
   vec2 refracted_color_coords = getScreenCoordinates(view_refraction_ray, matProjection);
   float sample_depth = texture(texColorAndDepth, getPixelCoords()).w;

@@ -50,6 +50,7 @@ float getLightFactor(vec3 light_to_surface, float light_distance, float incidenc
 
   for (int i = 0; i < TOTAL_SAMPLES; i++) {
     vec3 sample_offset = spread * rotatedVogelDisc(TOTAL_SAMPLES, i);
+    // @hack invert Z
     float shadow_map_depth = texture(texShadowMap, glVec3(light_to_surface + sample_offset)).r * light.radius;
     float bias = spread + pow(1.0 - incidence, 3) * 5.0;
 

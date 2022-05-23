@@ -7,7 +7,7 @@ float incidence = max(dot(normalized_surface_to_light, normal), 0.0);
 float specularity = pow(max(dot(half_vector, normal), 0.0), 50) * (1.0 - roughness);
 
 float fresnel_reflectivity = pow(1.0 - max(0, dot(normal, normalized_surface_to_camera)), 5);
-vec3 fresnel_term = adjusted_light_color * fresnel_reflectivity * 0.25;
+vec3 fresnel_term = adjusted_light_color * fresnel_reflectivity * 0.15;
 
 vec3 diffuse_term = color * adjusted_light_color * incidence * sqrt(roughness) * (1.0 - specularity) * (1.0 - fresnel_term);
 vec3 specular_term = adjusted_light_color * specularity;

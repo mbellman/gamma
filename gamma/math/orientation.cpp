@@ -46,6 +46,10 @@ namespace Gamma {
     pitch = -1.0f * (atan2f(rUp.y, rUp.z) - HALF_PI);
   }
 
+  Orientation Orientation::invert() const {
+    return Orientation(-roll, -pitch, -yaw);
+  }
+
   Vec3f Orientation::toVec3f() const {
     return Vec3f(pitch, yaw, roll);
   }

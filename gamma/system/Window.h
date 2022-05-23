@@ -26,6 +26,7 @@ namespace Gamma {
     void setController(AbstractController* controller);
     void setRenderMode(RenderMode mode);
     void setScreenRegion(const Region<uint32>& region);
+    void setTitle(const char* title);
 
   private:
     Commander commander;

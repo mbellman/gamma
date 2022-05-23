@@ -18,13 +18,14 @@
 namespace Gamma {
   struct RendererBuffers {
     OpenGLFrameBuffer gBuffer;
-    OpenGLFrameBuffer indirectLight[3];
+    OpenGLFrameBuffer indirectLight[2];
     OpenGLFrameBuffer reflections;
     OpenGLFrameBuffer accumulation1;
     OpenGLFrameBuffer accumulation2;
   };
 
   struct RendererShaders {
+    // Rendering pipeline shaders
     OpenGLShader geometry;
     OpenGLShader probeReflector;
     OpenGLShader particles;
@@ -112,12 +113,7 @@ namespace Gamma {
     struct PostShaders {
       OpenGLShader debanding;
     } post;
-
-    void handleSettingsChanges();
-    void initializeRendererContext();
-    void initializeLightArrays();
-    void renderToAccumulationBuffer();
-  
+ 
     void renderSceneToGBuffer();
     void renderDirectionalShadowMaps();
     void renderPointShadowMaps();
@@ -140,7 +136,11 @@ namespace Gamma {
     void renderDevBuffers();
 
     void createAndRenderProbe(const std::string& name, const Vec3f& position);
+    void handleSettingsChanges();
+    void initializeRendererContext();
+    void initializeLightArrays();
     void renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background);
+    void renderToAccumulationBuffer();
     void swapAccumulationBuffers();
   };
 }

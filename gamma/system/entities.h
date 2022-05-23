@@ -1,7 +1,8 @@
 #pragma once
 
-#include <vector>
+#include <functional>
 #include <string>
+#include <vector>
 
 #include "math/geometry.h"
 #include "math/matrix.h"
@@ -201,6 +202,11 @@ namespace Gamma {
      */
     std::vector<Vertex> vertices;
     /**
+     * Dynamic mesh vertices, based on the static vertices.
+     * Remains empty unless transformGeometry() is used.
+     */
+    std::vector<Vertex> transformedVertices;
+    /**
      * Vertex indices for each triangle face of the mesh,
      * defined in groups of three.
      */
@@ -260,6 +266,8 @@ namespace Gamma {
     static Mesh* Plane(uint32 size, bool useLoopingTexture = false);
     // @todo Sphere(uint32 divisions)
     // @todo Cylinder(uint32 divisions)
+
+    void transformGeometry(std::function<void(const Vertex&, Vertex&)> handler);
   };
 
   /**

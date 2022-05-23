@@ -15,5 +15,6 @@ layout (location = 5) in mat4 modelMatrix;
 #include "utils/gl.glsl";
 
 void main() {
-  gl_Position = lightMatrix * glMat4(modelMatrix) * vec4(vertexPosition, 1.0);
+  // @hack invert Z
+  gl_Position = lightMatrix * glVec4(modelMatrix * vec4(vertexPosition, 1.0));
 }

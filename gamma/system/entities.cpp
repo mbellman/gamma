@@ -119,9 +119,9 @@ namespace Gamma {
   static void Gm_BufferObjData(const ObjLoader& obj, std::vector<Vertex>& vertices, std::vector<uint32>& faceElements) {
     uint32 baseVertex = vertices.size();
 
-    if (obj.textureCoordinates.size() == 0) {
-      // No texture coordinates defined in the model file,
-      // so we can load the vertices/face elements directly
+    if (obj.textureCoordinates.size() == 0 && obj.normals.size() == 0) {
+      // Only vertex positions defined, so simply load in vertices,
+      // and then load in face element indexes
       for (uint32 i = 0; i < obj.vertices.size(); i++) {
         Vertex vertex;
         vertex.position = obj.vertices[i];
@@ -135,41 +135,48 @@ namespace Gamma {
         faceElements.push_back(baseVertex + obj.faces[i].v3.vertexIndex);
       }
     } else {
-      // Texture coordinates defined, so we need to create
-      // vertices by unique position/uv pairs, and add face
-      // elements based on created vertices
-      typedef std::pair<uint32, uint32> VertexPair;
+      // Texture coordinates and/or normals defined, so we need
+      // to create a unique vertex for each position/uv/normal
+      // tuple, and add face elements based on created vertices
+      typedef std::tuple<uint32, uint32, uint32> VertexTuple;
 
-      std::map<VertexPair, uint32> pairToVertexIndexMap;
+      std::map<VertexTuple, uint32> vertexTupleToIndexMap;
 
       for (const auto& face : obj.faces) {
-        VertexPair pairs[3] = {
-          { face.v1.vertexIndex, face.v1.textureCoordinateIndex },
-          { face.v2.vertexIndex, face.v2.textureCoordinateIndex },
-          { face.v3.vertexIndex, face.v3.textureCoordinateIndex }
+        VertexTuple vertexTuples[3] = {
+          { face.v1.vertexIndex, face.v1.textureCoordinateIndex, face.v1.normalIndex },
+          { face.v2.vertexIndex, face.v2.textureCoordinateIndex, face.v2.normalIndex },
+          { face.v3.vertexIndex, face.v3.textureCoordinateIndex, face.v3.normalIndex }
         };
 
         // Add face elements, creating vertices if necessary
         for (uint32 p = 0; p < 3; p++) {
-          auto& pair = pairs[p];
-          auto indexRecord = pairToVertexIndexMap.find(pair);
+          auto& vertexTuple = vertexTuples[p];
+          auto indexRecord = vertexTupleToIndexMap.find(vertexTuple);
 
-          if (indexRecord != pairToVertexIndexMap.end()) {
-            // Vertex already exists, so we can just add the face element
+          if (indexRecord != vertexTupleToIndexMap.end()) {
+            // Vertex tupple already exists, so we can just
+            // add the stored face element index
             faceElements.push_back(indexRecord->second);
           } else {
             // Vertex doesn't exist, so we need to create it
             Vertex vertex;
             uint32 index = vertices.size();
 
-            vertex.position = obj.vertices[pair.first];
-            // @todo see if uv.y needs to be inverted
-            vertex.uv = obj.textureCoordinates[pair.second];
-            
+            vertex.position = obj.vertices[std::get<0>(vertexTuple)];
+
+            if (obj.textureCoordinates.size() > 0) {
+              vertex.uv = obj.textureCoordinates[std::get<1>(vertexTuple)];
+            }
+
+            if (obj.normals.size() > 0) {
+              vertex.normal = obj.normals[std::get<2>(vertexTuple)];
+            }
+
             vertices.push_back(vertex);
             faceElements.push_back(index);
 
-            pairToVertexIndexMap.emplace(pair, index);
+            vertexTupleToIndexMap.emplace(vertexTuple, index);
           }
         }
       }
@@ -235,7 +242,11 @@ namespace Gamma {
     auto* mesh = new Mesh();
 
     Gm_BufferObjData(obj, mesh->vertices, mesh->faceElements);
-    Gm_ComputeNormals(mesh);
+
+    if (obj.normals.size() == 0) {
+      Gm_ComputeNormals(mesh);
+    }
+
     Gm_ComputeTangents(mesh);
 
     return mesh;
@@ -344,6 +355,25 @@ namespace Gamma {
     Gm_ComputeTangents(mesh);
 
     return mesh;
+  }
+
+  /**
+   * Mesh::transformGeometry()
+   * -------------------------
+   *
+   * @todo description
+   */
+  void Mesh::transformGeometry(std::function<void(const Vertex&, Vertex&)> handler) {
+    // Copy vertices the first time
+    if (transformedVertices.size() == 0) {
+      for (auto& vertex : vertices) {
+        transformedVertices.push_back(vertex);
+      }
+    }
+
+    for (uint32 i = 0; i < vertices.size(); i++) {
+      handler(vertices[i], transformedVertices[i]);
+    }
   }
 
   /**

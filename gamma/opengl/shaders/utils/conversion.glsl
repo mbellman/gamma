@@ -48,6 +48,7 @@ float getFragDepth(float linearized_depth, mat4 projection) {
  * [0.0, 1.0], corresponding to a point in view space.
  */
 vec2 getScreenCoordinates(vec3 view_position, mat4 projection) {
+  // @hack invert Z
   vec4 proj = projection * glVec4(view_position);
   vec3 clip = proj.xyz / proj.w;
 

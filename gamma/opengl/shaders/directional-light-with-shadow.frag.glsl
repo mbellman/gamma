@@ -117,6 +117,7 @@ float getLightIntensity(Cascade cascade, vec4 transform) {
 }
 
 vec4 getLightSpaceTransform(mat4 matLight, vec3 position) {
+  // @hack invert Z
   vec4 transform = matLight * glVec4(position);
 
   transform.xyz /= transform.w;

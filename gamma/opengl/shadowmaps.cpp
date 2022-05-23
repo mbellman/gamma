@@ -95,7 +95,7 @@ namespace Gamma {
 
     // Transform clip space camera frustum into world space
     Matrix4f cameraView = (
-      Matrix4f::rotation(camera.orientation.toVec3f()) *
+      Matrix4f::rotation(camera.orientation) *
       Matrix4f::translation(camera.position.invert().gl())
     );
 

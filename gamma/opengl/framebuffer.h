@@ -21,6 +21,7 @@ namespace Gamma {
     RGB,
     RGB16,
     RGBA,
+    RGBA8,
     RGBA16
   };
 

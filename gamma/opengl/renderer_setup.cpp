@@ -15,25 +15,21 @@ namespace Gamma {
 
     buffers.indirectLight[0].init();
     buffers.indirectLight[0].setSize({ internalResolution.width / 2, internalResolution.height / 2 });
-    buffers.indirectLight[0].addColorAttachment(ColorFormat::RGBA16, 2);  // (RGB) Color
+    buffers.indirectLight[0].addColorAttachment(ColorFormat::RGBA8, 2);  // (RGB) GI, (A) AO
     buffers.indirectLight[0].bindColorAttachments();
 
     buffers.indirectLight[1].init();
     buffers.indirectLight[1].setSize({ internalResolution.width / 2, internalResolution.height / 2 });
-    buffers.indirectLight[1].addColorAttachment(ColorFormat::RGBA16, 2);  // (RGB) Color
+    buffers.indirectLight[1].addColorAttachment(ColorFormat::RGBA8, 2);  // (RGB) GI, (A) AO
     buffers.indirectLight[1].bindColorAttachments();
 
     buffers.reflections.init();
     buffers.reflections.setSize(internalResolution);
+    // @todo consider whether we need a half-size reflections buffer
+    // buffers.reflections.setSize({ internalResolution.width / 2, internalResolution.height / 2 });
     buffers.reflections.addColorAttachment(ColorFormat::RGBA);  // (RGB) Color, (A) Depth
     buffers.gBuffer.shareDepthStencilAttachment(buffers.reflections);
     buffers.reflections.bindColorAttachments();
-
-    // @todo consider whether we need a half-size reflections buffer
-    // buffers.reflections.init();
-    // buffers.reflections.setSize({ internalResolution.width / 2, internalResolution.height /2 });
-    // buffers.reflections.addColorAttachment(ColorFormat::RGBA);
-    // buffers.reflections.bindColorAttachments();
 
     buffers.accumulation1.init();
     buffers.accumulation1.setSize(internalResolution);

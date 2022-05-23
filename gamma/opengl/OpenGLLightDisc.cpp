@@ -133,7 +133,7 @@ namespace Gamma {
     Matrix4f matProjection = Matrix4f::glPerspective(resolution, 90.0f * 0.5f, 1.0f, 10000.0f);
 
     Matrix4f matView = (
-      Matrix4f::rotation(camera.orientation.toVec3f().invert()) *
+      Matrix4f::rotation(camera.orientation.invert()) *
       Matrix4f::translation(camera.position.invert())
     );
 
@@ -154,7 +154,7 @@ namespace Gamma {
     Matrix4f matProjection = Matrix4f::glPerspective(resolution, 90.0f * 0.5f, 1.0f, 10000.0f);
 
     Matrix4f matView = (
-      Matrix4f::rotation(camera.orientation.toVec3f().invert()) *
+      Matrix4f::rotation(camera.orientation.invert()) *
       Matrix4f::translation(camera.position.invert())
     );
 

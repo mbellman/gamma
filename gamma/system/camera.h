@@ -11,4 +11,14 @@ namespace Gamma {
 
     static Camera* active;
   };
+
+  struct ThirdPersonCamera {
+    float azimuth = 0.0f;
+    float altitude = 0.0f;
+    float radius = 100.0f;
+
+    Vec3f calculatePosition() const;
+    bool isUpsideDown() const;
+    void limitAltitude(float factor);
+  };
 }

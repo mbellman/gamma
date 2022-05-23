@@ -42,6 +42,7 @@ vec2 rotatedVogelDisc(int samples, int index) {
 }
 
 float getLightFactor(vec3 position, float incidence, float light_distance) {
+  // @hack invert Z
   vec4 transform = lightMatrix * glVec4(position);
 
   transform.xyz /= transform.w;

@@ -14,7 +14,7 @@ uniform mat4 matInverseView;
 uniform mat4 matProjection;
 uniform mat4 matInverseProjection;
 uniform mat4 matViewT1;
-uniform float time;
+uniform int frame;
 
 noperspective in vec2 fragUv;
 
@@ -47,33 +47,35 @@ const vec3[] ssao_sample_points = {
 vec2 texel_size = 1.0 / screenSize;
 
 vec2 rotatedVogelDisc(int samples, int index) {
-  float rotation = noise(fract(1.0 + time)) * 3.141592 * 2.0;
+  float f = frame % 4;
+  float rotation = noise(1.0 + f) * 3.141592 * 2.0;
   float theta = 2.4 * index + rotation;
   float radius = sqrt(float(index) + 0.5) / sqrt(float(samples));
 
   return radius * vec2(cos(theta), sin(theta));
 }
 
-// @todo fix distance occlusion issues due to depth mipmap sampling
 float getScreenSpaceAmbientOcclusionContribution(float fragment_depth, vec3 fragment_position, vec3 fragment_normal) {
   const int TOTAL_SAMPLES = 16;
+  // @todo make configurable
   const float radius = 8.0;
   vec3 contribution = vec3(0);
   float linearized_fragment_depth = getLinearizedDepth(fragment_depth);
   float occlusion = 0.0;
 
-  float t = fract(time);
-  vec3 rvec = vec3(noise(1.0 + t), noise(2.0 + t), noise(3.0 + t));
-  vec3 tangent = normalize(rvec - fragment_normal * dot(rvec, fragment_normal));
+  float f = frame % 4;
+  vec3 random_vector = vec3(noise(1.0 + f), noise(2.0 + f), noise(3.0 + f));
+  vec3 tangent = normalize(random_vector - fragment_normal * dot(random_vector, fragment_normal));
   vec3 bitangent = cross(fragment_normal, tangent);
   mat3 tbn = mat3(tangent, bitangent, fragment_normal);
 
   for (int i = 0; i < TOTAL_SAMPLES; i++) {
     vec3 sample_offset = tbn * ssao_sample_points[i];
     vec3 world_sample_position = fragment_position + sample_offset * radius;
+    // @hack invert Z
     vec3 view_sample_position = glVec3(matView * glVec4(world_sample_position));
     vec2 screen_sample_position = getScreenCoordinates(view_sample_position, matProjection);
-    float sample_depth = textureLod(texColorAndDepth, screen_sample_position, 3).w;
+    float sample_depth = textureLod(texColorAndDepth, screen_sample_position, 1).w;
     float linear_sample_depth = getLinearizedDepth(sample_depth);
 
     if (linear_sample_depth < view_sample_position.z) {
@@ -101,6 +103,7 @@ vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fra
   vec3 camera_to_fragment = normalize(fragment_position - cameraPosition);
   vec3 reflection_vector = reflect(camera_to_fragment, fragment_normal);
   vec3 world_bounce_ray = fragment_position + reflection_vector * 10.0;
+  // @hack invert Z
   vec3 view_bounce_ray = glVec3(matView * glVec4(world_bounce_ray));
   vec2 bounce_ray_coords = getScreenCoordinates(view_bounce_ray, matProjection);
 
@@ -152,45 +155,38 @@ void main() {
     ambient_occlusion = getScreenSpaceAmbientOcclusionContribution(frag_color_and_depth.w, fragment_position, fragment_normal);
   #endif
 
-  float sample_sum = 0.0;
-
   out_gi_and_ao = vec4(global_illumination * 0.75, ambient_occlusion);
-  sample_sum += 1.0;
 
   #if USE_DENOISING == 1
-    // Sample the previous frame's global illumination/ambient occlusion
-    // result over an area to yield smoother blending. Since each frame
-    // is temporally denoised using the frame prior, successive frames
-    // will converge upon a smooth image.
-    //
-    // @todo if indirect skylight is disabled, blurred global illumination
-    // is the only contribution to surfaces not directly affected by lights.
-    // this results in noticeable over-smoothing and low-fidelity detail
-    // resolution compared to directly lit surfaces. not a bug, but an
-    // unsightly visual quirk that may need addressing.
-    //
-    // @todo AO completely breaks (and GI becomes almost unnoticeable)
-    // on moving objects, since any granular detail is all but lost in the
-    // denoising/reprojection process. eventually, we may need to use
-    // same-frame convergence without temporal denoising.
-    const int radius = 5;
-    const float temporal_sample_weight = 4.0;
     vec3 view_fragment_position_t1 = glVec3(matViewT1 * glVec4(fragment_position));
     vec2 frag_uv_t1 = getScreenCoordinates(view_fragment_position_t1.xyz, matProjection);
+    vec4 sample_t1 = texture(texIndirectLightT1, frag_uv_t1);
+    float linearized_fragment_depth = getLinearizedDepth(frag_color_and_depth.w);
+    float weight = 1.0;
+    float sample_sum = 0.0;
 
-    for (int i = -radius; i <= radius; i += radius) {
-      for (int j = -radius; j <= radius; j += radius) {
-        vec2 sample_uv = frag_uv_t1 + vec2(float(i), float(j)) * texel_size;
+    float sample_depth = textureLod(texColorAndDepth, frag_uv_t1, 1).w;
+    float linear_sample_depth = getLinearizedDepth(sample_depth);
 
-        if (!isOffScreen(sample_uv, 0.001)) {
-          vec4 sample_t1 = texture(texIndirectLightT1, sample_uv);
+    // if (distance(linearized_fr/agment_depth, linear_sample_depth) < 1.0) {
+      out_gi_and_ao += sample_t1 * weight;
+      sample_sum += weight;
+    // }
 
-          out_gi_and_ao += sample_t1 * temporal_sample_weight;
-          sample_sum += temporal_sample_weight;
-        }
+    for (int x = -2; x <= 2; x++) {
+      for (int y = -2; y <= 2; y++) {
+        vec2 offset = vec2(x, y) * texel_size * 3.0;
+        vec2 sample_uv = frag_uv_t1 + offset;
+        float sample_depth = textureLod(texColorAndDepth, sample_uv, 1).w;
+        float linear_sample_depth = getLinearizedDepth(sample_depth);
+
+        // if (distance(linearized_fragment_depth, linear_sample_depth) < 2.0) {
+          out_gi_and_ao += texture(texIndirectLightT1, sample_uv) * weight * 0.2;
+          sample_sum += weight * 0.2;
+        // }
       }
     }
-  #endif
 
-  out_gi_and_ao /= sample_sum;
+    out_gi_and_ao /= (1.0 + sample_sum);
+  #endif
 }

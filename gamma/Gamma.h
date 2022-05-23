@@ -1,6 +1,7 @@
 #pragma once
 
 #include "math/matrix.h"
+#include "math/utilities.h"
 #include "math/vector.h"
 #include "performance/benchmark.h"
 #include "system/AbstractController.h"

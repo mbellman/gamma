@@ -117,6 +117,7 @@ namespace Gamma {
         lastTick = SDL_GetTicks();
 
         Camera::active = &activeScene->camera;
+
         activeScene->updateScene(dt);
 
         if (renderer != nullptr) {
@@ -127,6 +128,7 @@ namespace Gamma {
 
           #if GAMMA_DEVELOPER_MODE
             // Display stats
+            // @todo make this a method
             auto& resolution = renderer->getInternalResolution();
             auto& renderStats = renderer->getRenderStats();
             auto& sceneStats = activeScene->getStats();
@@ -250,5 +252,9 @@ namespace Gamma {
   void Window::setScreenRegion(const Region<uint32>& region) {
     SDL_SetWindowPosition(sdl_window, region.x, region.y);
     SDL_SetWindowSize(sdl_window, region.width, region.height);
+  }
+
+  void Window::setTitle(const char* title) {
+    SDL_SetWindowTitle(sdl_window, title);
   }
 }

@@ -16,7 +16,8 @@ namespace Gamma {
     { ColorFormat::RGB, GL_RGB32F },
     { ColorFormat::RGB16, GL_RGB16F },
     { ColorFormat::RGBA, GL_RGBA32F },
-    { ColorFormat::RGBA16, GL_RGBA16F }
+    { ColorFormat::RGBA16, GL_RGBA16F },
+    { ColorFormat::RGBA8, GL_RGBA8 }
   };
 
   const static std::map<ColorFormat, GLenum> glFormatMap = {
@@ -27,7 +28,8 @@ namespace Gamma {
     { ColorFormat::RGB, GL_RGB },
     { ColorFormat::RGB16, GL_RGB },
     { ColorFormat::RGBA, GL_RGBA },
-    { ColorFormat::RGBA16, GL_RGBA }
+    { ColorFormat::RGBA16, GL_RGBA },
+    { ColorFormat::RGBA8, GL_RGBA }
   };
 
   /**

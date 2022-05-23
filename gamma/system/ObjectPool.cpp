@@ -10,6 +10,10 @@ namespace Gamma {
    * ObjectPool
    * ----------
    */
+  Object& ObjectPool::operator[](uint32 index) {
+    return objects[index];
+  }
+
   Object* ObjectPool::begin() const {
     return objects;
   }

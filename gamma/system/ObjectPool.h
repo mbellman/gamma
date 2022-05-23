@@ -20,6 +20,8 @@ namespace Gamma {
    */
   class ObjectPool {
   public:
+    Object& operator[](uint32 index);
+
     Object* begin() const;
     Object& createObject();
     Object* end() const;

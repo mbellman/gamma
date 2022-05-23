@@ -92,6 +92,7 @@ namespace Gamma {
 
     // Enable default OpenGL settings
     glEnable(GL_PROGRAM_POINT_SIZE);
+    glFrontFace(GL_CW);
 
     #if !GAMMA_DEVELOPER_MODE
       // Set uniform shader constants upfront, since
@@ -203,23 +204,23 @@ namespace Gamma {
 
     if (Gm_FlagWasEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)) {
       shaders.indirectLight.define("USE_SCREEN_SPACE_AMBIENT_OCCLUSION", "1");
-      shaders.indirectLightComposite.define("USE_AVERAGE_INDIRECT_LIGHT", "1");
+      shaders.indirectLightComposite.define("USE_COMPOSITED_INDIRECT_LIGHT", "1");
     } else if (Gm_FlagWasDisabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)) {
       shaders.indirectLight.define("USE_SCREEN_SPACE_AMBIENT_OCCLUSION", "0");
 
       if (!Gm_IsFlagEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)) {
-        shaders.indirectLightComposite.define("USE_AVERAGE_INDIRECT_LIGHT", "0");
+        shaders.indirectLightComposite.define("USE_COMPOSITED_INDIRECT_LIGHT", "0");
       }
     }
 
     if (Gm_FlagWasEnabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)) {
       shaders.indirectLight.define("USE_SCREEN_SPACE_GLOBAL_ILLUMINATION", "1");
-      shaders.indirectLightComposite.define("USE_AVERAGE_INDIRECT_LIGHT", "1");
+      shaders.indirectLightComposite.define("USE_COMPOSITED_INDIRECT_LIGHT", "1");
     } else if (Gm_FlagWasDisabled(GammaFlags::RENDER_GLOBAL_ILLUMINATION)) {
       shaders.indirectLight.define("USE_SCREEN_SPACE_GLOBAL_ILLUMINATION", "0");
 
       if (!Gm_IsFlagEnabled(GammaFlags::RENDER_AMBIENT_OCCLUSION)) {
-        shaders.indirectLightComposite.define("USE_AVERAGE_INDIRECT_LIGHT", "0");
+        shaders.indirectLightComposite.define("USE_COMPOSITED_INDIRECT_LIGHT", "0");
       }
     }
 
@@ -256,7 +257,7 @@ namespace Gamma {
     ctx.matPreviousView = ctx.matView;
 
     ctx.matView = (
-      Matrix4f::rotation(camera.orientation.toVec3f()) *
+      Matrix4f::rotation(camera.orientation) *
       Matrix4f::translation(camera.position.invert().gl())
     ).transpose();
 
@@ -882,7 +883,7 @@ namespace Gamma {
       shaders.indirectLight.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
       shaders.indirectLight.setMatrix4f("matInverseView", ctx.matInverseView);
       shaders.indirectLight.setMatrix4f("matViewT1", ctx.matPreviousView);
-      shaders.indirectLight.setFloat("time", AbstractScene::active->getRunningTime());
+      shaders.indirectLight.setInt("frame", AbstractScene::active->getFrame());
 
       OpenGLScreenQuad::render();
 
@@ -892,6 +893,7 @@ namespace Gamma {
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     }
 
+    // Composite the indirect lighting result into the accumulation target buffer
     buffers.gBuffer.read();
     currentIndirectLightBuffer.read();
     ctx.accumulationTarget->write();
@@ -1271,7 +1273,7 @@ namespace Gamma {
       }
 
       Matrix4f matView = (
-        Matrix4f::rotation(probeCamera.orientation.toVec3f()) *
+        Matrix4f::rotation(probeCamera.orientation) *
         Matrix4f::translation(probeCamera.position.invert().gl())
       ).transpose();
 

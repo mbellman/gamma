@@ -110,6 +110,15 @@ namespace Gamma {
     Quaternion yaw = Quaternion::fromAxisAngle(rotation.y, 0.0f, 1.0f, 0.0f);
     Quaternion roll = Quaternion::fromAxisAngle(rotation.z, 0.0f, 0.0f, 1.0f);
 
+    return (roll * yaw * pitch).toMatrix4f();
+  }
+
+  Matrix4f Matrix4f::rotation(const Orientation& orientation) {
+    Vec3f rotation = orientation.toVec3f();
+    Quaternion pitch = Quaternion::fromAxisAngle(rotation.x, 1.0f, 0.0f, 0.0f);
+    Quaternion yaw = Quaternion::fromAxisAngle(rotation.y, 0.0f, 1.0f, 0.0f);
+    Quaternion roll = Quaternion::fromAxisAngle(rotation.z, 0.0f, 0.0f, 1.0f);
+
     return (pitch * yaw * roll).toMatrix4f();
   }
 
@@ -135,20 +144,20 @@ namespace Gamma {
     // the number of transforms per frame reaches into the thousands.
     float v[6];
 
-    // Accumulate scale * rotation
+    // Accumulate rotation * scale
     for (uint32 r = 0; r < 3; r++) {
-      // Store scale terms
-      v[0] = m_scale.m[r * 4];
-      v[2] = m_scale.m[r * 4 + 1];
-      v[4] = m_scale.m[r * 4 + 2];
+      // Store rotation terms
+      v[0] = m_rotation.m[r * 4];
+      v[2] = m_rotation.m[r * 4 + 1];
+      v[4] = m_rotation.m[r * 4 + 2];
 
       for (uint32 c = 0; c < 3; c++) {
-        // Store rotation terms
-        v[1] = m_rotation.m[c];
-        v[3] = m_rotation.m[4 + c];
-        v[5] = m_rotation.m[8 + c];
+        // Store scale terms
+        v[1] = m_scale.m[c];
+        v[3] = m_scale.m[4 + c];
+        v[5] = m_scale.m[8 + c];
 
-        // S * R
+        // rotation * scale
         m_transform.m[r * 4 + c] = (
           v[0] * v[1] +
           v[2] * v[3] +
