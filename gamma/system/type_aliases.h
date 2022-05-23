@@ -1,7 +1,9 @@
 #pragma once
 
 struct SDL_Window;
+typedef struct _TTF_Font TTF_Font;
 typedef void* SDL_GLContext;
+
 typedef int GLint;
 typedef unsigned int GLuint;
 typedef unsigned int GLenum;

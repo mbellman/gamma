@@ -1,5 +1,9 @@
 #include <string>
 
+#include "SDL.h"
+#include "SDL_ttf.h"
+#include "SDL_image.h"
+
 #include "opengl/OpenGLRenderer.h"
 #include "performance/benchmark.h"
 #include "performance/tools.h"
@@ -9,9 +13,118 @@
 #include "system/flags.h"
 #include "system/Window.h"
 
-#include "SDL.h"
-#include "SDL_ttf.h"
-#include "SDL_image.h"
+GmWindow* Gm_CreateWindow() {
+  auto* window = new GmWindow();
+
+  // @todo create Gm_Init() and move there
+  SDL_Init(SDL_INIT_EVERYTHING);
+  TTF_Init();
+  IMG_Init(IMG_INIT_PNG);
+
+  window->sdl_window = SDL_CreateWindow(
+    "Gamma",
+    SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+    640, 480,
+    SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI
+  );
+
+  window->font_sm = TTF_OpenFont("./fonts/OpenSans-Regular.ttf", 16);
+  window->font_lg = TTF_OpenFont("./fonts/OpenSans-Regular.ttf", 22);
+
+  return window;
+}
+
+// @todo remove the need for scene
+GmGameContext* Gm_CreateGameContext(Gamma::AbstractScene* scene) {
+  auto* context = new GmGameContext();
+
+  context->scene = scene;
+  // @todo log meshes being loaded
+  context->scene->init();
+
+  return context;
+}
+
+void Gm_SetRenderMode(GmWindow* window, GmRenderMode mode) {
+  if (window->renderer) {
+    window->renderer->destroy();
+
+    delete window->renderer;
+
+    window->renderer = nullptr;
+  }
+
+  switch (mode) {
+    case GmRenderMode::OPENGL:
+      window->renderer = new Gamma::OpenGLRenderer(window->sdl_window);
+      break;
+    case GmRenderMode::VULKAN:
+      // @todo
+      break;
+  }
+
+  if (window->renderer != nullptr) {
+    window->renderer->init();
+  }
+}
+
+void Gm_HandleEvents(GmWindow* window, GmGameContext* context) {
+  // @todo remove need for AbstractScene
+  auto* activeScene = Gamma::AbstractScene::active;
+  SDL_Event event;
+
+  while (SDL_PollEvent(&event)) {
+    switch (event.type) {
+      case SDL_QUIT:
+        window->closed = true;
+        break;
+      case SDL_WINDOWEVENT:
+        if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+          window->size = {
+            (Gamma::uint32)event.window.data1,
+            (Gamma::uint32)event.window.data2
+          };
+        }
+
+        break;
+      default:
+        break;
+    }
+
+    if (activeScene != nullptr && !window->commander.isOpen()) {
+      activeScene->input.handleEvent(event);
+    }
+
+    #if GAMMA_DEVELOPER_MODE
+      window->commander.input.handleEvent(event);
+    #endif
+  }
+}
+
+void Gm_RenderScene(GmWindow* window, GmGameContext* context) {
+  // @todo render objects via GmGameContext
+  window->renderer->render();
+  window->renderer->present();
+}
+
+void Gm_DestroyWindow(GmWindow* window) {
+  IMG_Quit();
+
+  TTF_CloseFont(window->font_sm);
+  TTF_CloseFont(window->font_lg);
+  TTF_Quit();
+
+  SDL_DestroyWindow(window->sdl_window);
+  SDL_Quit();
+}
+
+void Gm_DestroyGameContext(GmGameContext* context) {
+  if (context->scene) {
+    context->scene->destroy();
+
+    delete context->scene;
+  }
+}
 
 namespace Gamma {
   /**

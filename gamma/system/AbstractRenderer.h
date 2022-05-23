@@ -3,9 +3,6 @@
 #include "system/traits.h"
 #include "system/type_aliases.h"
 
-#include "SDL.h"
-#include "SDL_ttf.h"
-
 namespace Gamma {
   struct Mesh;
   struct Light;
