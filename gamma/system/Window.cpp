@@ -13,74 +13,76 @@
 #include "system/flags.h"
 #include "system/Window.h"
 
-GmWindow* Gm_CreateWindow() {
-  auto* window = new GmWindow();
+GmContext* Gm_CreateContext() {
+  auto* context = new GmContext();
 
   // @todo create Gm_Init() and move there
   SDL_Init(SDL_INIT_EVERYTHING);
   TTF_Init();
   IMG_Init(IMG_INIT_PNG);
 
-  window->sdl_window = SDL_CreateWindow(
+  // @todo Gm_OpenWindow(const char* title, const Area<uint32>& size)
+  context->window.sdl_window = SDL_CreateWindow(
     "Gamma",
     SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
     640, 480,
     SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI
   );
 
-  window->font_sm = TTF_OpenFont("./fonts/OpenSans-Regular.ttf", 16);
-  window->font_lg = TTF_OpenFont("./fonts/OpenSans-Regular.ttf", 22);
-
-  return window;
-}
-
-// @todo remove the need for scene
-GmGameContext* Gm_CreateGameContext(Gamma::AbstractScene* scene) {
-  auto* context = new GmGameContext();
-
-  context->scene = scene;
-  // @todo log meshes being loaded
-  context->scene->init();
+  context->window.font_sm = TTF_OpenFont("./fonts/OpenSans-Regular.ttf", 16);
+  context->window.font_lg = TTF_OpenFont("./fonts/OpenSans-Regular.ttf", 22);
 
   return context;
 }
 
-void Gm_SetRenderMode(GmWindow* window, GmRenderMode mode) {
-  if (window->renderer) {
-    window->renderer->destroy();
+void Gm_SetRenderMode(GmContext* context, GmRenderMode mode) {
+  if (context->renderer) {
+    context->renderer->destroy();
 
-    delete window->renderer;
+    delete context->renderer;
 
-    window->renderer = nullptr;
+    context->renderer = nullptr;
   }
 
   switch (mode) {
     case GmRenderMode::OPENGL:
-      window->renderer = new Gamma::OpenGLRenderer(window->sdl_window);
+      context->renderer = new Gamma::OpenGLRenderer(context->window.sdl_window);
       break;
     case GmRenderMode::VULKAN:
       // @todo
       break;
   }
 
-  if (window->renderer != nullptr) {
-    window->renderer->init();
+  if (context->renderer != nullptr) {
+    context->renderer->init();
   }
 }
 
-void Gm_HandleEvents(GmWindow* window, GmGameContext* context) {
-  // @todo remove need for AbstractScene
-  auto* activeScene = Gamma::AbstractScene::active;
+// @todo remove this method once AbstractScene is replaced with a scene struct
+void Gm_SetScene(GmContext* context, Gamma::AbstractScene* scene) {
+  context->scene = scene;
+
+  context->scene->init();
+
+  // @todo add renderable meshes
+}
+
+void Gm_AddRenderableMesh(GmContext* context, const Gamma::Mesh* mesh) {
+  // @todo
+}
+
+void Gm_HandleEvents(GmContext* context) {
+  auto* activeScene = context->scene;
   SDL_Event event;
 
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
       case SDL_QUIT:
-        window->closed = true;
+        context->window.closed = true;
         break;
       case SDL_WINDOWEVENT:
         if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-          window->size = {
+          context->window.size = {
             (Gamma::uint32)event.window.data1,
             (Gamma::uint32)event.window.data2
           };
@@ -91,39 +93,36 @@ void Gm_HandleEvents(GmWindow* window, GmGameContext* context) {
         break;
     }
 
-    if (activeScene != nullptr && !window->commander.isOpen()) {
+    if (activeScene != nullptr && !context->commander.isOpen()) {
       activeScene->input.handleEvent(event);
     }
 
     #if GAMMA_DEVELOPER_MODE
-      window->commander.input.handleEvent(event);
+      context->commander.input.handleEvent(event);
     #endif
   }
 }
 
-void Gm_RenderScene(GmWindow* window, GmGameContext* context) {
-  // @todo render objects via GmGameContext
-  window->renderer->render();
-  window->renderer->present();
+void Gm_RenderScene(GmContext* context) {
+  context->renderer->render();
+  context->renderer->present();
 }
 
-void Gm_DestroyWindow(GmWindow* window) {
-  IMG_Quit();
-
-  TTF_CloseFont(window->font_sm);
-  TTF_CloseFont(window->font_lg);
-  TTF_Quit();
-
-  SDL_DestroyWindow(window->sdl_window);
-  SDL_Quit();
-}
-
-void Gm_DestroyGameContext(GmGameContext* context) {
+void Gm_DestroyContext(GmContext* context) {
   if (context->scene) {
     context->scene->destroy();
 
     delete context->scene;
   }
+
+  IMG_Quit();
+
+  TTF_CloseFont(context->window.font_sm);
+  TTF_CloseFont(context->window.font_lg);
+  TTF_Quit();
+
+  SDL_DestroyWindow(context->window.sdl_window);
+  SDL_Quit();
 }
 
 namespace Gamma {

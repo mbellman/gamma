@@ -12,22 +12,20 @@ int main(int argc, char* argv[]) {
   // window.setController(new DemoController());
   // window.open();
 
-  GmWindow* window = Gm_CreateWindow();
+  GmContext* context = Gm_CreateContext();
 
-  Gm_SetRenderMode(window, GmRenderMode::OPENGL);
+  Gm_SetRenderMode(context, GmRenderMode::OPENGL);
+  Gm_SetScene(context, new DemoScene());
 
-  GmGameContext* context = Gm_CreateGameContext(new DemoScene());
-
-  while (!window->closed) {
-    Gm_HandleEvents(window, context);
+  while (!context->window.closed) {
+    Gm_HandleEvents(context);
 
     // update logic
 
-    Gm_RenderScene(window, context);
+    Gm_RenderScene(context);
   }
 
-  Gm_DestroyWindow(window);
-  Gm_DestroyGameContext(context);
+  Gm_DestroyContext(context);
 
   // benchmark_matrix_multiplication();
   // benchmark_object_management();

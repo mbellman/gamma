@@ -4,25 +4,24 @@
 #include "system/AbstractRenderer.h"
 #include "system/AbstractScene.h"
 #include "system/Commander.h"
+#include "system/entities.h"
 #include "system/macros.h"
 #include "system/traits.h"
 #include "system/type_aliases.h"
 
-// @todo combine GmWindow/GmGameContext into GmContext
-struct GmWindow {
-  bool closed = false;
+struct GmContext {
   Gamma::Commander commander;
-  TTF_Font* font_sm = nullptr;
-  TTF_Font* font_lg = nullptr;
   Gamma::AbstractRenderer* renderer = nullptr;
-  SDL_Window* sdl_window = nullptr;
-  Gamma::Area<Gamma::uint32> size;
-};
-
-struct GmGameContext {
-  // @todo remove the need for an AbstractScene and add
-  // appropriate fields to GmGameContext to manage scenes
+  // @todo replace AbstractScene with a scene management struct
   Gamma::AbstractScene* scene = nullptr;
+
+  struct {
+    bool closed = false;
+    TTF_Font* font_sm = nullptr;
+    TTF_Font* font_lg = nullptr;
+    SDL_Window* sdl_window = nullptr;
+    Gamma::Area<Gamma::uint32> size;
+  } window;
 };
 
 enum GmRenderMode {
@@ -30,13 +29,14 @@ enum GmRenderMode {
   VULKAN
 };
 
-GmWindow* Gm_CreateWindow();
-GmGameContext* Gm_CreateGameContext(Gamma::AbstractScene* scene);  // @todo remove the need for scene
-void Gm_SetRenderMode(GmWindow* window, GmRenderMode mode);
-void Gm_HandleEvents(GmWindow* window, GmGameContext* context);
-void Gm_RenderScene(GmWindow* window, GmGameContext* context);
-void Gm_DestroyWindow(GmWindow* window);
-void Gm_DestroyGameContext(GmGameContext* context);
+GmContext* Gm_CreateContext();
+void Gm_OpenWindow(GmContext* context, const Gamma::Area<Gamma::uint32>& size);
+void Gm_SetRenderMode(GmContext* context, GmRenderMode mode);
+void Gm_SetScene(GmContext* context, Gamma::AbstractScene* scene);
+void Gm_AddRenderableMesh(GmContext* context, const Gamma::Mesh* mesh);
+void Gm_HandleEvents(GmContext* context);
+void Gm_RenderScene(GmContext* context);
+void Gm_DestroyContext(GmContext* context);
 
 namespace Gamma {
   enum RenderMode {
