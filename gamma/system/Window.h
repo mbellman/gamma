@@ -46,32 +46,8 @@ void Gm_LogFrameEnd(GmContext* context);
 void Gm_DestroyContext(GmContext* context);
 
 namespace Gamma {
-  enum RenderMode {
-    OPENGL,
-    VULKAN
-  };
-
-  class Window {
-  public:
+  // @todo remove the need for this
+  struct Window {
     static Area<uint32> size;
-
-    Window();
-
-    void open();
-    void setController(AbstractController* controller);
-    void setRenderMode(RenderMode mode);
-    void setScreenRegion(const Region<uint32>& region);
-    void setTitle(const char* title);
-
-  private:
-    Commander commander;
-    SDL_Window* sdl_window = nullptr;
-    TTF_Font* font_OpenSans_sm = nullptr;
-    TTF_Font* font_OpenSans_lg = nullptr;
-    AbstractController* controller = nullptr;
-    AbstractRenderer* renderer = nullptr;
-
-    void bindEvents();
-    void destroyRenderer();
   };
 }
