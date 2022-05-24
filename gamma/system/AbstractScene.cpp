@@ -224,6 +224,8 @@ namespace Gamma {
   }
 
   void AbstractScene::updateScene(float dt) {
+    Camera::active = &camera;
+
     if (Gm_IsFlagEnabled(GammaFlags::FREE_CAMERA_MODE)) {
       handleFreeCameraMode(dt);
     }

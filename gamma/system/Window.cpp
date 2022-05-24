@@ -91,6 +91,15 @@ void Gm_SetScene(GmContext* context, Gamma::AbstractScene* scene) {
   scene->init();
 }
 
+float Gm_GetDeltaTime(GmContext* context) {
+  Gamma::uint32 ticks = SDL_GetTicks();
+  float dt = float(ticks - context->lastTick) / 1000.0f;
+
+  context->lastTick = ticks;
+
+  return dt;
+}
+
 void Gm_HandleEvents(GmContext* context) {
   SDL_Event event;
 

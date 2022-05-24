@@ -9,6 +9,7 @@ namespace Gamma {
     Vec3f position;
     Orientation orientation;
 
+    // @todo remove the need for this
     static Camera* active;
   };
 

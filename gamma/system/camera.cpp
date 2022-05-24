@@ -9,6 +9,8 @@ namespace Gamma {
    * --------------
    *
    * A static reference to the active camera pointer.
+   *
+   * @todo remove the need for this
    */
   Camera* Camera::active = nullptr;
 

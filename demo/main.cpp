@@ -1,37 +1,21 @@
 #include "Gamma.h"
 #include "DemoScene.h"
-#include "DemoController.h"
-
-// #include "benchmarks/object_management.h"
-// #include "benchmarks/matrix_multiplication.h"
 
 int main(int argc, char* argv[]) {
-  // Gamma::Window window;
-
-  // window.setRenderMode(Gamma::RenderMode::OPENGL);
-  // window.setController(new DemoController());
-  // window.open();
-
   GmContext* context = Gm_CreateContext();
 
   Gm_SetRenderMode(context, GmRenderMode::OPENGL);
   Gm_SetScene(context, new DemoScene());
 
   while (!context->window.closed) {
+    float dt = Gm_GetDeltaTime(context);
+
     Gm_HandleEvents(context);
-
-    Gamma::Camera::active = &context->scene->camera;
-
-    // @todo use proper dt
-    context->scene->updateScene(1.0f / 60.0f);
-
+    context->scene->updateScene(dt);
     Gm_RenderScene(context);
   }
 
   Gm_DestroyContext(context);
-
-  // benchmark_matrix_multiplication();
-  // benchmark_object_management();
 
   return 0;
 }

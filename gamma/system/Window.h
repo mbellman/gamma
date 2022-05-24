@@ -16,6 +16,7 @@ enum GmRenderMode {
 
 struct GmContext {
   Gamma::Commander commander;
+  Gamma::uint32 lastTick = 0;
   Gamma::AbstractRenderer* renderer = nullptr;
   // @todo replace AbstractScene with a scene management struct
   Gamma::AbstractScene* scene = nullptr;
@@ -33,6 +34,7 @@ GmContext* Gm_CreateContext();
 void Gm_OpenWindow(GmContext* context, const Gamma::Area<Gamma::uint32>& size);
 void Gm_SetRenderMode(GmContext* context, GmRenderMode mode);
 void Gm_SetScene(GmContext* context, Gamma::AbstractScene* scene);
+float Gm_GetDeltaTime(GmContext* context);
 void Gm_HandleEvents(GmContext* context);
 void Gm_RenderScene(GmContext* context);
 void Gm_DestroyContext(GmContext* context);
