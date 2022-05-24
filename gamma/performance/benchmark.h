@@ -5,6 +5,8 @@
 
 #include "system/type_aliases.h"
 
+Gamma::uint64 Gm_GetMicroseconds();
+
 namespace Gamma {
   void Gm_CompareBenchmarks(uint64 a, uint64 b);
 

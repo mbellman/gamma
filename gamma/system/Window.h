@@ -1,6 +1,7 @@
 #pragma once
 
 #include "math/plane.h"
+#include "performance/tools.h"
 #include "system/AbstractRenderer.h"
 #include "system/AbstractScene.h"
 #include "system/Commander.h"
@@ -15,11 +16,14 @@ enum GmRenderMode {
 };
 
 struct GmContext {
-  Gamma::Commander commander;
-  Gamma::uint32 lastTick = 0;
-  Gamma::AbstractRenderer* renderer = nullptr;
   // @todo replace AbstractScene with a scene management struct
   Gamma::AbstractScene* scene = nullptr;
+  Gamma::AbstractRenderer* renderer = nullptr;
+  Gamma::uint32 lastTick = 0;
+  Gamma::uint64 frameStartMicroseconds = 0;
+  Gamma::Averager<5, Gamma::uint32> fpsAverager;
+  Gamma::Averager<5, Gamma::uint64> frameTimeAverager;
+  Gamma::Commander commander;
 
   struct {
     bool closed = false;
@@ -35,8 +39,10 @@ void Gm_OpenWindow(GmContext* context, const Gamma::Area<Gamma::uint32>& size);
 void Gm_SetRenderMode(GmContext* context, GmRenderMode mode);
 void Gm_SetScene(GmContext* context, Gamma::AbstractScene* scene);
 float Gm_GetDeltaTime(GmContext* context);
+void Gm_LogFrameStart(GmContext* context);
 void Gm_HandleEvents(GmContext* context);
 void Gm_RenderScene(GmContext* context);
+void Gm_LogFrameEnd(GmContext* context);
 void Gm_DestroyContext(GmContext* context);
 
 namespace Gamma {

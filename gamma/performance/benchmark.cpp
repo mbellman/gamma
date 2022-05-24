@@ -4,6 +4,12 @@
 
 #include "performance/benchmark.h"
 
+Gamma::uint64 Gm_GetMicroseconds() {
+  auto now = std::chrono::system_clock::now();
+
+  return std::chrono::time_point_cast<std::chrono::microseconds>(now).time_since_epoch().count();
+}
+
 namespace Gamma {
   void Gm_CompareBenchmarks(uint64 a, uint64 b) {
     if (a > b) {
