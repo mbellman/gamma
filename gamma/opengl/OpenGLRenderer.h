@@ -2,6 +2,9 @@
 
 #include <vector>
 
+#include "SDL.h"
+#include "SDL_ttf.h"
+
 #include "math/vector.h"
 #include "opengl/framebuffer.h"
 #include "opengl/OpenGLLightDisc.h"
@@ -11,9 +14,6 @@
 #include "system/AbstractRenderer.h"
 #include "system/entities.h"
 #include "system/type_aliases.h"
-
-#include "SDL.h"
-#include "SDL_ttf.h"
 
 namespace Gamma {
   struct RendererBuffers {

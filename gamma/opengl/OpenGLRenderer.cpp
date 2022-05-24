@@ -2,6 +2,11 @@
 #include <cstdio>
 #include <map>
 
+#include "SDL.h"
+#include "SDL_ttf.h"
+#include "glew.h"
+#include "SDL_opengl.h"
+
 #include "opengl/errors.h"
 #include "opengl/indirect_buffer.h"
 #include "opengl/OpenGLRenderer.h"
@@ -14,11 +19,6 @@
 #include "system/entities.h"
 #include "system/flags.h"
 #include "system/Window.h"
-
-#include "SDL.h"
-#include "SDL_ttf.h"
-#include "glew.h"
-#include "SDL_opengl.h"
 
 namespace Gamma {
   const static uint32 MAX_LIGHTS = 1000;

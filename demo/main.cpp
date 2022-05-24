@@ -1,6 +1,6 @@
 #include "Gamma.h"
 #include "DemoScene.h"
-// #include "DemoController.h"
+#include "DemoController.h"
 
 // #include "benchmarks/object_management.h"
 // #include "benchmarks/matrix_multiplication.h"
@@ -20,7 +20,10 @@ int main(int argc, char* argv[]) {
   while (!context->window.closed) {
     Gm_HandleEvents(context);
 
-    // update logic
+    Gamma::Camera::active = &context->scene->camera;
+
+    // @todo use proper dt
+    context->scene->updateScene(1.0f / 60.0f);
 
     Gm_RenderScene(context);
   }

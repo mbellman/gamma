@@ -29,6 +29,8 @@ namespace Gamma {
   public:
     Camera camera;
     InputSystem input;
+    std::vector<Mesh*> meshes;
+    std::vector<Light> lights;
 
     static AbstractScene* active;
 
@@ -61,11 +63,9 @@ namespace Gamma {
     void useSceneFile(const std::string& filename);
 
   private:
-    std::vector<Mesh*> meshes;
     std::map<std::string, Mesh*> meshMap;
     std::map<std::string, Vec3f> probeMap;
     std::map<std::string, ObjectRecord> objectStore;
-    std::vector<Light> lights;
     std::vector<SceneFileRecord> sceneFileRecords;
     float runningTime = 0.0f;
     Vec3f freeCameraVelocity = Vec3f(0.0f);

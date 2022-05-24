@@ -16,7 +16,6 @@
 GmContext* Gm_CreateContext() {
   auto* context = new GmContext();
 
-  // @todo create Gm_Init() and move there
   SDL_Init(SDL_INIT_EVERYTHING);
   TTF_Init();
   IMG_Init(IMG_INIT_PNG);
@@ -31,12 +30,17 @@ GmContext* Gm_CreateContext() {
 
   context->window.font_sm = TTF_OpenFont("./fonts/OpenSans-Regular.ttf", 16);
   context->window.font_lg = TTF_OpenFont("./fonts/OpenSans-Regular.ttf", 22);
+  context->window.size = { 640, 480 };
+
+  // @hack accommodate Window::size checks
+  // @todo pass a GmContext* to AbstractRenderer, rather than SDL_Window*
+  Gamma::Window::size = context->window.size;
 
   return context;
 }
 
 void Gm_SetRenderMode(GmContext* context, GmRenderMode mode) {
-  if (context->renderer) {
+  if (context->renderer != nullptr) {
     context->renderer->destroy();
 
     delete context->renderer;
@@ -60,19 +64,34 @@ void Gm_SetRenderMode(GmContext* context, GmRenderMode mode) {
 
 // @todo remove this method once AbstractScene is replaced with a scene struct
 void Gm_SetScene(GmContext* context, Gamma::AbstractScene* scene) {
+  using namespace Gamma;
+
   context->scene = scene;
 
-  context->scene->init();
+  AbstractScene::active = scene;
 
-  // @todo add renderable meshes
-}
+  // @todo remove Signaler/event-driven behavior here
+  // once AbstractScene becomes a regular struct
+  scene->on<const Mesh*>("mesh-created", [=](auto* mesh) {
+    context->renderer->createMesh(mesh);
+  });
 
-void Gm_AddRenderableMesh(GmContext* context, const Gamma::Mesh* mesh) {
-  // @todo
+  scene->on<const Mesh*>("mesh-destroyed", [=](auto* mesh) {
+    context->renderer->destroyMesh(mesh);
+  });
+
+  scene->on<const Light*>("shadowcaster-created", [=](auto* light) {
+    context->renderer->createShadowMap(light);
+  });
+
+  scene->on<const Light*>("shadowcaster-destroyed", [=](auto* light) {
+    context->renderer->destroyShadowMap(light);
+  });
+
+  scene->init();
 }
 
 void Gm_HandleEvents(GmContext* context) {
-  auto* activeScene = context->scene;
   SDL_Event event;
 
   while (SDL_PollEvent(&event)) {
@@ -86,6 +105,10 @@ void Gm_HandleEvents(GmContext* context) {
             (Gamma::uint32)event.window.data1,
             (Gamma::uint32)event.window.data2
           };
+
+          // @hack accommodate Window::size checks
+          // @todo pass a GmContext* to AbstractRenderer, rather than SDL_Window*
+          Gamma::Window::size = context->window.size;
         }
 
         break;
@@ -93,8 +116,8 @@ void Gm_HandleEvents(GmContext* context) {
         break;
     }
 
-    if (activeScene != nullptr && !context->commander.isOpen()) {
-      activeScene->input.handleEvent(event);
+    if (context->scene != nullptr && !context->commander.isOpen()) {
+      context->scene->input.handleEvent(event);
     }
 
     #if GAMMA_DEVELOPER_MODE
@@ -106,10 +129,13 @@ void Gm_HandleEvents(GmContext* context) {
 void Gm_RenderScene(GmContext* context) {
   context->renderer->render();
   context->renderer->present();
+
+  // @todo move this elsewhere
+  Gamma::Gm_SavePreviousFlags();
 }
 
 void Gm_DestroyContext(GmContext* context) {
-  if (context->scene) {
+  if (context->scene != nullptr) {
     context->scene->destroy();
 
     delete context->scene;

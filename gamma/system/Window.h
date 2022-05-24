@@ -9,6 +9,11 @@
 #include "system/traits.h"
 #include "system/type_aliases.h"
 
+enum GmRenderMode {
+  OPENGL,
+  VULKAN
+};
+
 struct GmContext {
   Gamma::Commander commander;
   Gamma::AbstractRenderer* renderer = nullptr;
@@ -24,16 +29,10 @@ struct GmContext {
   } window;
 };
 
-enum GmRenderMode {
-  OPENGL,
-  VULKAN
-};
-
 GmContext* Gm_CreateContext();
 void Gm_OpenWindow(GmContext* context, const Gamma::Area<Gamma::uint32>& size);
 void Gm_SetRenderMode(GmContext* context, GmRenderMode mode);
 void Gm_SetScene(GmContext* context, Gamma::AbstractScene* scene);
-void Gm_AddRenderableMesh(GmContext* context, const Gamma::Mesh* mesh);
 void Gm_HandleEvents(GmContext* context);
 void Gm_RenderScene(GmContext* context);
 void Gm_DestroyContext(GmContext* context);
