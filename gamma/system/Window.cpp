@@ -13,6 +13,8 @@
 #include "system/flags.h"
 #include "system/Window.h"
 
+#define String(value) std::to_string(value)
+
 static void Gm_DisplayDevtools(GmContext* context) {
   using namespace Gamma;
 
@@ -28,26 +30,25 @@ static void Gm_DisplayDevtools(GmContext* context) {
   uint64 averageFrameTime = frameTimeAverager.average();
   uint32 frameTimeBudget = uint32(100.0f * (float)averageFrameTime / 16667.0f);
 
-  std::string fpsLabel = "FPS: "
-    + std::to_string(fpsAverager.average())
+  auto fpsLabel = "FPS: "
+    + String(fpsAverager.average())
     + ", low "
-    + std::to_string(fpsAverager.low())
+    + String(fpsAverager.low())
     + " (V-Sync " + (renderStats.isVSynced ? "ON" : "OFF") + ")";
 
-  std::string frameTimeLabel = "Frame time: "
-    + std::to_string(averageFrameTime)
+  auto frameTimeLabel = "Frame time: "
+    + String(averageFrameTime)
     + "us, high "
-    + std::to_string(frameTimeAverager.high())
+    + String(frameTimeAverager.high())
     + " ("
-    + std::to_string(frameTimeBudget)
+    + String(frameTimeBudget)
     + "%)";
 
-  std::string resolutionLabel = "Resolution: " + std::to_string(resolution.width) + " x " + std::to_string(resolution.height);
-  std::string vertsLabel = "Verts: " + std::to_string(sceneStats.verts);
-  std::string trisLabel = "Tris: " + std::to_string(sceneStats.tris);
-  std::string memoryLabel = "GPU Memory: " + std::to_string(renderStats.gpuMemoryUsed) + "MB / " + std::to_string(renderStats.gpuMemoryTotal) + "MB";
+  auto resolutionLabel = "Resolution: " + String(resolution.width) + " x " + String(resolution.height);
+  auto vertsLabel = "Verts: " + String(sceneStats.verts);
+  auto trisLabel = "Tris: " + String(sceneStats.tris);
+  auto memoryLabel = "GPU Memory: " + String(renderStats.gpuMemoryUsed) + "MB / " + String(renderStats.gpuMemoryTotal) + "MB";
 
-  // @todo write a little helper for rendering labels less repetitively
   renderer.renderText(font_sm, fpsLabel.c_str(), 25, 25);
   renderer.renderText(font_sm, frameTimeLabel.c_str(), 25, 50);
   renderer.renderText(font_sm, resolutionLabel.c_str(), 25, 75);
@@ -58,10 +59,11 @@ static void Gm_DisplayDevtools(GmContext* context) {
   // Display command line
   if (commander.isOpen()) {
     std::string caret = SDL_GetTicks() % 1000 < 500 ? "_" : "  ";
-    Vec3f fg = Vec3f(0.0f, 1.0f, 0.0f);
-    Vec4f bg = Vec4f(0.0f, 0.0f, 0.0f, 0.8f);
+    Vec3f fgColor = Vec3f(0.0f, 1.0f, 0.0f);
+    Vec4f bgColor = Vec4f(0.0f, 0.0f, 0.0f, 0.8f);
+    std::string input = "> " + commander.getCommand() + caret;
 
-    renderer.renderText(font_lg, ("> " + commander.getCommand() + caret).c_str(), 25, Window::size.height - 200, fg, bg);
+    renderer.renderText(font_lg, input.c_str(), 25, Window::size.height - 200, fgColor, bgColor);
   }
 
   // Display console messages
