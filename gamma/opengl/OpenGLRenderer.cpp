@@ -127,9 +127,7 @@ namespace Gamma {
   }
 
   void OpenGLRenderer::render() {
-    if (AbstractScene::active == nullptr) {
-      return;
-    }
+    auto& scene = gmContext->scene;
 
     // @todo consider moving this out of render() and
     // initializing probes before the rendering loop
@@ -141,7 +139,7 @@ namespace Gamma {
       // @todo properly initialize meshes, then render probes,
       // then proceed to render the scene normally.
       frame > 0 &&
-      AbstractScene::active->getProbeMap().size() > 0
+      scene.probeMap.size() > 0
     ) {
       Gm_SavePreviousFlags();
       Gm_DisableFlags(GammaFlags::RENDER_AMBIENT_OCCLUSION);
@@ -151,7 +149,7 @@ namespace Gamma {
       initializeRendererContext();
       initializeLightArrays();
 
-      for (auto& [ name, position ] : AbstractScene::active->getProbeMap()) {
+      for (auto& [ name, position ] : scene.probeMap) {
         createAndRenderProbe(name, position);
       }
 
@@ -240,7 +238,7 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::initializeRendererContext() {
-    auto& camera = *Camera::active;
+    auto& camera = gmContext->scene.camera;
 
     // Accumulation buffers
     ctx.accumulationSource = &buffers.accumulation1;
@@ -292,7 +290,7 @@ namespace Gamma {
     ctx.spotLights.clear();
     ctx.spotShadowcasters.clear();
 
-    for (auto& light : AbstractScene::active->getLights()) {
+    for (auto& light : gmContext->scene.lights) {
       switch (light.type) {
         case LightType::POINT:
           ctx.pointLights.push_back(light);
@@ -802,7 +800,7 @@ namespace Gamma {
     shader.setVec3f("cameraPosition", camera.position);
     shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
     shader.setMatrix4f("matInverseView", ctx.matInverseView);
-    shader.setFloat("time", AbstractScene::active->getRunningTime());
+    shader.setFloat("time", gmContext->scene.runningTime);
 
     for (uint32 i = 0; i < ctx.spotShadowcasters.size(); i++) {
       auto& glShadowMap = *glSpotShadowMaps[i];
@@ -882,7 +880,7 @@ namespace Gamma {
       shaders.indirectLight.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
       shaders.indirectLight.setMatrix4f("matInverseView", ctx.matInverseView);
       shaders.indirectLight.setMatrix4f("matViewT1", ctx.matPreviousView);
-      shaders.indirectLight.setInt("frame", AbstractScene::active->getFrame());
+      shaders.indirectLight.setInt("frame", gmContext->scene.frame);
 
       OpenGLScreenQuad::render();
 
@@ -947,7 +945,7 @@ namespace Gamma {
     shaders.particles.use();
     shaders.particles.setMatrix4f("matProjection", ctx.matProjection);
     shaders.particles.setMatrix4f("matView", ctx.matView);
-    shaders.particles.setFloat("time", AbstractScene::active->getRunningTime());
+    shaders.particles.setFloat("time", gmContext->scene.runningTime);
 
     for (auto& glMesh : glMeshes) {
       if (glMesh->isMeshType(MeshType::PARTICLE_SYSTEM)) {

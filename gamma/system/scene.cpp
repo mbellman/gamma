@@ -4,7 +4,132 @@
 #include "system/console.h"
 #include "system/flags.h"
 #include "system/scene.h"
+#include "system/context.h"
 #include "system/yaml_parser.h"
+
+const GmSceneStats Gm_GetSceneStats(GmContext* context) {
+  GmSceneStats stats;
+
+  for (auto* mesh : context->scene.meshes) {
+    if (mesh->lods.size() > 0) {
+      for (auto& lod : mesh->lods) {
+        stats.verts += lod.vertexCount * lod.instanceCount;
+        stats.tris += (lod.elementCount / 3) * lod.instanceCount;
+      }
+    } else {
+      stats.verts += mesh->vertices.size() * mesh->objects.totalVisible();
+      stats.tris += (mesh->faceElements.size() / 3) * mesh->objects.totalVisible();
+    }
+  }
+
+  return stats;
+}
+
+void Gm_AddMesh(GmContext* context, const std::string& meshName, Gamma::uint16 maxInstances, Gamma::Mesh* mesh) {
+  using namespace Gamma;
+
+  auto& scene = context->scene;
+  auto& meshes = scene.meshes;
+  auto& meshMap = scene.meshMap;
+
+  assert(meshMap.find(meshName) == meshMap.end(), "Mesh '" + meshName + "' already exists!");
+
+  mesh->index = (uint16)meshes.size();
+  mesh->id = scene.runningMeshId++;
+  mesh->objects.reserve(maxInstances);
+
+  if (mesh->lods.size() > 0) {
+    mesh->lods[0].instanceOffset = 0;
+    mesh->lods[0].instanceCount = maxInstances;
+  }
+
+  meshMap.emplace(meshName, mesh);
+  meshes.push_back(mesh);
+
+  if (mesh->type == MeshType::PARTICLE_SYSTEM) {
+    for (uint16 i = 0; i < maxInstances; i++) {
+      Gm_CreateObjectFrom(context, meshName);
+    }
+  }
+
+  context->renderer->createMesh(mesh);
+}
+
+void Gm_AddProbe(GmContext* context, const std::string& probeName, const Gamma::Vec3f& position) {
+  // @todo
+}
+
+Gamma::Object& Gm_CreateObjectFrom(GmContext* context, const std::string& meshName) {
+  using namespace Gamma;
+
+  auto& meshMap = context->scene.meshMap;
+
+  assert(meshMap.find(meshName) != meshMap.end(), "Mesh '" + meshName + "' not found");
+
+  // @todo assert that mesh exists
+  auto& mesh = *meshMap.at(meshName);
+  auto& object = mesh.objects.createObject();
+
+  object._record.meshId = mesh.id;
+  object._record.meshIndex = mesh.index;
+  object.position = Vec3f(0.0f);
+  object.rotation = Vec3f(0.0f);
+  object.scale = Vec3f(1.0f);
+
+  return object;
+}
+
+void Gm_Commit(GmContext* context, const Gamma::Object& object) {
+  using namespace Gamma;
+
+  auto& meshes = context->scene.meshes;
+  auto& record = object._record;
+  auto* mesh = meshes[record.meshIndex];
+
+  // @todo (?) dispatch transform commands to separate buckets for multithreading
+  mesh->objects.transformById(record.id, Matrix4f::transformation(
+    object.position,
+    object.scale,
+    object.rotation
+  ).transpose());
+
+  mesh->objects.setColorById(record.id, object.color);
+}
+
+void Gm_HandleFreeCameraMode(GmContext* context, float dt) {
+  using namespace Gamma;
+  
+  auto& scene = context->scene;
+  auto& camera = scene.camera;
+  auto& input = scene.input;
+  const Orientation& orientation = camera.orientation;
+  Vec3f direction;
+
+  if (input.isKeyHeld(Key::A)) {
+    direction += orientation.getLeftDirection();
+  } else if (input.isKeyHeld(Key::D)) {
+    direction += orientation.getRightDirection();
+  }
+
+  if (input.isKeyHeld(Key::W)) {
+    direction += orientation.getDirection();
+  } else if (input.isKeyHeld(Key::S)) {
+    direction += orientation.getDirection().invert();
+  }
+
+  if (direction.magnitude() > 0.0f) {
+    float speed = input.isKeyHeld(Key::SHIFT) ? 200.0f : 1000.0f;
+
+    scene.freeCameraVelocity += direction.unit() * speed * dt;
+  }
+
+  camera.position += scene.freeCameraVelocity * dt;
+  scene.freeCameraVelocity *= (0.995f - dt * 5.0f);
+
+  if (scene.freeCameraVelocity.magnitude() < 0.1f) {
+    scene.freeCameraVelocity = Vec3f(0.0f);
+  }
+}
 
 namespace Gamma {
   /**

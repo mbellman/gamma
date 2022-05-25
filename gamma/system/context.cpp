@@ -20,7 +20,7 @@ static void Gm_DisplayDevtools(GmContext* context) {
   auto& renderer = *context->renderer;
   auto& resolution = renderer.getInternalResolution();
   auto& renderStats = renderer.getRenderStats();
-  auto& sceneStats = context->scene_deprecated->getStats();
+  auto& sceneStats = Gm_GetSceneStats(context);
   auto& fpsAverager = context->fpsAverager;
   auto& frameTimeAverager = context->frameTimeAverager;
   auto& commander = context->commander;
@@ -59,11 +59,11 @@ static void Gm_DisplayDevtools(GmContext* context) {
   // Display command line
   if (commander.isOpen()) {
     std::string caret = SDL_GetTicks() % 1000 < 500 ? "_" : "  ";
-    Vec3f fgColor = Vec3f(0.0f, 1.0f, 0.0f);
-    Vec4f bgColor = Vec4f(0.0f, 0.0f, 0.0f, 0.8f);
-    std::string input = "> " + commander.getCommand() + caret;
+    std::string command = "> " + commander.getCommand() + caret;
+    const Vec3f fgColor = Vec3f(0.0f, 1.0f, 0.0f);
+    const Vec4f bgColor = Vec4f(0.0f, 0.0f, 0.0f, 0.8f);
 
-    renderer.renderText(font_lg, input.c_str(), 25, window.size.height - 200, fgColor, bgColor);
+    renderer.renderText(font_lg, command.c_str(), 25, window.size.height - 200, fgColor, bgColor);
   }
 
   // Display console messages
@@ -186,8 +186,12 @@ void Gm_HandleEvents(GmContext* context) {
         break;
     }
 
-    if (context->scene_deprecated != nullptr && !context->commander.isOpen()) {
-      context->scene_deprecated->input.handleEvent(event);
+    if (!context->commander.isOpen()) {
+      if (context->scene_deprecated != nullptr) {
+        context->scene_deprecated->input.handleEvent(event);
+      }
+
+      context->scene.input.handleEvent(event);
     }
 
     #if GAMMA_DEVELOPER_MODE

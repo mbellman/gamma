@@ -14,6 +14,12 @@
 #include "system/traits.h"
 #include "system/type_aliases.h"
 
+// #define addMesh(meshName, maxInstances, mesh) Gm_AddMesh(context, meshName, maxInstances, mesh);
+// #define addProbe(probeName, position) Gm_AddProbe(context, probeName, position);
+// #define createObjectFrom(meshName) Gm_CreateObjectFrom(context, meshName);
+
+struct GmContext;
+
 struct GmSceneStats {
   Gamma::uint32 verts = 0;
   Gamma::uint32 tris = 0;
@@ -33,8 +39,12 @@ struct GmScene {
   float runningTime = 0.0f;
 };
 
-GmSceneStats Gm_GetSceneStats(GmScene* scene);
-void Gm_HandleFreeCameraMode(GmScene* scene);
+const GmSceneStats Gm_GetSceneStats(GmContext* context);
+void Gm_AddMesh(GmContext* context, const std::string& meshName, Gamma::uint16 maxInstances, Gamma::Mesh* mesh);
+void Gm_AddProbe(GmContext* context, const std::string& probeName, const Gamma::Vec3f& position);
+Gamma::Object& Gm_CreateObjectFrom(GmContext* context, const std::string& meshName);
+void Gm_Commit(GmContext* context, const Gamma::Object& object);
+void Gm_HandleFreeCameraMode(GmContext* context, float dt);
 
 namespace Gamma {
   struct SceneStats {
