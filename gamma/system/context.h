@@ -35,7 +35,7 @@ struct GmContext {
 };
 
 GmContext* Gm_CreateContext();
-void Gm_OpenWindow(GmContext* context, const Gamma::Area<Gamma::uint32>& size);
+void Gm_OpenWindow(GmContext* context, const Gamma::Area<Gamma::uint32>& size);  // @todo
 void Gm_SetRenderMode(GmContext* context, GmRenderMode mode);
 void Gm_SetScene(GmContext* context, Gamma::AbstractScene* scene);
 float Gm_GetDeltaTime(GmContext* context);

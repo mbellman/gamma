@@ -27,22 +27,13 @@
     <ClCompile Include="gamma\system\file.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gamma\system\Window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="gamma\math\vector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="gamma\opengl\framebuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="demo\DemoController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="demo\DemoScene.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="gamma\system\AbstractController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="gamma\system\AbstractLoader.cpp">
@@ -127,6 +118,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="gamma\system\ObjectPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gamma\system\context.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -404,9 +398,6 @@
     <ClInclude Include="gamma\opengl\shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="gamma\system\Window.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="gamma\system\AbstractRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -434,16 +425,10 @@
     <ClInclude Include="gamma\system\type_aliases.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="demo\DemoController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="demo\DemoScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gamma\math\geometry.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="gamma\system\AbstractController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gamma\system\AbstractLoader.h">
@@ -537,6 +522,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gamma\system\ObjectPool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gamma\system\context.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -116,7 +116,6 @@
   <ItemGroup>
     <ClCompile Include="demo\benchmarks\matrix_multiplication.cpp" />
     <ClCompile Include="demo\benchmarks\object_management.cpp" />
-    <ClCompile Include="demo\DemoController.cpp" />
     <ClCompile Include="demo\DemoScene.cpp" />
     <ClCompile Include="demo\main.cpp" />
     <ClCompile Include="gamma\math\matrix.cpp" />
@@ -135,13 +134,13 @@
     <ClCompile Include="gamma\opengl\shader.cpp" />
     <ClCompile Include="gamma\opengl\shadowmaps.cpp" />
     <ClCompile Include="gamma\performance\benchmark.cpp" />
-    <ClCompile Include="gamma\system\AbstractController.cpp" />
     <ClCompile Include="gamma\system\AbstractLoader.cpp" />
     <ClCompile Include="gamma\system\AbstractScene.cpp" />
     <ClCompile Include="gamma\system\assert.cpp" />
     <ClCompile Include="gamma\system\camera.cpp" />
     <ClCompile Include="gamma\system\Commander.cpp" />
     <ClCompile Include="gamma\system\console.cpp" />
+    <ClCompile Include="gamma\system\context.cpp" />
     <ClCompile Include="gamma\system\entities.cpp" />
     <ClCompile Include="gamma\system\file.cpp" />
     <ClCompile Include="gamma\system\flags.cpp" />
@@ -150,13 +149,11 @@
     <ClCompile Include="gamma\system\ObjLoader.cpp" />
     <ClCompile Include="gamma\system\packed_data.cpp" />
     <ClCompile Include="gamma\system\string_helpers.cpp" />
-    <ClCompile Include="gamma\system\Window.cpp" />
     <ClCompile Include="gamma\system\yaml_parser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="demo\benchmarks\matrix_multiplication.h" />
     <ClInclude Include="demo\benchmarks\object_management.h" />
-    <ClInclude Include="demo\DemoController.h" />
     <ClInclude Include="demo\DemoScene.h" />
     <ClInclude Include="demo\gamma_flags.h" />
     <ClInclude Include="external\glew\include\eglew.h" />
@@ -268,7 +265,6 @@
     <ClInclude Include="gamma\opengl\shadowmaps.h" />
     <ClInclude Include="gamma\performance\benchmark.h" />
     <ClInclude Include="gamma\performance\tools.h" />
-    <ClInclude Include="gamma\system\AbstractController.h" />
     <ClInclude Include="gamma\system\AbstractLoader.h" />
     <ClInclude Include="gamma\system\AbstractRenderer.h" />
     <ClInclude Include="gamma\system\AbstractScene.h" />
@@ -276,6 +272,7 @@
     <ClInclude Include="gamma\system\camera.h" />
     <ClInclude Include="gamma\system\Commander.h" />
     <ClInclude Include="gamma\system\console.h" />
+    <ClInclude Include="gamma\system\context.h" />
     <ClInclude Include="gamma\system\entities.h" />
     <ClInclude Include="gamma\system\file.h" />
     <ClInclude Include="gamma\system\flags.h" />
@@ -288,7 +285,6 @@
     <ClInclude Include="gamma\system\string_helpers.h" />
     <ClInclude Include="gamma\system\traits.h" />
     <ClInclude Include="gamma\system\type_aliases.h" />
-    <ClInclude Include="gamma\system\Window.h" />
     <ClInclude Include="gamma\system\yaml_parser.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
