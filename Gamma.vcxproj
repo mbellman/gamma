@@ -135,7 +135,6 @@
     <ClCompile Include="gamma\opengl\shadowmaps.cpp" />
     <ClCompile Include="gamma\performance\benchmark.cpp" />
     <ClCompile Include="gamma\system\AbstractLoader.cpp" />
-    <ClCompile Include="gamma\system\AbstractScene.cpp" />
     <ClCompile Include="gamma\system\assert.cpp" />
     <ClCompile Include="gamma\system\camera.cpp" />
     <ClCompile Include="gamma\system\Commander.cpp" />
@@ -148,6 +147,7 @@
     <ClCompile Include="gamma\system\ObjectPool.cpp" />
     <ClCompile Include="gamma\system\ObjLoader.cpp" />
     <ClCompile Include="gamma\system\packed_data.cpp" />
+    <ClCompile Include="gamma\system\scene.cpp" />
     <ClCompile Include="gamma\system\string_helpers.cpp" />
     <ClCompile Include="gamma\system\yaml_parser.cpp" />
   </ItemGroup>
@@ -267,7 +267,6 @@
     <ClInclude Include="gamma\performance\tools.h" />
     <ClInclude Include="gamma\system\AbstractLoader.h" />
     <ClInclude Include="gamma\system\AbstractRenderer.h" />
-    <ClInclude Include="gamma\system\AbstractScene.h" />
     <ClInclude Include="gamma\system\assert.h" />
     <ClInclude Include="gamma\system\camera.h" />
     <ClInclude Include="gamma\system\Commander.h" />
@@ -281,6 +280,7 @@
     <ClInclude Include="gamma\system\ObjectPool.h" />
     <ClInclude Include="gamma\system\ObjLoader.h" />
     <ClInclude Include="gamma\system\packed_data.h" />
+    <ClInclude Include="gamma\system\scene.h" />
     <ClInclude Include="gamma\system\Signaler.h" />
     <ClInclude Include="gamma\system\string_helpers.h" />
     <ClInclude Include="gamma\system\traits.h" />

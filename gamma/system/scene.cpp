@@ -1,9 +1,9 @@
 #include <filesystem>
 
-#include "system/AbstractScene.h"
 #include "system/assert.h"
 #include "system/console.h"
 #include "system/flags.h"
+#include "system/scene.h"
 #include "system/yaml_parser.h"
 
 namespace Gamma {

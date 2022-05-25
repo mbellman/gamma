@@ -3,10 +3,10 @@
 #include "math/plane.h"
 #include "performance/tools.h"
 #include "system/AbstractRenderer.h"
-#include "system/AbstractScene.h"
 #include "system/Commander.h"
 #include "system/entities.h"
 #include "system/macros.h"
+#include "system/scene.h"
 #include "system/traits.h"
 #include "system/type_aliases.h"
 

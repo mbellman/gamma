@@ -7,10 +7,10 @@
 #include "opengl/OpenGLRenderer.h"
 #include "performance/benchmark.h"
 #include "performance/tools.h"
-#include "system/AbstractScene.h"
 #include "system/console.h"
 #include "system/context.h"
 #include "system/flags.h"
+#include "system/scene.h"
 
 #define String(value) std::to_string(value)
 

@@ -12,12 +12,12 @@
 #include "opengl/OpenGLRenderer.h"
 #include "opengl/OpenGLScreenQuad.h"
 #include "opengl/renderer_setup.h"
-#include "system/AbstractScene.h"
 #include "system/camera.h"
 #include "system/console.h"
 #include "system/context.h"
 #include "system/entities.h"
 #include "system/flags.h"
+#include "system/scene.h"
 
 namespace Gamma {
   const static uint32 MAX_LIGHTS = 1000;
