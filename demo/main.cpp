@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
 
     Gm_LogFrameStart(context);
     Gm_HandleEvents(context);
-    context->scene->updateScene(dt);
+    context->scene_deprecated->updateScene(dt);
     Gm_RenderScene(context);
     Gm_LogFrameEnd(context);
   }

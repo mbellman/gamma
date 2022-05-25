@@ -14,6 +14,28 @@
 #include "system/traits.h"
 #include "system/type_aliases.h"
 
+struct GmSceneStats {
+  Gamma::uint32 verts = 0;
+  Gamma::uint32 tris = 0;
+};
+
+struct GmScene {
+  Gamma::Camera camera;
+  Gamma::InputSystem input;
+  std::vector<Gamma::Mesh*> meshes;
+  std::vector<Gamma::Light> lights;
+  std::map<std::string, Gamma::Mesh*> meshMap;
+  std::map<std::string, Gamma::Vec3f> probeMap;
+  std::map<std::string, Gamma::ObjectRecord> objectStore;
+  Gamma::Vec3f freeCameraVelocity = Gamma::Vec3f(0.0f);
+  Gamma::uint16 runningMeshId = 0;
+  Gamma::uint32 frame = 0;
+  float runningTime = 0.0f;
+};
+
+GmSceneStats Gm_GetSceneStats(GmScene* scene);
+void Gm_HandleFreeCameraMode(GmScene* scene);
+
 namespace Gamma {
   struct SceneStats {
     uint32 verts = 0;

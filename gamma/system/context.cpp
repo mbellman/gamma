@@ -20,7 +20,7 @@ static void Gm_DisplayDevtools(GmContext* context) {
   auto& renderer = *context->renderer;
   auto& resolution = renderer.getInternalResolution();
   auto& renderStats = renderer.getRenderStats();
-  auto& sceneStats = context->scene->getStats();
+  auto& sceneStats = context->scene_deprecated->getStats();
   auto& fpsAverager = context->fpsAverager;
   auto& frameTimeAverager = context->frameTimeAverager;
   auto& commander = context->commander;
@@ -127,7 +127,7 @@ void Gm_SetRenderMode(GmContext* context, GmRenderMode mode) {
 void Gm_SetScene(GmContext* context, Gamma::AbstractScene* scene) {
   using namespace Gamma;
 
-  context->scene = scene;
+  context->scene_deprecated = scene;
 
   AbstractScene::active = scene;
 
@@ -186,8 +186,8 @@ void Gm_HandleEvents(GmContext* context) {
         break;
     }
 
-    if (context->scene != nullptr && !context->commander.isOpen()) {
-      context->scene->input.handleEvent(event);
+    if (context->scene_deprecated != nullptr && !context->commander.isOpen()) {
+      context->scene_deprecated->input.handleEvent(event);
     }
 
     #if GAMMA_DEVELOPER_MODE
@@ -220,10 +220,10 @@ void Gm_LogFrameEnd(GmContext* context) {
 }
 
 void Gm_DestroyContext(GmContext* context) {
-  if (context->scene != nullptr) {
-    context->scene->destroy();
+  if (context->scene_deprecated != nullptr) {
+    context->scene_deprecated->destroy();
 
-    delete context->scene;
+    delete context->scene_deprecated;
   }
 
   IMG_Quit();

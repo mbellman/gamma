@@ -17,7 +17,9 @@ enum GmRenderMode {
 
 struct GmContext {
   // @todo replace AbstractScene with a scene management struct
-  Gamma::AbstractScene* scene = nullptr;
+  Gamma::AbstractScene* scene_deprecated = nullptr;
+  // @todo use as replacement for scene_deprecated
+  GmScene scene;
   Gamma::AbstractRenderer* renderer = nullptr;
   Gamma::uint32 lastTick = 0;
   Gamma::uint64 frameStartMicroseconds = 0;
