@@ -3,6 +3,8 @@
 #include "system/traits.h"
 #include "system/type_aliases.h"
 
+struct GmContext;
+
 namespace Gamma {
   struct Mesh;
   struct Light;
@@ -15,7 +17,7 @@ namespace Gamma {
 
   class AbstractRenderer : public Initable, public Renderable, public Destroyable {
   public:
-    AbstractRenderer(SDL_Window* sdl_window): sdl_window(sdl_window) {};
+    AbstractRenderer(GmContext* gmContext): gmContext(gmContext) {};
     virtual ~AbstractRenderer() {};
 
     virtual void createMesh(const Mesh* mesh) {};
@@ -32,7 +34,7 @@ namespace Gamma {
     virtual void renderText(TTF_Font* font, const char* message, uint32 x, uint32 y, const Vec3f& color = Vec3f(1.0f), const Vec4f& background = Vec4f(0.0f)) {};
 
   protected:
-    SDL_Window* sdl_window = nullptr;
+    GmContext* gmContext = nullptr;
     Area<uint32> internalResolution = { 1920, 1080 };
     RenderStats stats;
   };

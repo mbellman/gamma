@@ -25,7 +25,7 @@ struct GmContext {
   Gamma::Averager<5, Gamma::uint64> frameTimeAverager;
   Gamma::Commander commander;
 
-  struct {
+  struct GmWindow {
     bool closed = false;
     TTF_Font* font_sm = nullptr;
     TTF_Font* font_lg = nullptr;
@@ -44,10 +44,3 @@ void Gm_HandleEvents(GmContext* context);
 void Gm_RenderScene(GmContext* context);
 void Gm_LogFrameEnd(GmContext* context);
 void Gm_DestroyContext(GmContext* context);
-
-namespace Gamma {
-  // @todo remove the need for this
-  struct Window {
-    static Area<uint32> size;
-  };
-}

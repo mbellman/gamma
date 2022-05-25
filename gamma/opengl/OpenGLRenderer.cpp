@@ -57,7 +57,7 @@ namespace Gamma {
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-    glContext = SDL_GL_CreateContext(sdl_window);
+    glContext = SDL_GL_CreateContext(gmContext->window.sdl_window);
     glewExperimental = true;
 
     glewInit();
@@ -1142,7 +1142,7 @@ namespace Gamma {
     ctx.accumulationSource->read();
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
-    glViewport(0, 0, Window::size.width, Window::size.height);
+    glViewport(0, 0, gmContext->window.size.width, gmContext->window.size.height);
     // glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_STENCIL_TEST);
 
@@ -1238,7 +1238,7 @@ namespace Gamma {
   }
 
   void OpenGLRenderer::present() {
-    SDL_GL_SwapWindow(sdl_window);
+    SDL_GL_SwapWindow(gmContext->window.sdl_window);
   }
 
   void OpenGLRenderer::createAndRenderProbe(const std::string& name, const Vec3f& position) {
@@ -1298,10 +1298,11 @@ namespace Gamma {
   }
 
   void OpenGLRenderer::renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background) {
-    float offsetX = -1.0f + (2 * x + surface->w) / (float)Window::size.width;
-    float offsetY = 1.0f - (2 * y + surface->h) / (float)Window::size.height;
-    float scaleX = surface->w / (float)Window::size.width;
-    float scaleY = -1.0f * surface->h / (float)Window::size.height;
+    auto& window = gmContext->window;
+    float offsetX = -1.0f + (2 * x + surface->w) / (float)window.size.width;
+    float offsetY = 1.0f - (2 * y + surface->h) / (float)window.size.height;
+    float scaleX = surface->w / (float)window.size.width;
+    float scaleY = -1.0f * surface->h / (float)window.size.height;
     int format = surface->format->BytesPerPixel == 4 ? GL_RGBA : GL_RGB;
 
     glActiveTexture(GL_TEXTURE0);

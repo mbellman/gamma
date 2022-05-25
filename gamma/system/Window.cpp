@@ -25,8 +25,9 @@ static void Gm_DisplayDevtools(GmContext* context) {
   auto& fpsAverager = context->fpsAverager;
   auto& frameTimeAverager = context->frameTimeAverager;
   auto& commander = context->commander;
-  auto* font_sm = context->window.font_sm;
-  auto* font_lg = context->window.font_lg;
+  auto& window = context->window;
+  auto* font_sm = window.font_sm;
+  auto* font_lg = window.font_lg;
   uint64 averageFrameTime = frameTimeAverager.average();
   uint32 frameTimeBudget = uint32(100.0f * (float)averageFrameTime / 16667.0f);
 
@@ -63,7 +64,7 @@ static void Gm_DisplayDevtools(GmContext* context) {
     Vec4f bgColor = Vec4f(0.0f, 0.0f, 0.0f, 0.8f);
     std::string input = "> " + commander.getCommand() + caret;
 
-    renderer.renderText(font_lg, input.c_str(), 25, Window::size.height - 200, fgColor, bgColor);
+    renderer.renderText(font_lg, input.c_str(), 25, window.size.height - 200, fgColor, bgColor);
   }
 
   // Display console messages
@@ -72,7 +73,7 @@ static void Gm_DisplayDevtools(GmContext* context) {
 
   // @todo clear messages after a set duration
   while (message != nullptr) {
-    renderer.renderText(font_sm, message->text.c_str(), 25, Window::size.height - 150 + (messageIndex++) * 25);
+    renderer.renderText(font_sm, message->text.c_str(), 25, window.size.height - 150 + (messageIndex++) * 25);
 
     message = message->next;
   }
@@ -97,10 +98,6 @@ GmContext* Gm_CreateContext() {
   context->window.font_lg = TTF_OpenFont("./fonts/OpenSans-Regular.ttf", 22);
   context->window.size = { 640, 480 };
 
-  // @hack accommodate Window::size checks
-  // @todo pass a GmContext* to AbstractRenderer, rather than SDL_Window*
-  Gamma::Window::size = context->window.size;
-
   return context;
 }
 
@@ -115,7 +112,7 @@ void Gm_SetRenderMode(GmContext* context, GmRenderMode mode) {
 
   switch (mode) {
     case GmRenderMode::OPENGL:
-      context->renderer = new Gamma::OpenGLRenderer(context->window.sdl_window);
+      context->renderer = new Gamma::OpenGLRenderer(context);
       break;
     case GmRenderMode::VULKAN:
       // @todo
@@ -183,10 +180,6 @@ void Gm_HandleEvents(GmContext* context) {
             (Gamma::uint32)event.window.data1,
             (Gamma::uint32)event.window.data2
           };
-
-          // @hack accommodate Window::size checks
-          // @todo pass a GmContext* to AbstractRenderer, rather than SDL_Window*
-          Gamma::Window::size = context->window.size;
         }
 
         break;
@@ -242,14 +235,4 @@ void Gm_DestroyContext(GmContext* context) {
 
   SDL_DestroyWindow(context->window.sdl_window);
   SDL_Quit();
-}
-
-namespace Gamma {
-  /**
-   * Window
-   * ------
-   *
-   * @todo remove the need for this
-   */
-  Area<uint32> Window::size = { 0, 0 };
 }

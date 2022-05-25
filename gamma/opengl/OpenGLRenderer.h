@@ -80,7 +80,7 @@ namespace Gamma {
 
   class OpenGLRenderer final : public AbstractRenderer {
   public:
-    OpenGLRenderer(SDL_Window* sdl_window): AbstractRenderer(sdl_window) {};
+    OpenGLRenderer(GmContext* gmContext): AbstractRenderer(gmContext) {};
     ~OpenGLRenderer() {};
 
     virtual void init() override;
