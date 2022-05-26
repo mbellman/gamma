@@ -38,11 +38,6 @@ void Gm_AddMesh(GmContext* context, const std::string& meshName, Gamma::uint16 m
   mesh->id = scene.runningMeshId++;
   mesh->objects.reserve(maxInstances);
 
-  if (mesh->lods.size() > 0) {
-    mesh->lods[0].instanceOffset = 0;
-    mesh->lods[0].instanceCount = maxInstances;
-  }
-
   meshMap.emplace(meshName, mesh);
   meshes.push_back(mesh);
 
@@ -56,7 +51,96 @@ void Gm_AddMesh(GmContext* context, const std::string& meshName, Gamma::uint16 m
 }
 
 void Gm_AddProbe(GmContext* context, const std::string& probeName, const Gamma::Vec3f& position) {
-  // @todo
+  context->scene.probeMap.emplace(probeName, position);
+}
+
+Gamma::Light& Gm_CreateLight(GmContext* context, Gamma::LightType type) {
+  using namespace Gamma;
+
+  auto& lights = context->scene.lights;
+
+  // @todo recycle removed/deactivated Lights
+  // @todo new Light()
+  lights.push_back(Light());
+
+  auto& light = lights.back();
+
+  light.type = type;
+
+  if (
+    type == LightType::POINT_SHADOWCASTER ||
+    type == LightType::DIRECTIONAL_SHADOWCASTER ||
+    type == LightType::SPOT_SHADOWCASTER
+  ) {
+    context->renderer->createShadowMap(&light);
+  }
+
+  return light;
+}
+
+void Gm_UseSceneFile(GmContext* context, const std::string& filename) {
+  using namespace Gamma;
+
+  auto& scene = Gm_ParseYamlFile(filename.c_str());
+
+  // Load meshes
+  for (auto& [ key, property ] : *scene["meshes"].object) {
+    auto& meshConfig = *property.object;
+    uint32 maxInstances = Gm_ReadYamlProperty<uint32>(meshConfig, "max");
+    Mesh* mesh = nullptr;
+
+    if (Gm_HasYamlProperty(meshConfig, "plane")) {
+      uint32 size = Gm_ReadYamlProperty<uint32>(meshConfig, "plane.size");
+      bool useLoopingTexture = Gm_ReadYamlProperty<uint32>(meshConfig, "plane.useLoopingTexture");
+
+      mesh = Mesh::Plane(size, useLoopingTexture);
+    } else if (Gm_HasYamlProperty(meshConfig, "cube")) {
+      mesh = Mesh::Cube();
+    } else if (Gm_HasYamlProperty(meshConfig, "model")) {
+      std::vector<std::string> filepaths;
+      auto& paths = Gm_ReadYamlProperty<YamlArray<std::string*>>(meshConfig, "model");
+
+      for (auto* path : paths) {
+        filepaths.push_back(*path);
+      }
+
+      mesh = Mesh::Model(filepaths);
+    } else if (Gm_HasYamlProperty(meshConfig, "particles")) {
+      // @todo
+    }
+
+    // if mesh == nullptr, report mesh name missing type
+
+    if (mesh != nullptr) {
+      if (Gm_HasYamlProperty(meshConfig, "texture")) {
+        mesh->texture = Gm_ReadYamlProperty<std::string>(meshConfig, "texture");
+      }
+
+      if (Gm_HasYamlProperty(meshConfig, "normalMap")) {
+        mesh->normalMap = Gm_ReadYamlProperty<std::string>(meshConfig, "normalMap");
+      }
+
+      if (Gm_HasYamlProperty(meshConfig, "type")) {
+        std::string type = Gm_ReadYamlProperty<std::string>(meshConfig, "type");
+
+        // @todo use a map
+        if (type == "REFRACTIVE") {
+          mesh->type = MeshType::REFRACTIVE;
+        } else if (type == "REFLECTIVE") {
+          mesh->type = MeshType::REFLECTIVE;
+        } else if (type == "PROBE_REFLECTOR") {
+          mesh->type = MeshType::PROBE_REFLECTOR;
+          mesh->probe = Gm_ReadYamlProperty<std::string>(meshConfig, "probe");
+        }
+      }
+
+      Gm_AddMesh(context, key, maxInstances, mesh);
+    }
+  }
+
+  // @todo skybox settings, what else?
+
+  Gm_FreeYamlObject(&scene);
 }
 
 Gamma::Object& Gm_CreateObjectFrom(GmContext* context, const std::string& meshName) {
@@ -66,7 +150,6 @@ Gamma::Object& Gm_CreateObjectFrom(GmContext* context, const std::string& meshNa
 
   assert(meshMap.find(meshName) != meshMap.end(), "Mesh '" + meshName + "' not found");
 
-  // @todo assert that mesh exists
   auto& mesh = *meshMap.at(meshName);
   auto& object = mesh.objects.createObject();
 
@@ -75,6 +158,14 @@ Gamma::Object& Gm_CreateObjectFrom(GmContext* context, const std::string& meshNa
   object.position = Vec3f(0.0f);
   object.rotation = Vec3f(0.0f);
   object.scale = Vec3f(1.0f);
+
+  if (mesh.lods.size() > 0) {
+    // Increment the base LoD instance count by default,
+    // which we use for vert/tri counts in scene stats.
+    // Gm_UseLodByDistance can control the per-LoD
+    // instance counts during the update loop.
+    mesh.lods[0].instanceCount++;
+  }
 
   return object;
 }
@@ -148,11 +239,6 @@ namespace Gamma {
     mesh->index = (uint16)meshes.size();
     mesh->id = runningMeshId++;
     mesh->objects.reserve(maxInstances);
-
-    if (mesh->lods.size() > 0) {
-      mesh->lods[0].instanceOffset = 0;
-      mesh->lods[0].instanceCount = maxInstances;
-    }
 
     meshMap.emplace(meshName, mesh);
     meshes.push_back(mesh);

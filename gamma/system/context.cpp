@@ -123,35 +123,6 @@ void Gm_SetRenderMode(GmContext* context, GmRenderMode mode) {
   }
 }
 
-// @todo remove this method once AbstractScene is replaced with a scene struct
-void Gm_SetScene(GmContext* context, Gamma::AbstractScene* scene) {
-  using namespace Gamma;
-
-  context->scene_deprecated = scene;
-
-  AbstractScene::active = scene;
-
-  // @todo remove Signaler/event-driven behavior here
-  // once AbstractScene becomes a regular struct
-  scene->on<const Mesh*>("mesh-created", [=](auto* mesh) {
-    context->renderer->createMesh(mesh);
-  });
-
-  scene->on<const Mesh*>("mesh-destroyed", [=](auto* mesh) {
-    context->renderer->destroyMesh(mesh);
-  });
-
-  scene->on<const Light*>("shadowcaster-created", [=](auto* light) {
-    context->renderer->createShadowMap(light);
-  });
-
-  scene->on<const Light*>("shadowcaster-destroyed", [=](auto* light) {
-    context->renderer->destroyShadowMap(light);
-  });
-
-  scene->init();
-}
-
 float Gm_GetDeltaTime(GmContext* context) {
   Gamma::uint32 ticks = SDL_GetTicks();
   float dt = float(ticks - context->lastTick) / 1000.0f;
@@ -221,6 +192,9 @@ void Gm_LogFrameEnd(GmContext* context) {
 
   context->fpsAverager.add(fps);
   context->frameTimeAverager.add(frameTimeInMicroseconds);
+
+  context->scene.runningTime += frameTimeInMicroseconds / 1000000.0f;
+  context->scene.frame++;
 }
 
 void Gm_DestroyContext(GmContext* context) {

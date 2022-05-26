@@ -16,7 +16,6 @@ enum GmRenderMode {
 };
 
 struct GmContext {
-  // @todo replace AbstractScene with a scene management struct
   Gamma::AbstractScene* scene_deprecated = nullptr;
   // @todo use as replacement for scene_deprecated
   GmScene scene;
@@ -39,7 +38,6 @@ struct GmContext {
 GmContext* Gm_CreateContext();
 void Gm_OpenWindow(GmContext* context, const Gamma::Area<Gamma::uint32>& size);  // @todo
 void Gm_SetRenderMode(GmContext* context, GmRenderMode mode);
-void Gm_SetScene(GmContext* context, Gamma::AbstractScene* scene);
 float Gm_GetDeltaTime(GmContext* context);
 void Gm_LogFrameStart(GmContext* context);
 void Gm_HandleEvents(GmContext* context);

@@ -42,6 +42,8 @@ struct GmScene {
 const GmSceneStats Gm_GetSceneStats(GmContext* context);
 void Gm_AddMesh(GmContext* context, const std::string& meshName, Gamma::uint16 maxInstances, Gamma::Mesh* mesh);
 void Gm_AddProbe(GmContext* context, const std::string& probeName, const Gamma::Vec3f& position);
+Gamma::Light& Gm_CreateLight(GmContext* context, Gamma::LightType type);
+void Gm_UseSceneFile(GmContext* context, const std::string& filename);
 Gamma::Object& Gm_CreateObjectFrom(GmContext* context, const std::string& meshName);
 void Gm_Commit(GmContext* context, const Gamma::Object& object);
 void Gm_HandleFreeCameraMode(GmContext* context, float dt);

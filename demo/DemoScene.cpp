@@ -334,13 +334,6 @@ void DemoScene::addStatuesExhibit() {
   lucyLight.direction = Vec3f(0.0f, 1.0f, 0.75f);
   lucyLight.fov = 60.0f;
   lucyLight.radius = 200.0f;
-  // lucyLight.isStatic = true;
-
-  // auto& lucyLight2 = createLight(LightType::POINT);
-
-  // lucyLight2.position = lucy.position + Vec3f(0.0f, 30.0f, 10.0f);
-  // lucyLight2.color = Vec3f(1.0f);
-  // lucyLight2.radius = 50.0f;
 }
 
 void DemoScene::addChessExhibit() {
