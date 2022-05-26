@@ -33,9 +33,6 @@
     <ClCompile Include="gamma\opengl\framebuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="demo\DemoScene.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="gamma\system\AbstractLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -423,9 +420,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gamma\system\type_aliases.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="demo\DemoScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gamma\math\geometry.h">

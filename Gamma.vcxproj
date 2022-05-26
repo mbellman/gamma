@@ -116,7 +116,6 @@
   <ItemGroup>
     <ClCompile Include="demo\benchmarks\matrix_multiplication.cpp" />
     <ClCompile Include="demo\benchmarks\object_management.cpp" />
-    <ClCompile Include="demo\DemoScene.cpp" />
     <ClCompile Include="demo\main.cpp" />
     <ClCompile Include="gamma\math\matrix.cpp" />
     <ClCompile Include="gamma\math\orientation.cpp" />
@@ -154,7 +153,6 @@
   <ItemGroup>
     <ClInclude Include="demo\benchmarks\matrix_multiplication.h" />
     <ClInclude Include="demo\benchmarks\object_management.h" />
-    <ClInclude Include="demo\DemoScene.h" />
     <ClInclude Include="demo\gamma_flags.h" />
     <ClInclude Include="external\glew\include\eglew.h" />
     <ClInclude Include="external\glew\include\glew.h" />

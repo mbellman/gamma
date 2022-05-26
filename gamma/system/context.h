@@ -10,6 +10,8 @@
 #include "system/traits.h"
 #include "system/type_aliases.h"
 
+#define _ctx GmContext* context
+
 enum GmRenderMode {
   OPENGL,
   VULKAN

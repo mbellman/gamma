@@ -1,27 +1,26 @@
 #include "Gamma.h"
-// #include "DemoScene.h"
 
-static void setupScene(GmContext* context) {
+static void setupScene(_ctx) {
   using namespace Gamma;
 
-  auto& sunlight = Gm_CreateLight(context, LightType::DIRECTIONAL_SHADOWCASTER);
+  auto& sunlight = createLight(LightType::DIRECTIONAL_SHADOWCASTER);
 
   sunlight.direction = Vec3f(-0.3f, -0.5f, 1.0f);
   sunlight.color = Vec3f(1.0f);
 
   // addFloor
-  auto& floor = Gm_CreateObjectFrom(context, "floor");
+  auto& floor = createObjectFrom("floor");
 
   floor.scale = Gamma::Vec3f(1000.0f, 1.0f, 1000.0f);
 
-  Gm_Commit(context, floor);
+  commit(floor);
 
   // addCenterCubesExhibit
   Vec3f location(0.0f);
 
-  auto& cube1 = Gm_CreateObjectFrom(context, "cat-cube");
-  auto& cube2 = Gm_CreateObjectFrom(context, "cat-cube");
-  auto& cube3 = Gm_CreateObjectFrom(context, "cat-cube");
+  auto& cube1 = createObjectFrom("cat-cube");
+  auto& cube2 = createObjectFrom("cat-cube");
+  auto& cube3 = createObjectFrom("cat-cube");
 
   cube1.position = location + Vec3f(-50.0f, 35.0f, 0.0f);
   cube1.scale = 20.0f;
@@ -38,21 +37,21 @@ static void setupScene(GmContext* context) {
   cube3.rotation = Vec3f(0.9f, 2.5f, 3.1f);
   cube3.color = pVec4(10, 50, 255);
 
-  Gm_Commit(context, cube1);
-  Gm_Commit(context, cube2);
-  Gm_Commit(context, cube3);
+  commit(cube1);
+  commit(cube2);
+  commit(cube3);
 
   // addRainbowCubesExhibit
   const float pi = 3.141592f;
   Vec3f rcLocation = Vec3f(-150.0f, 0.0f, 12.0f);
-  auto& ball = Gm_CreateObjectFrom(context, "probe-ball");
+  auto& ball = createObjectFrom("probe-ball");
 
   ball.scale = 16.0f;
   ball.position = rcLocation + Vec3f(-10.0f, 35.0f, -10.0f);
 
-  Gm_Commit(context, ball);
+  commit(ball);
 
-  Gm_AddProbe(context, "ball-probe", ball.position);
+  addProbe("ball-probe", ball.position);
 
   auto n_sinf = [](float value) {
     return sinf(value) * 0.5f + 0.5f;
@@ -64,7 +63,7 @@ static void setupScene(GmContext* context) {
 
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 4; j++) {
-      auto& cube = Gm_CreateObjectFrom(context, "rainbow-cube");
+      auto& cube = createObjectFrom("rainbow-cube");
 
       cube.position = rcLocation + Vec3f(
         20.0f * (i - 2.0f),
@@ -82,30 +81,30 @@ static void setupScene(GmContext* context) {
         )
       );
 
-      Gm_Commit(context, cube);
+      commit(cube);
     }
   }
 
   // addStatuesExhibit
   Vec3f sLocation(150.0f, 0.0f, 0.0f);
-  auto& lucy = Gm_CreateObjectFrom(context, "lucy");
+  auto& lucy = createObjectFrom("lucy");
 
   lucy.position = sLocation;
   lucy.scale = 10.0f;
 
-  Gm_Commit(context, lucy);
+  commit(lucy);
 
-  auto& dragon = Gm_CreateObjectFrom(context, "dragon");
+  auto& dragon = createObjectFrom("dragon");
 
   dragon.position = sLocation + Vec3f(40.0f, 0, 0);
   dragon.scale = 10.0f;
 
-  Gm_Commit(context, dragon);
+  commit(dragon);
 
-  auto& wall1 = Gm_CreateObjectFrom(context, "statue-wall");
-  auto& wall2 = Gm_CreateObjectFrom(context, "statue-wall");
-  auto& wall3 = Gm_CreateObjectFrom(context, "statue-wall");
-  auto& ceiling = Gm_CreateObjectFrom(context, "statue-wall");
+  auto& wall1 = createObjectFrom("statue-wall");
+  auto& wall2 = createObjectFrom("statue-wall");
+  auto& wall3 = createObjectFrom("statue-wall");
+  auto& ceiling = createObjectFrom("statue-wall");
 
   wall1.position = sLocation + Vec3f(-17.0f, 25.0f, -7.5f);
   wall1.scale = Vec3f(3.0f, 25.0f, 40.0f);
@@ -123,12 +122,12 @@ static void setupScene(GmContext* context) {
   ceiling.scale = Vec3f(70.0f, 3.0f, 40.0f);
   ceiling.color = pVec4(255, 255, 255);
 
-  Gm_Commit(context, wall1);
-  Gm_Commit(context, wall2);
-  Gm_Commit(context, wall3);
-  Gm_Commit(context, ceiling);
+  commit(wall1);
+  commit(wall2);
+  commit(wall3);
+  commit(ceiling);
 
-  auto& lucyLight = Gm_CreateLight(context, LightType::SPOT_SHADOWCASTER);
+  auto& lucyLight = createLight(LightType::SPOT_SHADOWCASTER);
 
   lucyLight.position = lucy.position + Vec3f(0.0f, 5.0f, -20.0f);
   lucyLight.color = Vec3f(1.0f);
