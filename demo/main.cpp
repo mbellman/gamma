@@ -188,8 +188,6 @@ int main(int argc, char* argv[]) {
     Gm_LogFrameStart(context);
     Gm_HandleEvents(context);
 
-    // context->scene_deprecated->updateScene(dt);
-
     // @hack @todo remove this
     Gamma::Camera::active = &context->scene.camera;
 

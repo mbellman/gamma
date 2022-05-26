@@ -1,10 +1,10 @@
 #include <filesystem>
 
+#include "system/scene.h"
 #include "system/assert.h"
 #include "system/console.h"
-#include "system/flags.h"
-#include "system/scene.h"
 #include "system/context.h"
+#include "system/flags.h"
 #include "system/yaml_parser.h"
 
 const GmSceneStats Gm_GetSceneStats(GmContext* context) {

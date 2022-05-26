@@ -158,10 +158,6 @@ void Gm_HandleEvents(GmContext* context) {
     }
 
     if (!context->commander.isOpen()) {
-      if (context->scene_deprecated != nullptr) {
-        context->scene_deprecated->input.handleEvent(event);
-      }
-
       context->scene.input.handleEvent(event);
     }
 
@@ -198,11 +194,7 @@ void Gm_LogFrameEnd(GmContext* context) {
 }
 
 void Gm_DestroyContext(GmContext* context) {
-  if (context->scene_deprecated != nullptr) {
-    context->scene_deprecated->destroy();
-
-    delete context->scene_deprecated;
-  }
+  // @todo clear scene
 
   IMG_Quit();
 

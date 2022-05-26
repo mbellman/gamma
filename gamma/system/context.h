@@ -16,8 +16,6 @@ enum GmRenderMode {
 };
 
 struct GmContext {
-  Gamma::AbstractScene* scene_deprecated = nullptr;
-  // @todo use as replacement for scene_deprecated
   GmScene scene;
   Gamma::AbstractRenderer* renderer = nullptr;
   Gamma::uint32 lastTick = 0;
