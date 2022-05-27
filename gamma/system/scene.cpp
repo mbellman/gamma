@@ -221,3 +221,42 @@ void Gm_HandleFreeCameraMode(GmContext* context, float dt) {
     scene.freeCameraVelocity = Vec3f(0.0f);
   }
 }
+
+void Gm_UseFrustumCulling(GmContext* context, const std::initializer_list<std::string>& meshNames) {
+  auto& meshMap = context->scene.meshMap;
+
+  for (auto& meshName : meshNames) {
+    meshMap[meshName]->objects.partitionByVisibility(context->scene.camera);
+  }
+}
+
+void Gm_UseLodByDistance(GmContext* context, float distance, const std::initializer_list<std::string>& meshNames) {
+  using namespace Gamma;
+
+  auto& meshMap = context->scene.meshMap;
+  auto& camera = context->scene.camera;
+
+  for (auto& meshName : meshNames) {
+    auto& mesh = *meshMap[meshName];
+
+    uint32 instanceOffset = 0;
+
+    for (uint32 lodIndex = 0; lodIndex < mesh.lods.size(); lodIndex++) {
+      mesh.lods[lodIndex].instanceOffset = instanceOffset;
+
+      if (lodIndex < mesh.lods.size() - 1) {
+        // Group all objects within the distance threshold
+        // in front of those outside it, and use the pivot
+        // defining that boundary to determine our instance
+        // count for this LoD set
+        instanceOffset = (uint32)mesh.objects.partitionByDistance((uint16)instanceOffset, distance * float(lodIndex + 1), camera.position);
+
+        mesh.lods[lodIndex].instanceCount = instanceOffset - mesh.lods[lodIndex].instanceOffset;
+      } else {
+        // The final LoD can just use the remaining set
+        // of objects beyond the last LoD distance threshold
+        mesh.lods[lodIndex].instanceCount = (uint32)mesh.objects.totalVisible() - instanceOffset;
+      }
+    }
+  }
+}

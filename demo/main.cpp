@@ -1,6 +1,6 @@
 #include "Gamma.h"
 
-static void setupScene(_ctx) {
+static void initScene(_ctx) {
   using namespace Gamma;
 
   auto& sunlight = createLight(LightType::DIRECTIONAL_SHADOWCASTER);
@@ -136,6 +136,47 @@ static void setupScene(_ctx) {
   lucyLight.radius = 200.0f;
 }
 
+static void updateScene(_ctx, float dt) {
+  using namespace Gamma;
+
+  useFrustumCulling({
+    "pawn",
+    "dragon",
+    "lucy",
+    "rook",
+    "knight",
+    "bishop",
+    "king",
+    "queen"
+  });
+
+  useLodByDistance(150.0f, {
+    "dragon",
+    "pawn"
+  });
+
+  useLodByDistance(100.0f, {
+    "lucy",
+    "rook",
+    "knight",
+    "bishop",
+    "king",
+    "queen"
+  });
+
+  for (auto& cube : context->scene.meshMap["cat-cube"]->objects) {
+    cube.rotation += Vec3f(0.5f * dt);
+
+    commit(cube);
+  }
+
+  auto& lucy = context->scene.meshMap["lucy"]->objects[0];
+
+  lucy.rotation.y += dt;
+
+  commit(lucy);
+}
+
 int main(int argc, char* argv[]) {
   GmContext* context = Gm_CreateContext();
 
@@ -176,7 +217,7 @@ int main(int argc, char* argv[]) {
 
   Gm_UseSceneFile(context, "./demo/scene.yml");
 
-  setupScene(context);
+  initScene(context);
 
   camera.position.z = -300.0f;
   camera.position.y = 20.0f;
@@ -191,6 +232,7 @@ int main(int argc, char* argv[]) {
     Gamma::Camera::active = &context->scene.camera;
 
     Gm_HandleFreeCameraMode(context, dt);
+    updateScene(context, dt);
 
     Gm_RenderScene(context);
     Gm_LogFrameEnd(context);
