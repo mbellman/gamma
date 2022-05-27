@@ -187,6 +187,24 @@ void Gm_Commit(GmContext* context, const Gamma::Object& object) {
   mesh->objects.setColorById(record.id, object.color);
 }
 
+void Gm_PointCamera(GmContext* context, const Gamma::Object& object, bool upsideDown) {
+  Gm_PointCamera(context, object.position, upsideDown);
+}
+
+void Gm_PointCamera(GmContext* context, const Gamma::Vec3f& position, bool upsideDown) {
+  using namespace Gamma;
+
+  auto& camera = context->scene.camera;
+  Vec3f forward = (position - camera.position).unit();
+  Vec3f sideways = Vec3f::cross(forward, Vec3f(0, 1.0f, 0));
+
+  Vec3f up = upsideDown
+    ? Vec3f::cross(forward, sideways)
+    : Vec3f::cross(sideways, forward);
+
+  camera.orientation.face(forward, up);
+}
+
 void Gm_HandleFreeCameraMode(GmContext* context, float dt) {
   using namespace Gamma;
   

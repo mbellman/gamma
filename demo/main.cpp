@@ -329,7 +329,6 @@ int main(int argc, char* argv[]) {
   GmContext* context = Gm_CreateContext();
 
   Gm_SetRenderMode(context, GmRenderMode::OPENGL);
-  // Gm_SetScene(context, new DemoScene());
 
   using namespace Gamma;
 

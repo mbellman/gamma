@@ -19,6 +19,7 @@
 #define createLight(type) Gm_CreateLight(context, type);
 #define createObjectFrom(meshName) Gm_CreateObjectFrom(context, meshName);
 #define commit(object) Gm_Commit(context, object);
+#define pointCamera(...) Gm_PointCamera(context, __VA_ARGS__);
 #define useFrustumCulling(...) Gm_UseFrustumCulling(context, __VA_ARGS__);
 #define useLodByDistance(distance, ...) Gm_UseLodByDistance(context, distance, __VA_ARGS__);
 
@@ -50,6 +51,8 @@ Gamma::Light& Gm_CreateLight(GmContext* context, Gamma::LightType type);
 void Gm_UseSceneFile(GmContext* context, const std::string& filename);
 Gamma::Object& Gm_CreateObjectFrom(GmContext* context, const std::string& meshName);
 void Gm_Commit(GmContext* context, const Gamma::Object& object);
+void Gm_PointCamera(GmContext* context, const Gamma::Object& object, bool upsideDown = false);
+void Gm_PointCamera(GmContext* context, const Gamma::Vec3f& position, bool upsideDown = false);
 void Gm_HandleFreeCameraMode(GmContext* context, float dt);
 void Gm_UseFrustumCulling(GmContext* context, const std::initializer_list<std::string>& meshNames);
 void Gm_UseLodByDistance(GmContext* context, float distance, const std::initializer_list<std::string>& meshNames);
