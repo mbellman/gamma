@@ -134,6 +134,154 @@ static void initScene(_ctx) {
   lucyLight.direction = Vec3f(0.0f, 1.0f, 0.75f);
   lucyLight.fov = 60.0f;
   lucyLight.radius = 200.0f;
+
+  // addChessExhibit
+  Vec3f cLocation = Vec3f(0, 0, 250.0f);
+
+  // Create chess board
+  auto& chessBoard = createObjectFrom("chess-board");
+
+  chessBoard.position = cLocation + Vec3f(-8.6f, 1.0f, 17.0f);
+  chessBoard.scale = 69.0f;
+
+  commit(chessBoard);
+
+  // Create white pawns
+  for (uint32 i = 0; i < 8; i++) {
+    auto& pawn = createObjectFrom("pawn");
+
+    pawn.scale = 4.5f;
+    pawn.position = cLocation + Vec3f(-38.5f + 8.6f * i, 1.0f, -4.5f);
+
+    commit(pawn);
+  }
+
+  // Create white rooks
+  auto& wRook1 = createObjectFrom("rook");
+  auto& wRook2 = createObjectFrom("rook");
+
+  wRook1.position = cLocation + Vec3f(-38.5f, 1.0f, -13.5f);
+  wRook1.scale = 4.5f;
+
+  wRook2.position = cLocation + Vec3f(21.7f, 1.0f, -13.5f);
+  wRook2.scale = 4.5f;
+
+  commit(wRook1);
+  commit(wRook2);
+
+  // Create white knights
+  auto& wKnight1 = createObjectFrom("knight");
+  auto& wKnight2 = createObjectFrom("knight");
+
+  wKnight1.position = cLocation + Vec3f(-29.9f, 1.0f, -13.5f);
+  wKnight1.scale = 4.5f;
+  wKnight1.rotation = Vec3f(0, pi, 0);
+
+  wKnight2.position = cLocation + Vec3f(13.1f, 1.0f, -13.5f);
+  wKnight2.scale = 4.5f;
+  wKnight2.rotation =  Vec3f(0, pi, 0);
+
+  commit(wKnight1);
+  commit(wKnight2);
+
+  // Create white bishops
+  auto& wBishop1 = createObjectFrom("bishop");
+  auto& wBishop2 = createObjectFrom("bishop");
+
+  wBishop1.position = cLocation + Vec3f(-21.3f, 1.0f, -13.5f);
+  wBishop1.scale = 4.5f;
+  wBishop1.rotation = Vec3f(0, pi, 0);
+
+  wBishop2.position = cLocation + Vec3f(4.5f, 1.0f, -13.5f);
+  wBishop2.scale = 4.5f;
+  wBishop2.rotation =  Vec3f(0, pi, 0);
+
+  commit(wBishop1);
+  commit(wBishop2);
+
+  // Create white king + queen
+  auto& wKing = createObjectFrom("king");
+  auto& wQueen = createObjectFrom("queen");
+
+  wKing.position = cLocation + Vec3f(-4.1f, 1.0f, -13.5f);
+  wKing.scale = 4.5f;
+
+  wQueen.position = cLocation + Vec3f(-12.7f, 1.0f, -13.5f);
+  wQueen.scale = 4.5f;
+
+  commit(wKing);
+  commit(wQueen);
+
+  // Create black pawns
+  for (uint32 i = 0; i < 8; i++) {
+    auto& pawn = createObjectFrom("pawn");
+
+    pawn.scale = 4.5f;
+    pawn.position = cLocation + Vec3f(-38.5f + 8.6f * i, 1.0f, 38.6f);
+    pawn.color = pVec4(50, 50, 50);
+
+    commit(pawn);
+  }
+
+  // Create black rooks
+  auto& bRook1 = createObjectFrom("rook");
+  auto& bRook2 = createObjectFrom("rook");
+
+  bRook1.position = cLocation + Vec3f(-38.5f, 1.0f, 47.25f);
+  bRook1.scale = 4.5f;
+  bRook1.color = pVec4(50, 50, 50);
+
+  bRook2.position = cLocation + Vec3f(21.7f, 1.0f, 47.25f);
+  bRook2.scale = 4.5f;
+  bRook2.color = pVec4(50, 50, 50);
+
+  commit(bRook1);
+  commit(bRook2);
+
+  // Create black knights
+  auto& bKnight1 = createObjectFrom("knight");
+  auto& bKnight2 = createObjectFrom("knight");
+
+  bKnight1.position = cLocation + Vec3f(-29.9f, 1.0f, 47.25f);
+  bKnight1.scale = 4.5f;
+  bKnight1.color = pVec4(50, 50, 50);
+
+  bKnight2.position = cLocation + Vec3f(13.1f, 1.0f, 47.25f);
+  bKnight2.scale = 4.5f;
+  bKnight2.color = pVec4(50, 50, 50);
+
+  commit(bKnight1);
+  commit(bKnight2);
+
+  // Create black bishops
+  auto& bBishop1 = createObjectFrom("bishop");
+  auto& bBishop2 = createObjectFrom("bishop");
+
+  bBishop1.position = cLocation + Vec3f(-21.3f, 1.0f, 47.25f);
+  bBishop1.scale = 4.5f;
+  bBishop1.color = pVec4(50, 50, 50);
+
+  bBishop2.position = cLocation + Vec3f(4.5f, 1.0f, 47.25f);
+  bBishop2.scale = 4.5f;
+  bBishop2.color = pVec4(50, 50, 50);
+
+  commit(bBishop1);
+  commit(bBishop2);
+
+  // Create black king + queen
+  auto& bKing = createObjectFrom("king");
+  auto& bQueen = createObjectFrom("queen");
+
+  bKing.position = cLocation + Vec3f(-4.1f, 1.0f, 47.25f);
+  bKing.scale = 4.5f;
+  bKing.color = pVec4(50, 50, 50);
+
+  bQueen.position = cLocation + Vec3f(-12.7f, 1.0f, 47.25f);
+  bQueen.scale = 4.5f;
+  bQueen.color = pVec4(50, 50, 50);
+
+  commit(bKing);
+  commit(bQueen);
 }
 
 static void updateScene(_ctx, float dt) {
