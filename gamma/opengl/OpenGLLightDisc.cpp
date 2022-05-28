@@ -125,10 +125,9 @@ namespace Gamma {
     }
   }
 
-  void OpenGLLightDisc::draw(const Light& light, const Area<uint32>& resolution) {
+  void OpenGLLightDisc::draw(const Light& light, const Area<uint32>& resolution, const Camera& camera) {
     Disc discs[1];
     auto& disc = discs[0];
-    auto& camera = *Camera::active;
     float aspectRatio = (float)resolution.width / (float)resolution.height;
     Matrix4f matProjection = Matrix4f::glPerspective(resolution, 90.0f * 0.5f, 1.0f, 10000.0f);
 
@@ -146,10 +145,9 @@ namespace Gamma {
     glDrawArrays(GL_TRIANGLES, 0, DISC_SLICES * 3);
   }
 
-  void OpenGLLightDisc::draw(const std::vector<Light>& lights, const Area<uint32>& resolution) {
+  void OpenGLLightDisc::draw(const std::vector<Light>& lights, const Area<uint32>& resolution, const Camera& camera) {
     // @todo avoid reallocating/freeing the disc array on each draw
     Disc* discs = new Disc[lights.size()];
-    auto& camera = *Camera::active;
     float aspectRatio = (float)resolution.width / (float)resolution.height;
     Matrix4f matProjection = Matrix4f::glPerspective(resolution, 90.0f * 0.5f, 1.0f, 10000.0f);
 

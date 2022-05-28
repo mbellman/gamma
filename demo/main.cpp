@@ -287,6 +287,8 @@ static void initScene(_ctx) {
 static void updateScene(_ctx, float dt) {
   using namespace Gamma;
 
+  Gm_HandleFreeCameraMode(context, dt);
+
   useFrustumCulling({
     "pawn",
     "dragon",
@@ -375,10 +377,6 @@ int main(int argc, char* argv[]) {
     Gm_LogFrameStart(context);
     Gm_HandleEvents(context);
 
-    // @hack @todo remove this
-    Gamma::Camera::active = &context->scene.camera;
-
-    Gm_HandleFreeCameraMode(context, dt);
     updateScene(context, dt);
 
     Gm_RenderScene(context);

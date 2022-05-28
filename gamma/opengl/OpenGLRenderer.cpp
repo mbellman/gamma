@@ -238,8 +238,6 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::initializeRendererContext() {
-    auto& camera = gmContext->scene.camera;
-
     // Accumulation buffers
     ctx.accumulationSource = &buffers.accumulation1;
     ctx.accumulationTarget = &buffers.accumulation2;
@@ -250,12 +248,13 @@ namespace Gamma {
     ctx.primitiveMode = Gm_IsFlagEnabled(GammaFlags::WIREFRAME_MODE) ? GL_LINES : GL_TRIANGLES;
 
     // Camera projection/view/inverse matrices
+    ctx.activeCamera = &gmContext->scene.camera;
     ctx.matProjection = Matrix4f::glPerspective(internalResolution, 45.0f, 1.0f, 10000.0f).transpose();
     ctx.matPreviousView = ctx.matView;
 
     ctx.matView = (
-      Matrix4f::rotation(camera.orientation) *
-      Matrix4f::translation(camera.position.invert().gl())
+      Matrix4f::rotation(ctx.activeCamera->orientation) *
+      Matrix4f::translation(ctx.activeCamera->position.invert().gl())
     ).transpose();
 
     ctx.matInverseProjection = ctx.matProjection.inverse();
@@ -482,7 +481,7 @@ namespace Gamma {
       shaders.probeReflector.setInt("meshTexture", 0);
       shaders.probeReflector.setInt("meshNormalMap", 1);
       shaders.probeReflector.setInt("probeMap", 3);
-      shaders.probeReflector.setVec3f("cameraPosition", Camera::active->position);
+      shaders.probeReflector.setVec3f("cameraPosition", ctx.activeCamera->position);
 
       for (auto* glMesh : glMeshes) {
         if (glMesh->isMeshType(MeshType::PROBE_REFLECTOR)) {
@@ -507,7 +506,7 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderDirectionalShadowMaps() {
-    auto& camera = *Camera::active;
+    auto& camera = *ctx.activeCamera;
     auto& shader = shaders.directionalShadowcasterView;
 
     shader.use();
@@ -668,7 +667,7 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderPointLights() {
-    auto& camera = *Camera::active;
+    auto& camera = *ctx.activeCamera;
     auto& shader = shaders.pointLight;
 
     shader.use();
@@ -678,14 +677,14 @@ namespace Gamma {
     shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
     shader.setMatrix4f("matInverseView", ctx.matInverseView);
 
-    lightDisc.draw(ctx.pointLights, internalResolution);
+    lightDisc.draw(ctx.pointLights, internalResolution, *ctx.activeCamera);
   }
 
   /**
    * @todo description
    */
   void OpenGLRenderer::renderPointShadowcasters() {
-    auto& camera = *Camera::active;
+    auto& camera = *ctx.activeCamera;
     auto& shader = shaders.pointShadowcaster;
 
     shader.use();
@@ -701,7 +700,7 @@ namespace Gamma {
       auto& light = ctx.pointShadowCasters[i];
 
       glShadowMap.buffer.read();
-      lightDisc.draw(light, internalResolution);
+      lightDisc.draw(light, internalResolution, *ctx.activeCamera);
     }
   }
 
@@ -709,7 +708,7 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderDirectionalLights() {
-    auto& camera = *Camera::active;
+    auto& camera = *ctx.activeCamera;
     auto& shader = shaders.directionalLight;
 
     shader.use();
@@ -737,7 +736,7 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderDirectionalShadowcasters() {
-    auto& camera = *Camera::active;
+    auto& camera = *ctx.activeCamera;
     auto& shader = shaders.directionalShadowcaster;
 
     shader.use();
@@ -773,7 +772,7 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderSpotLights() {
-    auto& camera = *Camera::active;
+    auto& camera = *ctx.activeCamera;
     auto& shader = shaders.spotLight;
 
     shader.use();
@@ -783,14 +782,14 @@ namespace Gamma {
     shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
     shader.setMatrix4f("matInverseView", ctx.matInverseView);
 
-    lightDisc.draw(ctx.spotLights, internalResolution);
+    lightDisc.draw(ctx.spotLights, internalResolution, *ctx.activeCamera);
   }
 
   /**
    * @todo description
    */
   void OpenGLRenderer::renderSpotShadowcasters() {
-    auto& camera = *Camera::active;
+    auto& camera = *ctx.activeCamera;
     auto& shader = shaders.spotShadowcaster;
 
     shader.use();
@@ -813,7 +812,7 @@ namespace Gamma {
       shader.setMatrix4f("lightMatrix", lightMatrix);
 
       glShadowMap.buffer.read();
-      lightDisc.draw(light, internalResolution);
+      lightDisc.draw(light, internalResolution, *ctx.activeCamera);
     }
   }
 
@@ -874,7 +873,7 @@ namespace Gamma {
       shaders.indirectLight.setInt("texColorAndDepth", 0);
       shaders.indirectLight.setInt("texNormalAndEmissivity", 1);
       shaders.indirectLight.setInt("texIndirectLightT1", 2);
-      shaders.indirectLight.setVec3f("cameraPosition", Camera::active->position);
+      shaders.indirectLight.setVec3f("cameraPosition", ctx.activeCamera->position);
       shaders.indirectLight.setMatrix4f("matProjection", ctx.matProjection);
       shaders.indirectLight.setMatrix4f("matView", ctx.matView);
       shaders.indirectLight.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
@@ -925,7 +924,7 @@ namespace Gamma {
 
     shaders.skybox.use();
     shaders.skybox.setVec4f("transform", FULL_SCREEN_TRANSFORM);
-    shaders.skybox.setVec3f("cameraPosition", Camera::active->position);
+    shaders.skybox.setVec3f("cameraPosition", ctx.activeCamera->position);
     shaders.skybox.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
     shaders.skybox.setMatrix4f("matInverseView", ctx.matInverseView);
 
@@ -1025,7 +1024,7 @@ namespace Gamma {
       glDisable(GL_CULL_FACE);
     }
 
-    auto& camera = *Camera::active;
+    auto& camera = *ctx.activeCamera;
 
     buffers.gBuffer.read();
     ctx.accumulationTarget->read();
@@ -1069,7 +1068,7 @@ namespace Gamma {
    * @todo description
    */
   void OpenGLRenderer::renderRefractiveGeometry() {
-    auto& camera = *Camera::active;
+    auto& camera = *ctx.activeCamera;
 
     // Swap buffers so we can temporarily render the
     // refracted geometry to the second accumulation
@@ -1261,7 +1260,6 @@ namespace Gamma {
       probeCamera.position = position;
       probeCamera.orientation.face(direction, upDirection);
 
-      Camera::active = &probeCamera;
       Matrix4f matProjection = Matrix4f::glPerspective({ 1024, 1024 }, 90.0f, 1.0f, farDistance).transpose();
 
       if (i == 2 || i == 3) {
@@ -1274,10 +1272,10 @@ namespace Gamma {
         Matrix4f::translation(probeCamera.position.invert().gl())
       ).transpose();
 
+      ctx.activeCamera = &probeCamera;
       ctx.matProjection = matProjection;
       ctx.matView = matView;
       ctx.matPreviousView = matView;
-
       ctx.matInverseProjection = ctx.matProjection.inverse();
       ctx.matInverseView = ctx.matView.inverse();
 

@@ -68,6 +68,7 @@ namespace Gamma {
     std::vector<Light> directionalShadowcasters;
     std::vector<Light> spotLights;
     std::vector<Light> spotShadowcasters;
+    Camera* activeCamera = nullptr;
     Matrix4f matProjection;
     Matrix4f matInverseProjection;
     Matrix4f matView;
