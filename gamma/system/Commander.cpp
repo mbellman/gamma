@@ -65,10 +65,11 @@ namespace Gamma {
   }
 
   void Commander::processCurrentCommand() {
-    constexpr static uint32 totalCommands = sizeof(commands) / sizeof(Command);
+    constexpr static u32 totalCommands = sizeof(commands) / sizeof(Command);
+    auto command = std::string(currentCommand);
 
     if (currentCommandIncludes("enable")) {
-      for (uint32 i = 0; i < totalCommands; i++) {
+      for (u32 i = 0; i < totalCommands; i++) {
         auto& command = commands[i];
 
         if (currentCommandIncludes(command.keyword)) {
@@ -78,7 +79,7 @@ namespace Gamma {
         }
       }
     } else if (currentCommandIncludes("disable")) {
-      for (uint32 i = 0; i < totalCommands; i++) {
+      for (u32 i = 0; i < totalCommands; i++) {
         auto& command = commands[i];
 
         if (currentCommandIncludes(command.keyword)) {
@@ -88,6 +89,8 @@ namespace Gamma {
         }
       }
     }
+
+    signal("command", command);
 
     resetCurrentCommand();
   }

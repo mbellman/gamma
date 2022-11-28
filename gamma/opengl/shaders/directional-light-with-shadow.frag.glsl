@@ -94,8 +94,10 @@ float getLightIntensity(Cascade cascade, vec4 transform) {
   vec2 shadow_map_texel_size = 1.0 / textureSize(texShadowMaps[cascade.index], 0);
 
   #if USE_VARIABLE_PENUMBRA_SIZE == 1
+    const float MAX_SPREAD = 15.0;
+
     float closest_occluder = getClosestOccluder(texShadowMaps[cascade.index], shadow_map_texel_size, transform, cascade.occluder_sweep_radius);
-    float spread = 1.0 + cascade.spread_factor * pow(distance(transform.z, closest_occluder), 2);
+    float spread = min(MAX_SPREAD, 1.0 + cascade.spread_factor * pow(distance(transform.z, closest_occluder), 2));
   #else
     float spread = cascade.spread_factor / 500.0;
   #endif

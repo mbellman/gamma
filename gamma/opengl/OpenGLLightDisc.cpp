@@ -1,15 +1,15 @@
 #include <cmath>
 
+#include "glew.h"
+
+#include "opengl/OpenGLLightDisc.h"
 #include "math/constants.h"
 #include "math/matrix.h"
-#include "opengl/OpenGLLightDisc.h"
 #include "system/camera.h"
 #include "system/console.h"
 
-#include "glew.h"
-
 namespace Gamma {
-  constexpr static uint32 DISC_SLICES = 16;
+  constexpr static u32 DISC_SLICES = 16;
 
   enum GLBuffer {
     VERTEX,
@@ -28,6 +28,24 @@ namespace Gamma {
     DISC_LIGHT_FOV
   };
 
+  static inline Matrix4f getLightViewMatrix(const Camera& camera) {
+    Orientation viewOrientation = camera.orientation.invert();
+
+    viewOrientation.roll *= -1.f;  // @hack
+
+    return (
+      Matrix4f::rotation(viewOrientation) *
+      Matrix4f::translation(camera.position.invert())
+    );
+  }
+
+  static inline Matrix4f getLightProjectionMatrix(const Area<u32>& resolution, const float fov) {
+    const static float near = 1.f;
+    const static float far = 10000.f;
+
+    return Matrix4f::glPerspective(resolution, fov, near, far);
+  }
+
   void OpenGLLightDisc::init() {
     glGenVertexArrays(1, &vao);
     glGenBuffers(2, &buffers[0]);
@@ -36,12 +54,12 @@ namespace Gamma {
     // Create the vertices for each slice of the disc
     Vec2f vertexPositions[DISC_SLICES * 3];
 
-    for (uint32 i = 0; i < DISC_SLICES; i++) {
-      constexpr static float sliceAngle = 360.0f / (float)DISC_SLICES;
-      uint32 index = i * 3;
+    for (u32 i = 0; i < DISC_SLICES; i++) {
+      constexpr static float sliceAngle = 360.f / (float)DISC_SLICES;
+      u32 index = i * 3;
 
       // Add center vertex
-      vertexPositions[index] = Vec2f(0.0f);
+      vertexPositions[index] = Vec2f(0.f);
 
       // Add corners
       const float a1 = i * sliceAngle * DEGREES_TO_RADIANS;
@@ -118,23 +136,19 @@ namespace Gamma {
       // Light source behind the camera; scale to cover
       // screen when within range, and scale to 0 when
       // out of range
-      float scale = localLightPosition.magnitude() < light.radius ? 2.0f : 0.0f;
+      float scale = localLightPosition.magnitude() < light.radius ? 2.f : 0.f;
 
-      disc.offset = Vec2f(0.0f);
+      disc.offset = Vec2f(0.f);
       disc.scale = Vec2f(scale);
     }
   }
 
-  void OpenGLLightDisc::draw(const Light& light, const Area<uint32>& resolution, const Camera& camera) {
+  void OpenGLLightDisc::draw(const Light& light, const Area<u32>& resolution, const Camera& camera) {
     Disc discs[1];
     auto& disc = discs[0];
     float aspectRatio = (float)resolution.width / (float)resolution.height;
-    Matrix4f matProjection = Matrix4f::glPerspective(resolution, 90.0f * 0.5f, 1.0f, 10000.0f);
-
-    Matrix4f matView = (
-      Matrix4f::rotation(camera.orientation.invert()) *
-      Matrix4f::translation(camera.position.invert())
-    );
+    Matrix4f matProjection = getLightProjectionMatrix(resolution, camera.fov);
+    Matrix4f matView = getLightViewMatrix(camera);
 
     configureDisc(disc, light, matProjection, matView, aspectRatio);
 
@@ -145,19 +159,15 @@ namespace Gamma {
     glDrawArrays(GL_TRIANGLES, 0, DISC_SLICES * 3);
   }
 
-  void OpenGLLightDisc::draw(const std::vector<Light>& lights, const Area<uint32>& resolution, const Camera& camera) {
+  void OpenGLLightDisc::draw(const std::vector<Light*>& lights, const Area<u32>& resolution, const Camera& camera) {
     // @todo avoid reallocating/freeing the disc array on each draw
     Disc* discs = new Disc[lights.size()];
     float aspectRatio = (float)resolution.width / (float)resolution.height;
-    Matrix4f matProjection = Matrix4f::glPerspective(resolution, 90.0f * 0.5f, 1.0f, 10000.0f);
+    Matrix4f matProjection = getLightProjectionMatrix(resolution, camera.fov);
+    Matrix4f matView = getLightViewMatrix(camera);
 
-    Matrix4f matView = (
-      Matrix4f::rotation(camera.orientation.invert()) *
-      Matrix4f::translation(camera.position.invert())
-    );
-
-    for (uint32 i = 0; i < lights.size(); i++) {
-      auto& light = lights[i];
+    for (u32 i = 0; i < lights.size(); i++) {
+      auto& light = *lights[i];
       auto& disc = discs[i];
 
       configureDisc(disc, light, matProjection, matView, aspectRatio);

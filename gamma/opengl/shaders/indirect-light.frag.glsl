@@ -47,7 +47,12 @@ const vec3[] ssao_sample_points = {
 vec2 texel_size = 1.0 / screenSize;
 
 vec2 rotatedVogelDisc(int samples, int index) {
-  float f = frame % 4;
+  #if USE_DENOISING == 1
+    float f = frame % 4;
+  #else
+    float f = 0;
+  #endif
+
   float rotation = noise(1.0 + f) * 3.141592 * 2.0;
   float theta = 2.4 * index + rotation;
   float radius = sqrt(float(index) + 0.5) / sqrt(float(samples));
@@ -63,7 +68,12 @@ float getScreenSpaceAmbientOcclusionContribution(float fragment_depth, vec3 frag
   float linearized_fragment_depth = getLinearizedDepth(fragment_depth);
   float occlusion = 0.0;
 
-  float f = frame % 4;
+  #if USE_DENOISING == 1
+    float f = frame % 4;
+  #else
+    float f = 0;
+  #endif
+
   vec3 random_vector = vec3(noise(1.0 + f), noise(2.0 + f), noise(3.0 + f));
   vec3 tangent = normalize(random_vector - fragment_normal * dot(random_vector, fragment_normal));
   vec3 bitangent = cross(fragment_normal, tangent);
@@ -90,7 +100,7 @@ float getScreenSpaceAmbientOcclusionContribution(float fragment_depth, vec3 frag
 }
 
 vec3 getScreenSpaceGlobalIlluminationContribution(float fragment_depth, vec3 fragment_position, vec3 fragment_normal) {
-  const int TOTAL_SAMPLES = 30;
+  const int TOTAL_SAMPLES = 8;
   const float max_sample_radius = 750.0;
   const float max_brightness = 100.0;
   vec3 global_illumination = vec3(0.0);
@@ -155,7 +165,7 @@ void main() {
     ambient_occlusion = getScreenSpaceAmbientOcclusionContribution(frag_color_and_depth.w, fragment_position, fragment_normal);
   #endif
 
-  out_gi_and_ao = vec4(global_illumination * 0.75, ambient_occlusion);
+  out_gi_and_ao = vec4(global_illumination * 0.75, ambient_occlusion * 0.5);
 
   #if USE_DENOISING == 1
     vec3 view_fragment_position_t1 = glVec3(matViewT1 * glVec4(fragment_position));
@@ -173,16 +183,19 @@ void main() {
       sample_sum += weight;
     // }
 
+    const float spatial_spread_size = 4.0;
+    const float spatial_spread_weight = 0.3;
+
     for (int x = -2; x <= 2; x++) {
       for (int y = -2; y <= 2; y++) {
-        vec2 offset = vec2(x, y) * texel_size * 3.0;
+        vec2 offset = vec2(x, y) * texel_size * spatial_spread_size;
         vec2 sample_uv = frag_uv_t1 + offset;
         float sample_depth = textureLod(texColorAndDepth, sample_uv, 1).w;
         float linear_sample_depth = getLinearizedDepth(sample_depth);
 
         // if (distance(linearized_fragment_depth, linear_sample_depth) < 2.0) {
-          out_gi_and_ao += texture(texIndirectLightT1, sample_uv) * weight * 0.2;
-          sample_sum += weight * 0.2;
+          out_gi_and_ao += texture(texIndirectLightT1, sample_uv) * weight * spatial_spread_weight;
+          sample_sum += weight * spatial_spread_weight;
         // }
       }
     }

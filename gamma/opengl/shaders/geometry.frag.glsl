@@ -4,6 +4,7 @@ uniform bool hasTexture = false;
 uniform bool hasNormalMap = false;
 uniform sampler2D meshTexture;
 uniform sampler2D meshNormalMap;
+uniform float meshEmissivity = 0.0;  // @todo material parameters?
 
 flat in vec3 fragColor;
 in vec3 fragNormal;
@@ -15,7 +16,7 @@ layout (location = 0) out vec4 out_color_and_depth;
 layout (location = 1) out vec4 out_normal_and_emissivity;
 
 vec3 getNormal() {
-  vec3 n_fragNormal = normalize(fragNormal);
+  vec3 normalized_frag_normal = normalize(fragNormal);
 
   if (hasNormalMap) {
     vec3 mappedNormal = texture(meshNormalMap, fragUv).rgb * 2.0 - vec3(1.0);
@@ -23,18 +24,22 @@ vec3 getNormal() {
     mat3 tangentMatrix = mat3(
       normalize(fragTangent),
       normalize(fragBitangent),
-      n_fragNormal
+      normalized_frag_normal
     );
 
     return normalize(tangentMatrix * mappedNormal);
   } else {
-    return n_fragNormal;
+    return normalized_frag_normal;
   }
 }
 
 void main() {
-  vec3 color = hasTexture ? texture(meshTexture, fragUv).rgb * fragColor : fragColor;
+  vec4 color = hasTexture ? texture(meshTexture, fragUv) * vec4(fragColor, 1.0) : vec4(fragColor, 1.0);
 
-  out_color_and_depth = vec4(color, gl_FragCoord.z);
-  out_normal_and_emissivity = vec4(getNormal(), 0.0);
+  if (color.a < 0.5) {
+    discard;
+  }
+
+  out_color_and_depth = vec4(color.rgb, gl_FragCoord.z);
+  out_normal_and_emissivity = vec4(getNormal(), meshEmissivity);
 }

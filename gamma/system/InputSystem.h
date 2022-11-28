@@ -8,7 +8,7 @@
 #include "system/type_aliases.h"
 
 namespace Gamma {
-  enum class Key : uint64 {
+  enum class Key : u64 {
     A = 1ULL << 0,
     B = 1ULL << 1,
     C = 1ULL << 2,
@@ -45,13 +45,17 @@ namespace Gamma {
     NUM_7 = 1ULL << 33,
     NUM_8 = 1ULL << 34,
     NUM_9 = 1ULL << 35,
-    SPACE = 1ULL << 36,
-    SHIFT = 1ULL << 37,
-    ESCAPE = 1ULL << 38,
-    ENTER = 1ULL << 39,
-    CONTROL = 1ULL << 40,
-    BACKSPACE = 1ULL << 41,
-    TAB = 1ULL << 42
+    ARROW_LEFT = 1ULL << 36,
+    ARROW_RIGHT = 1ULL << 37,
+    ARROW_UP = 1ULL << 38,
+    ARROW_DOWN = 1ULL << 39,
+    SPACE = 1ULL << 40,
+    SHIFT = 1ULL << 41,
+    ESCAPE = 1ULL << 42,
+    ENTER = 1ULL << 43,
+    CONTROL = 1ULL << 44,
+    BACKSPACE = 1ULL << 45,
+    TAB = 1ULL << 46
   };
 
   struct MouseMoveEvent {
@@ -63,22 +67,34 @@ namespace Gamma {
     Point<int> position;
   };
 
+  struct MouseWheelEvent {
+    enum Direction {
+      UP,
+      DOWN
+    };
+
+    Direction direction = UP;
+  };
+
   struct KeyboardEvent {
     Key key;
   };
 
   class InputSystem : public Signaler {
   public:
+    u64 getLastKeyDown() const;
     void handleEvent(const SDL_Event& event);
     bool isKeyHeld(Key key);
 
   private:
-    uint64 keyState = 0;
+    u64 keyState = 0;
+    u64 lastKeyDown = 0;
 
     void handleKeyDown(const SDL_Keycode& code);
     void handleKeyUp(const SDL_Keycode& code);
     void handleMouseDown(const SDL_MouseButtonEvent& event);
     void handleMouseMotion(const SDL_MouseMotionEvent& event);
+    void handleMouseWheel(const SDL_MouseWheelEvent& event);
     void handleTextInput(char character);
   };
 }

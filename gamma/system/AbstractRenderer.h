@@ -9,14 +9,27 @@ namespace Gamma {
   struct Mesh;
   struct Light;
 
+  struct FrameFlags {
+    /**
+     * Controls whether we want to use an identical
+     * previous-frame camera view matrix to the current
+     * frame for temporal sampling. The net result is
+     * that points will not be reprojected, but sampled
+     * at the same position from the previous frame buffer.
+     */
+    bool useStableTemporalSampling = false;
+  };
+
   struct RenderStats {
-    uint32 gpuMemoryTotal;
-    uint32 gpuMemoryUsed;
+    u32 gpuMemoryTotal;
+    u32 gpuMemoryUsed;
     bool isVSynced;
   };
 
   class AbstractRenderer : public Initable, public Renderable, public Destroyable {
   public:
+    FrameFlags frameFlags;
+
     AbstractRenderer(GmContext* gmContext): gmContext(gmContext) {};
     virtual ~AbstractRenderer() {};
 
@@ -25,17 +38,18 @@ namespace Gamma {
     virtual void destroyMesh(const Mesh* mesh) {};
     virtual void destroyShadowMap(const Light* light) {};
 
-    virtual Area<uint32>& getInternalResolution() final {
+    virtual Area<u32>& getInternalResolution() final {
       return internalResolution;
     }
 
     virtual const RenderStats& getRenderStats() = 0;
     virtual void present() {};
-    virtual void renderText(TTF_Font* font, const char* message, uint32 x, uint32 y, const Vec3f& color = Vec3f(1.0f), const Vec4f& background = Vec4f(0.0f)) {};
+    virtual void renderText(TTF_Font* font, const char* message, u32 x, u32 y, const Vec3f& color = Vec3f(1.0f), const Vec4f& background = Vec4f(0.0f)) {};
+    virtual void resetShadowMaps() {};
 
   protected:
     GmContext* gmContext = nullptr;
-    Area<uint32> internalResolution = { 1920, 1080 };
+    Area<u32> internalResolution = { 1920, 1080 };
     RenderStats stats;
   };
 }

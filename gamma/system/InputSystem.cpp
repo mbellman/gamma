@@ -41,6 +41,10 @@ namespace Gamma {
     { SDLK_7, Key::NUM_7 },
     { SDLK_8, Key::NUM_8 },
     { SDLK_9, Key::NUM_9 },
+    { SDLK_LEFT, Key::ARROW_LEFT },
+    { SDLK_RIGHT, Key::ARROW_RIGHT },
+    { SDLK_UP, Key::ARROW_UP },
+    { SDLK_DOWN, Key::ARROW_DOWN },
     { SDLK_SPACE, Key::SPACE },
     { SDLK_LSHIFT, Key::SHIFT },
     { SDLK_RSHIFT, Key::SHIFT },
@@ -50,6 +54,10 @@ namespace Gamma {
     { SDLK_BACKSPACE, Key::BACKSPACE },
     { SDLK_TAB, Key::TAB }
   };
+
+  u64 InputSystem::getLastKeyDown() const {
+    return lastKeyDown;
+  }
 
   void InputSystem::handleEvent(const SDL_Event& event) {
     switch (event.type) {
@@ -65,6 +73,9 @@ namespace Gamma {
       case SDL_MOUSEBUTTONDOWN:
         handleMouseDown(event.button);
         break;
+      case SDL_MOUSEWHEEL:
+        handleMouseWheel(event.wheel);
+        break;
       case SDL_TEXTINPUT:
         handleTextInput(event.text.text[0]);
         break;
@@ -74,7 +85,8 @@ namespace Gamma {
   void InputSystem::handleKeyDown(const SDL_Keycode& code) {
     if (keyMap.find(code) != keyMap.end()) {
       Key key = keyMap.at(code);
-      keyState |= (uint64)key;
+      keyState |= (u64)key;
+      lastKeyDown = (u64)key;
 
       signal("keydown", key);
     }
@@ -83,7 +95,7 @@ namespace Gamma {
   void InputSystem::handleKeyUp(const SDL_Keycode& code) {
     if (keyMap.find(code) != keyMap.end()) {
       Key key = keyMap.at(code);
-      keyState &= ~(uint64)key;
+      keyState &= ~(u64)key;
 
       signal("keyup", key);
     }
@@ -107,11 +119,21 @@ namespace Gamma {
     signal("mousemove", moveEvent);
   }
 
+  void InputSystem::handleMouseWheel(const SDL_MouseWheelEvent& event) {
+    MouseWheelEvent wheelEvent;
+
+    wheelEvent.direction = event.y < 0
+      ? MouseWheelEvent::DOWN
+      : MouseWheelEvent::UP;
+
+    signal("mousewheel", wheelEvent);
+  }
+
   void InputSystem::handleTextInput(char character) {
     signal("input", character);
   }
 
   bool InputSystem::isKeyHeld(Key key) {
-    return keyState & (uint64)key;
+    return keyState & (u64)key;
   }
 }

@@ -93,10 +93,17 @@ vec3 getPathPoint(int index) {
 }
 
 /**
+ * @todo description
+ */
+float getParticleSpeed() {
+  return particles.median_speed + random(-particles.speed_variation, particles.speed_variation, particle_id);
+}
+
+/**
  * Returns the initial particle position, pseudo-randomly
  * determined by its ID.
  */
-vec3 getInitialPosition() {
+vec3 getInitialParticlePosition() {
   float radius = particles.minimum_radius + particles.spread * sqrt(0.001 + random(particle_id * 1.255673));
 
   float x = random(-1, 1, particle_id * 1.1);
@@ -109,12 +116,12 @@ vec3 getInitialPosition() {
 /**
  * @todo description
  */
-vec3 getPathPosition() {
+vec3 getPathParticlePosition() {
   if (path.total == 0) {
     return vec3(0);
   }
 
-  float particle_speed = particles.median_speed + random(-particles.speed_variation, particles.speed_variation, particle_id);
+  float particle_speed = getParticleSpeed();
   float path_progress = fract(random(0, 1, particle_id * 1.1) + time * (particle_speed / path.total));
 
   float path_position = path.is_circuit
@@ -136,8 +143,9 @@ vec3 getPathPosition() {
 /**
  * @todo description
  */
-vec3 getDeviation() {
-  float deviation_factor = particles.deviation * sin(particle_id + time);
+vec3 getParticleDeviation() {
+  float particle_speed = getParticleSpeed();
+  float deviation_factor = particles.deviation * sin(particle_id + time * particle_speed);
 
   return vec3(
     deviation_factor * random(-1, 1, particle_id * 1.4),
@@ -150,7 +158,7 @@ vec3 getDeviation() {
  * Returns the particle's current position as a function of time.
  */
 vec3 getParticlePosition() {
-  return particles.spawn + getInitialPosition() + getPathPosition() + getDeviation();
+  return particles.spawn + getInitialParticlePosition() + getPathParticlePosition() + getParticleDeviation();
 }
 
 void main() {
@@ -162,9 +170,9 @@ void main() {
 
   // @hack invert Z
   gl_Position = matProjection * matView * glVec4(position);
-  gl_PointSize = scale;
+  gl_PointSize = 50.0 * scale / gl_Position.z;
 
   fragUv = vertexUv;
   // @todo make color configurable
-  color = vec3(sin(r * 500.0) * 0.5 + 0.5, sin(time * 2.0) * 0.5 + 0.5, cos(r * 1000.0) * 0.5 + 0.5);
+  color = vec3(sin(r * 500.0) * 0.5 + 0.5, sin(particle_id + time * 2.0) * 0.5 + 0.5, cos(r * 1000.0) * 0.5 + 0.5);
 }

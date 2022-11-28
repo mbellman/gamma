@@ -18,6 +18,7 @@ out vec3 fragBitangent;
 out vec2 fragUv;
 
 #include "utils/gl.glsl";
+#include "utils/foliage.glsl";
 
 /**
  * Returns a bitangent from potentially non-orthonormal
@@ -48,6 +49,19 @@ void main() {
   // @hack invert Z
   vec4 world_position = glVec4(modelMatrix * vec4(vertexPosition, 1.0));
   mat3 normal_matrix = transpose(inverse(mat3(modelMatrix)));
+
+  // @todo make a utility for this
+  switch (foliage.type) {
+    case FLOWER:
+      world_position.xyz += getFlowerFoliageOffset(world_position.xyz);
+      break;
+    case BRANCH:
+      world_position.xyz += getBranchFoliageOffset(world_position.xyz);
+      break;
+    case LEAF:
+      world_position.xyz += getLeafFoliageOffset(world_position.xyz);
+      break;
+  }
 
   gl_Position = matProjection * matView * world_position;
 

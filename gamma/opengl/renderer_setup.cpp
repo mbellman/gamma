@@ -4,7 +4,7 @@
 #include "glew.h"
 
 namespace Gamma {
-  void Gm_InitRendererResources(RendererBuffers& buffers, RendererShaders& shaders, const Area<uint32>& internalResolution) {
+  void Gm_InitRendererResources(RendererBuffers& buffers, RendererShaders& shaders, const Area<u32>& internalResolution) {
     // Initialize buffers
     buffers.gBuffer.init();
     buffers.gBuffer.setSize(internalResolution);
@@ -61,6 +61,11 @@ namespace Gamma {
     shaders.geometry.fragment("./gamma/opengl/shaders/geometry.frag.glsl");
     shaders.geometry.link();
 
+    shaders.foliage.init();
+    shaders.foliage.vertex("./gamma/opengl/shaders/foliage.vert.glsl");
+    shaders.foliage.fragment("./gamma/opengl/shaders/geometry.frag.glsl");
+    shaders.foliage.link();
+
     shaders.probeReflector.init();
     shaders.probeReflector.vertex("./gamma/opengl/shaders/geometry.vert.glsl");
     shaders.probeReflector.fragment("./gamma/opengl/shaders/probe-reflector.frag.glsl");
@@ -76,51 +81,46 @@ namespace Gamma {
     shaders.lightingPrepass.fragment("./gamma/opengl/shaders/lighting-prepass.frag.glsl");
     shaders.lightingPrepass.link();
 
-    shaders.pointLight.init();
-    shaders.pointLight.vertex("./gamma/opengl/shaders/light-disc.vert.glsl");
-    shaders.pointLight.fragment("./gamma/opengl/shaders/point-light-without-shadow.frag.glsl");
-    shaders.pointLight.link();
-
-    shaders.pointShadowcaster.init();
-    shaders.pointShadowcaster.vertex("./gamma/opengl/shaders/light-disc.vert.glsl");
-    shaders.pointShadowcaster.fragment("./gamma/opengl/shaders/point-light-with-shadow.frag.glsl");
-    shaders.pointShadowcaster.link();
-
-    shaders.pointShadowcasterView.init();
-    shaders.pointShadowcasterView.vertex("./gamma/opengl/shaders/point-light-view.vert.glsl");
-    shaders.pointShadowcasterView.geometry("./gamma/opengl/shaders/point-light-view.geom.glsl");
-    shaders.pointShadowcasterView.fragment("./gamma/opengl/shaders/point-light-view.frag.glsl");
-    shaders.pointShadowcasterView.link();
-
     shaders.directionalLight.init();
     shaders.directionalLight.vertex("./gamma/opengl/shaders/quad.vert.glsl");
     shaders.directionalLight.fragment("./gamma/opengl/shaders/directional-light-without-shadow.frag.glsl");
     shaders.directionalLight.link();
-
-    shaders.directionalShadowcaster.init();
-    shaders.directionalShadowcaster.vertex("./gamma/opengl/shaders/quad.vert.glsl");
-    shaders.directionalShadowcaster.fragment("./gamma/opengl/shaders/directional-light-with-shadow.frag.glsl");
-    shaders.directionalShadowcaster.link();
-
-    shaders.directionalShadowcasterView.init();
-    shaders.directionalShadowcasterView.vertex("./gamma/opengl/shaders/directional-light-view.vert.glsl");
-    shaders.directionalShadowcasterView.fragment("./gamma/opengl/shaders/directional-light-view.frag.glsl");
-    shaders.directionalShadowcasterView.link();
 
     shaders.spotLight.init();
     shaders.spotLight.vertex("./gamma/opengl/shaders/light-disc.vert.glsl");
     shaders.spotLight.fragment("./gamma/opengl/shaders/spot-light-without-shadow.frag.glsl");
     shaders.spotLight.link();
 
+    shaders.pointLight.init();
+    shaders.pointLight.vertex("./gamma/opengl/shaders/light-disc.vert.glsl");
+    shaders.pointLight.fragment("./gamma/opengl/shaders/point-light-without-shadow.frag.glsl");
+    shaders.pointLight.link();
+
+    shaders.directionalShadowcaster.init();
+    shaders.directionalShadowcaster.vertex("./gamma/opengl/shaders/quad.vert.glsl");
+    shaders.directionalShadowcaster.fragment("./gamma/opengl/shaders/directional-light-with-shadow.frag.glsl");
+    shaders.directionalShadowcaster.link();
+
     shaders.spotShadowcaster.init();
     shaders.spotShadowcaster.vertex("./gamma/opengl/shaders/light-disc.vert.glsl");
     shaders.spotShadowcaster.fragment("./gamma/opengl/shaders/spot-light-with-shadow.frag.glsl");
     shaders.spotShadowcaster.link();
 
-    shaders.spotShadowcasterView.init();
-    shaders.spotShadowcasterView.vertex("./gamma/opengl/shaders/spot-light-view.vert.glsl");
-    shaders.spotShadowcasterView.fragment("./gamma/opengl/shaders/spot-light-view.frag.glsl");
-    shaders.spotShadowcasterView.link();
+    shaders.pointShadowcaster.init();
+    shaders.pointShadowcaster.vertex("./gamma/opengl/shaders/light-disc.vert.glsl");
+    shaders.pointShadowcaster.fragment("./gamma/opengl/shaders/point-light-with-shadow.frag.glsl");
+    shaders.pointShadowcaster.link();
+
+    shaders.shadowLightView.init();
+    shaders.shadowLightView.vertex("./gamma/opengl/shaders/shadow-light-view.vert.glsl");
+    shaders.shadowLightView.fragment("./gamma/opengl/shaders/shadow-light-view.frag.glsl");
+    shaders.shadowLightView.link();
+
+    shaders.pointShadowcasterView.init();
+    shaders.pointShadowcasterView.vertex("./gamma/opengl/shaders/point-light-view.vert.glsl");
+    shaders.pointShadowcasterView.geometry("./gamma/opengl/shaders/point-light-view.geom.glsl");
+    shaders.pointShadowcasterView.fragment("./gamma/opengl/shaders/point-light-view.frag.glsl");
+    shaders.pointShadowcasterView.link();
 
     shaders.indirectLight.init();
     shaders.indirectLight.vertex("./gamma/opengl/shaders/quad.vert.glsl");
@@ -153,15 +153,20 @@ namespace Gamma {
     shaders.reflectionsDenoise.fragment("./gamma/opengl/shaders/reflections-denoise.frag.glsl");
     shaders.reflectionsDenoise.link();
 
+    shaders.refractivePrepass.init();
+    shaders.refractivePrepass.vertex("./gamma/opengl/shaders/geometry.vert.glsl");
+    shaders.refractivePrepass.fragment("./gamma/opengl/shaders/refractive-prepass.frag.glsl");
+    shaders.refractivePrepass.link();
+
     shaders.refractiveGeometry.init();
     shaders.refractiveGeometry.vertex("./gamma/opengl/shaders/geometry.vert.glsl");
     shaders.refractiveGeometry.fragment("./gamma/opengl/shaders/refractive-geometry.frag.glsl");
     shaders.refractiveGeometry.link();
 
-    shaders.refractivePrepass.init();
-    shaders.refractivePrepass.vertex("./gamma/opengl/shaders/geometry.vert.glsl");
-    shaders.refractivePrepass.fragment("./gamma/opengl/shaders/refractive-prepass.frag.glsl");
-    shaders.refractivePrepass.link();
+    shaders.water.init();
+    shaders.water.vertex("./gamma/opengl/shaders/geometry.vert.glsl");
+    shaders.water.fragment("./gamma/opengl/shaders/water.frag.glsl");
+    shaders.water.link();
 
     #if GAMMA_DEVELOPER_MODE
       shaders.gBufferDev.init();
@@ -188,23 +193,23 @@ namespace Gamma {
     shaders.probeReflector.destroy();
     shaders.particles.destroy();
     shaders.lightingPrepass.destroy();
-    shaders.pointLight.destroy();
-    shaders.pointShadowcaster.destroy();
-    shaders.pointShadowcasterView.destroy();
     shaders.directionalLight.destroy();
-    shaders.directionalShadowcaster.destroy();
-    shaders.directionalShadowcasterView.destroy();
     shaders.spotLight.destroy();
+    shaders.pointLight.destroy();
+    shaders.directionalShadowcaster.destroy();
     shaders.spotShadowcaster.destroy();
-    shaders.spotShadowcasterView.destroy();
+    shaders.pointShadowcaster.destroy();
+    shaders.shadowLightView.destroy();
+    shaders.pointShadowcasterView.destroy();
     shaders.indirectLight.destroy();
     shaders.indirectLightComposite.destroy();
     shaders.skybox.destroy();
     shaders.copyFrame.destroy();
     shaders.reflections.destroy();
     shaders.reflectionsDenoise.destroy();
-    shaders.refractiveGeometry.destroy();
     shaders.refractivePrepass.destroy();
+    shaders.refractiveGeometry.destroy();
+    shaders.water.destroy();
 
     #if GAMMA_DEVELOPER_MODE
       shaders.gBufferDev.destroy();

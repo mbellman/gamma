@@ -12,15 +12,17 @@
 #include "opengl/OpenGLRenderer.h"
 #include "opengl/OpenGLScreenQuad.h"
 #include "opengl/renderer_setup.h"
+#include "math/utilities.h"
 #include "system/camera.h"
 #include "system/console.h"
 #include "system/context.h"
 #include "system/entities.h"
 #include "system/flags.h"
 #include "system/scene.h"
+#include "system/vector_helpers.h"
 
 namespace Gamma {
-  const static uint32 MAX_LIGHTS = 1000;
+  const static u32 MAX_LIGHTS = 1000;
   const static Vec4f FULL_SCREEN_TRANSFORM = { 0.0f, 0.0f, 1.0f, 1.0f };
 
   const static Vec3f CUBE_MAP_DIRECTIONS[6] = {
@@ -107,9 +109,17 @@ namespace Gamma {
       shaders.indirectLightComposite.use();
       shaders.indirectLightComposite.setVec2f("screenSize", screenSize);
 
+      shaders.reflectionsDenoise.use();
       shaders.reflectionsDenoise.setVec2f("screenSize", screenSize);
+
+      shaders.refractivePrepass.use();
       shaders.refractivePrepass.setVec2f("screenSize", screenSize);
+
+      shaders.refractiveGeometry.use();
       shaders.refractiveGeometry.setVec2f("screenSize", screenSize);
+
+      shaders.water.use();
+      shaders.water.setVec2f("screenSize", screenSize);
 
       // @todo set sampler2D texture units
     #endif
@@ -179,6 +189,9 @@ namespace Gamma {
     #endif
 
     frame++;
+
+    // Reset frame flags at the end of the render pass
+    frameFlags.useStableTemporalSampling = false;
   }
 
   /**
@@ -249,13 +262,18 @@ namespace Gamma {
 
     // Camera projection/view/inverse matrices
     ctx.activeCamera = &gmContext->scene.camera;
-    ctx.matProjection = Matrix4f::glPerspective(internalResolution, 45.0f, 1.0f, 10000.0f).transpose();
+    ctx.matProjection = Matrix4f::glPerspective(internalResolution, ctx.activeCamera->fov, 1.0f, 10000.0f).transpose();
     ctx.matPreviousView = ctx.matView;
 
     ctx.matView = (
-      Matrix4f::rotation(ctx.activeCamera->orientation) *
+      ctx.activeCamera->rotation.toMatrix4f() *
+      // Matrix4f::rotation(ctx.activeCamera->orientation) *
       Matrix4f::translation(ctx.activeCamera->position.invert().gl())
     ).transpose();
+
+    if (frameFlags.useStableTemporalSampling) {
+      ctx.matPreviousView = ctx.matView;
+    }
 
     ctx.matInverseProjection = ctx.matProjection.inverse();
     ctx.matInverseView = ctx.matView.inverse();
@@ -264,6 +282,7 @@ namespace Gamma {
     ctx.hasEmissiveObjects = false;
     ctx.hasReflectiveObjects = false;
     ctx.hasRefractiveObjects = false;
+    ctx.hasWaterObjects = false;
 
     for (auto* glMesh : glMeshes) {
       if (glMesh->getObjectCount() > 0) {
@@ -273,6 +292,8 @@ namespace Gamma {
           ctx.hasReflectiveObjects = true;
         } else if (glMesh->isMeshType(MeshType::REFRACTIVE)) {
           ctx.hasRefractiveObjects = true;
+        } else if (glMesh->isMeshType(MeshType::WATER)) {
+          ctx.hasWaterObjects = true;
         }
       }
     }
@@ -283,20 +304,20 @@ namespace Gamma {
    */
   void OpenGLRenderer::initializeLightArrays() {
     ctx.pointLights.clear();
-    ctx.pointShadowCasters.clear();
+    ctx.pointShadowcasters.clear();
     ctx.directionalLights.clear();
     ctx.directionalShadowcasters.clear();
     ctx.spotLights.clear();
     ctx.spotShadowcasters.clear();
 
-    for (auto& light : gmContext->scene.lights) {
-      switch (light.type) {
+    for (auto* light : gmContext->scene.lights) {
+      switch (light->type) {
         case LightType::POINT:
           ctx.pointLights.push_back(light);
           break;
         case LightType::POINT_SHADOWCASTER:
           if (Gm_IsFlagEnabled(GammaFlags::RENDER_SHADOWS)) {
-            ctx.pointShadowCasters.push_back(light);
+            ctx.pointShadowcasters.push_back(light);
           } else {
             ctx.pointLights.push_back(light);
           }
@@ -339,25 +360,17 @@ namespace Gamma {
         renderDirectionalShadowMaps();
       }
 
-      if (glPointShadowMaps.size() > 0) {
-        renderPointShadowMaps();
-      }
-
       if (glSpotShadowMaps.size() > 0) {
         renderSpotShadowMaps();
+      }
+
+      if (glPointShadowMaps.size() > 0) {
+        renderPointShadowMaps();
       }
     }
 
     prepareLightingPass();
     renderLightingPrepass();
-
-    if (ctx.pointLights.size() > 0) {
-      renderPointLights();
-    }
-
-    if (ctx.pointShadowCasters.size() > 0) {
-      renderPointShadowcasters();
-    }
 
     if (ctx.directionalLights.size() > 0) {
       renderDirectionalLights();
@@ -373,6 +386,14 @@ namespace Gamma {
 
     if (ctx.spotShadowcasters.size() > 0) {
       renderSpotShadowcasters();
+    }
+
+    if (ctx.pointLights.size() > 0) {
+      renderPointLights();
+    }
+
+    if (ctx.pointShadowcasters.size() > 0) {
+      renderPointShadowcasters();
     }
 
     if (ctx.hasEmissiveObjects) {
@@ -403,6 +424,10 @@ namespace Gamma {
 
     if (ctx.hasRefractiveObjects && Gm_IsFlagEnabled(GammaFlags::RENDER_REFRACTIVE_GEOMETRY)) {
       renderRefractiveGeometry();
+    }
+
+    if (ctx.hasWaterObjects) {
+      renderWater();
     }
 
     swapAccumulationBuffers();
@@ -457,13 +482,36 @@ namespace Gamma {
       }
     }
 
-    // Render non-emissive, non-reflective objects
-    glStencilMask(MeshType::NON_EMISSIVE);
+    // Render objects of the default mesh type
+    glStencilMask(MeshType::DEFAULT);
 
     for (auto* glMesh : glMeshes) {
-      if (glMesh->isMeshType(MeshType::NON_EMISSIVE)) {
+      if (glMesh->isMeshType(MeshType::DEFAULT)) {
         shaders.geometry.setBool("hasTexture", glMesh->hasTexture());
         shaders.geometry.setBool("hasNormalMap", glMesh->hasNormalMap());
+        shaders.geometry.setFloat("meshEmissivity", glMesh->getSourceMesh()->emissivity);
+
+        glMesh->render(ctx.primitiveMode);
+      }
+    }
+
+    // Render foliage
+    shaders.foliage.use();
+    shaders.foliage.setMatrix4f("matProjection", ctx.matProjection);
+    shaders.foliage.setMatrix4f("matView", ctx.matView);
+    shaders.foliage.setInt("meshTexture", 0);
+    shaders.foliage.setInt("meshNormalMap", 1);
+    shaders.foliage.setFloat("time", gmContext->scene.runningTime);
+
+    for (auto* glMesh : glMeshes) {
+      if (glMesh->isMeshType(MeshType::FOLIAGE)) {
+        auto& foliage = glMesh->getSourceMesh()->foliage;
+
+        shaders.foliage.setInt("foliage.type", foliage.type);
+        shaders.foliage.setFloat("foliage.speed", foliage.speed);
+        shaders.foliage.setBool("hasTexture", glMesh->hasTexture());
+        shaders.foliage.setBool("hasNormalMap", glMesh->hasNormalMap());
+        shaders.foliage.setFloat("meshEmissivity", glMesh->getSourceMesh()->emissivity);
 
         glMesh->render(ctx.primitiveMode);
       }
@@ -485,10 +533,12 @@ namespace Gamma {
 
       for (auto* glMesh : glMeshes) {
         if (glMesh->isMeshType(MeshType::PROBE_REFLECTOR)) {
+          auto& probeName = glMesh->getSourceMesh()->probe;
+          auto& position = gmContext->scene.probeMap[probeName];
+
           shaders.probeReflector.setBool("hasTexture", glMesh->hasTexture());
           shaders.probeReflector.setBool("hasNormalMap", glMesh->hasNormalMap());
-
-          auto& probeName = glMesh->getSourceMesh()->probe;
+          shaders.probeReflector.setVec3f("probePosition", position);
 
           if (glProbes.find(probeName) != glProbes.end()) {
             glProbes[probeName]->read();
@@ -507,21 +557,23 @@ namespace Gamma {
    */
   void OpenGLRenderer::renderDirectionalShadowMaps() {
     auto& camera = *ctx.activeCamera;
-    auto& shader = shaders.directionalShadowcasterView;
+    auto& shader = shaders.shadowLightView;
 
     shader.use();
+    shader.setFloat("time", gmContext->scene.runningTime);
+    shader.setInt("meshTexture", 0);
 
-    for (uint32 mapIndex = 0; mapIndex < glDirectionalShadowMaps.size(); mapIndex++) {
+    for (u32 mapIndex = 0; mapIndex < glDirectionalShadowMaps.size(); mapIndex++) {
       auto& glShadowMap = *glDirectionalShadowMaps[mapIndex];
-      auto& light = ctx.directionalShadowcasters[mapIndex];
+      auto& light = *ctx.directionalShadowcasters[mapIndex];
 
       glShadowMap.buffer.write();
 
-      for (uint32 cascade = 0; cascade < 3; cascade++) {
+      for (u32 cascade = 0; cascade < 3; cascade++) {
         glShadowMap.buffer.writeToAttachment(cascade);
-        Matrix4f matLightView = Gm_CreateCascadedLightViewMatrixGL(cascade, light.direction, camera);
+        Matrix4f matLightViewProjection = Gm_CreateCascadedLightViewProjectionMatrixGL(cascade, light.direction, camera);
 
-        shader.setMatrix4f("matLightView", matLightView);
+        shader.setMatrix4f("matLightViewProjection", matLightViewProjection);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -529,6 +581,11 @@ namespace Gamma {
         // (will require a handful of other changes to mesh organization/data buffering)
         for (auto* glMesh : glMeshes) {
           auto* sourceMesh = glMesh->getSourceMesh();
+          auto& foliage = sourceMesh->foliage;
+
+          shader.setInt("foliage.type", foliage.type);
+          shader.setFloat("foliage.speed", foliage.speed);
+          shader.setBool("hasTexture", glMesh->hasTexture());
 
           if (sourceMesh->canCastShadows && sourceMesh->maxCascade >= cascade) {
             glMesh->render(ctx.primitiveMode, true);
@@ -541,14 +598,62 @@ namespace Gamma {
   /**
    * @todo description
    */
+  void OpenGLRenderer::renderSpotShadowMaps() {
+    auto& shader = shaders.shadowLightView;
+
+    shader.use();
+    shader.setInt("meshTexture", 0);
+
+    for (u32 mapIndex = 0; mapIndex < glSpotShadowMaps.size(); mapIndex++) {
+      auto& glShadowMap = *glSpotShadowMaps[mapIndex];
+      auto& light = *glShadowMap.light;
+
+      if (light.isStatic && glShadowMap.isRendered) {
+        continue;
+      }
+
+      Matrix4f matLightProjection = Matrix4f::glPerspective({ 1024, 1024 }, 120.0f, 1.0f, light.radius);
+      Matrix4f matLightView = Matrix4f::lookAt(light.position.gl(), light.direction.invert().gl(), Vec3f(0.0f, 1.0f, 0.0f));
+      Matrix4f matLightViewProjection = (matLightProjection * matLightView).transpose();
+
+      glShadowMap.buffer.write();
+
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      shader.setMatrix4f("matLightViewProjection", matLightViewProjection);
+
+      // @todo glMultiDrawElementsIndirect for static world geometry
+      // (will require a handful of other changes to mesh organization/data buffering)
+      // @todo allow specific meshes to be associated with spot lights + rendered to shadow maps
+      for (auto* glMesh : glMeshes) {
+        auto* sourceMesh = glMesh->getSourceMesh();
+        // @todo check foliage behavior for correctness
+        auto& foliage = sourceMesh->foliage;
+
+        shader.setInt("foliage.type", foliage.type);
+        shader.setFloat("foliage.speed", foliage.speed);
+        shader.setBool("hasTexture", glMesh->hasTexture());
+
+        if (sourceMesh->canCastShadows) {
+          glMesh->render(ctx.primitiveMode, true);
+        }
+      }
+
+      glShadowMap.isRendered = true;
+    }
+  }
+
+  /**
+   * @todo description
+   */
   void OpenGLRenderer::renderPointShadowMaps() {
     auto& shader = shaders.pointShadowcasterView;
 
     shader.use();
 
-    for (uint32 mapIndex = 0; mapIndex < glPointShadowMaps.size(); mapIndex++) {
+    for (u32 mapIndex = 0; mapIndex < glPointShadowMaps.size(); mapIndex++) {
       auto& glShadowMap = *glPointShadowMaps[mapIndex];
-      auto& light = ctx.pointShadowCasters[mapIndex];
+      auto& light = *ctx.pointShadowcasters[mapIndex];
 
       if (light.isStatic && glShadowMap.isRendered) {
         continue;
@@ -558,12 +663,12 @@ namespace Gamma {
 
       glClear(GL_DEPTH_BUFFER_BIT);
 
-      for (uint32 i = 0; i < 6; i++) {
+      for (u32 i = 0; i < 6; i++) {
         auto& direction = CUBE_MAP_DIRECTIONS[i];
         auto& upDirection = CUBE_MAP_UP_DIRECTIONS[i];
 
         // @optimize matLightProjection can be precomputed
-        Matrix4f matLightProjection = Matrix4f::glPerspective({ 1024, 1024 }, 90.0f, 1.0f, light.radius);
+        Matrix4f matLightProjection = Matrix4f::glPerspective({ 1024, 1024 }, 90.f, 1.f, light.radius);
         Matrix4f matLightView = Matrix4f::lookAt(light.position.gl(), direction, upDirection);
         Matrix4f lightMatrix = (matLightProjection * matLightView).transpose();
 
@@ -579,47 +684,7 @@ namespace Gamma {
       for (auto* glMesh : glMeshes) {
         auto* sourceMesh = glMesh->getSourceMesh();
 
-        if (sourceMesh->canCastShadows) {
-          glMesh->render(ctx.primitiveMode, true);
-        }
-      }
-
-      glShadowMap.isRendered = true;
-    }
-  }
-
-  /**
-   * @todo description
-   */
-  void OpenGLRenderer::renderSpotShadowMaps() {
-    auto& shader = shaders.spotShadowcasterView;
-
-    shader.use();
-
-    for (uint32 mapIndex = 0; mapIndex < glSpotShadowMaps.size(); mapIndex++) {
-      auto& glShadowMap = *glSpotShadowMaps[mapIndex];
-      auto& light = ctx.spotShadowcasters[mapIndex];
-
-      if (light.isStatic && glShadowMap.isRendered) {
-        continue;
-      }
-
-      // @optimize matLightProjection can be precomputed
-      Matrix4f matLightProjection = Matrix4f::glPerspective({ 1024, 1024 }, 120.0f, 1.0f, light.radius);
-      Matrix4f matLightView = Matrix4f::lookAt(light.position.gl(), light.direction.invert().gl(), Vec3f(0.0f, 1.0f, 0.0f));
-      Matrix4f lightMatrix = (matLightProjection * matLightView).transpose();
-
-      glShadowMap.buffer.write();
-
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-      shader.setMatrix4f("lightMatrix", lightMatrix);
-
-      // @todo glMultiDrawElementsIndirect for static world geometry
-      // (will require a handful of other changes to mesh organization/data buffering)
-      // @todo allow specific meshes to be associated with spot lights + rendered to shadow maps
-      for (auto* glMesh : glMeshes) {
-        auto* sourceMesh = glMesh->getSourceMesh();
+        // @todo handle foliage (requires point shadowcaster view shader updates)
 
         if (sourceMesh->canCastShadows) {
           glMesh->render(ctx.primitiveMode, true);
@@ -660,48 +725,9 @@ namespace Gamma {
     shader.setInt("texColorAndDepth", 0);
     shader.setInt("texNormalAndEmissivity", 1);
 
+    // @todo allow for custom configuration
+
     OpenGLScreenQuad::render();
-  }
-
-  /**
-   * @todo description
-   */
-  void OpenGLRenderer::renderPointLights() {
-    auto& camera = *ctx.activeCamera;
-    auto& shader = shaders.pointLight;
-
-    shader.use();
-    shader.setInt("texColorAndDepth", 0);
-    shader.setInt("texNormalAndEmissivity", 1);
-    shader.setVec3f("cameraPosition", camera.position);
-    shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
-    shader.setMatrix4f("matInverseView", ctx.matInverseView);
-
-    lightDisc.draw(ctx.pointLights, internalResolution, *ctx.activeCamera);
-  }
-
-  /**
-   * @todo description
-   */
-  void OpenGLRenderer::renderPointShadowcasters() {
-    auto& camera = *ctx.activeCamera;
-    auto& shader = shaders.pointShadowcaster;
-
-    shader.use();
-    shader.setInt("texColorAndDepth", 0);
-    shader.setInt("texNormalAndEmissivity", 1);
-    shader.setInt("texShadowMap", 3);
-    shader.setVec3f("cameraPosition", camera.position);
-    shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
-    shader.setMatrix4f("matInverseView", ctx.matInverseView);
-
-    for (uint32 i = 0; i < ctx.pointShadowCasters.size(); i++) {
-      auto& glShadowMap = *glPointShadowMaps[i];
-      auto& light = ctx.pointShadowCasters[i];
-
-      glShadowMap.buffer.read();
-      lightDisc.draw(light, internalResolution, *ctx.activeCamera);
-    }
   }
 
   /**
@@ -720,8 +746,8 @@ namespace Gamma {
     shader.setMatrix4f("matInverseView", ctx.matInverseView);
 
     // @todo limit to MAX_DIRECTIONAL_LIGHTS
-    for (uint32 i = 0; i < ctx.directionalLights.size(); i++) {
-      auto& light = ctx.directionalLights[i];
+    for (u32 i = 0; i < ctx.directionalLights.size(); i++) {
+      auto& light = *ctx.directionalLights[i];
       std::string indexedLight = "lights[" + std::to_string(i) + "]";
 
       shader.setVec3f(indexedLight + ".color", light.color);
@@ -741,9 +767,9 @@ namespace Gamma {
 
     shader.use();
 
-    for (uint32 i = 0; i < ctx.directionalShadowcasters.size(); i++) {
-      auto& light = ctx.directionalShadowcasters[i];
+    for (u32 i = 0; i < ctx.directionalShadowcasters.size(); i++) {
       auto& glShadowMap = *glDirectionalShadowMaps[i];
+      auto& light = *glShadowMap.light;
 
       glShadowMap.buffer.read();
 
@@ -754,9 +780,9 @@ namespace Gamma {
       shader.setInt("texShadowMaps[0]", 3);
       shader.setInt("texShadowMaps[1]", 4);
       shader.setInt("texShadowMaps[2]", 5);
-      shader.setMatrix4f("lightMatrices[0]", Gm_CreateCascadedLightViewMatrixGL(0, light.direction, camera));
-      shader.setMatrix4f("lightMatrices[1]", Gm_CreateCascadedLightViewMatrixGL(1, light.direction, camera));
-      shader.setMatrix4f("lightMatrices[2]", Gm_CreateCascadedLightViewMatrixGL(2, light.direction, camera));
+      shader.setMatrix4f("lightMatrices[0]", Gm_CreateCascadedLightViewProjectionMatrixGL(0, light.direction, camera));
+      shader.setMatrix4f("lightMatrices[1]", Gm_CreateCascadedLightViewProjectionMatrixGL(1, light.direction, camera));
+      shader.setMatrix4f("lightMatrices[2]", Gm_CreateCascadedLightViewProjectionMatrixGL(2, light.direction, camera));
       shader.setVec3f("cameraPosition", camera.position);
       shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
       shader.setMatrix4f("matInverseView", ctx.matInverseView);
@@ -801,15 +827,56 @@ namespace Gamma {
     shader.setMatrix4f("matInverseView", ctx.matInverseView);
     shader.setFloat("time", gmContext->scene.runningTime);
 
-    for (uint32 i = 0; i < ctx.spotShadowcasters.size(); i++) {
+    for (u32 i = 0; i < ctx.spotShadowcasters.size(); i++) {
       auto& glShadowMap = *glSpotShadowMaps[i];
-      auto& light = ctx.spotShadowcasters[i];
+      auto& light = *glShadowMap.light;
 
       Matrix4f lightProjection = Matrix4f::glPerspective({ 1024, 1024 }, 120.0f, 1.0f, light.radius);
       Matrix4f lightView = Matrix4f::lookAt(light.position.gl(), light.direction.invert().gl(), Vec3f(0.0f, 1.0f, 0.0f));
       Matrix4f lightMatrix = (lightProjection * lightView).transpose();
 
       shader.setMatrix4f("lightMatrix", lightMatrix);
+
+      glShadowMap.buffer.read();
+      lightDisc.draw(light, internalResolution, *ctx.activeCamera);
+    }
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderPointLights() {
+    auto& camera = *ctx.activeCamera;
+    auto& shader = shaders.pointLight;
+
+    shader.use();
+    shader.setInt("texColorAndDepth", 0);
+    shader.setInt("texNormalAndEmissivity", 1);
+    shader.setVec3f("cameraPosition", camera.position);
+    shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
+    shader.setMatrix4f("matInverseView", ctx.matInverseView);
+
+    lightDisc.draw(ctx.pointLights, internalResolution, *ctx.activeCamera);
+  }
+
+  /**
+   * @todo description
+   */
+  void OpenGLRenderer::renderPointShadowcasters() {
+    auto& camera = *ctx.activeCamera;
+    auto& shader = shaders.pointShadowcaster;
+
+    shader.use();
+    shader.setInt("texColorAndDepth", 0);
+    shader.setInt("texNormalAndEmissivity", 1);
+    shader.setInt("texShadowMap", 3);
+    shader.setVec3f("cameraPosition", camera.position);
+    shader.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
+    shader.setMatrix4f("matInverseView", ctx.matInverseView);
+
+    for (u32 i = 0; i < ctx.pointShadowcasters.size(); i++) {
+      auto& glShadowMap = *glPointShadowMaps[i];
+      auto& light = *glShadowMap.light;
 
       glShadowMap.buffer.read();
       lightDisc.draw(light, internalResolution, *ctx.activeCamera);
@@ -851,7 +918,7 @@ namespace Gamma {
       buffers.gBuffer.read();
       ctx.accumulationTarget->read();
 
-      // @todo OpenGLFrameBuffer::createMipmaps(uint32 levels)
+      // @todo OpenGLFrameBuffer::createMipmaps(u32 levels)
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 3);
       glGenerateMipmap(GL_TEXTURE_2D);
@@ -885,7 +952,7 @@ namespace Gamma {
 
       ctx.accumulationTarget->read();
 
-      // @todo OpenGLFrameBuffer::setMaxMipmapLevel(uint32 level)
+      // @todo OpenGLFrameBuffer::setMaxMipmapLevel(u32 level)
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     }
 
@@ -928,6 +995,8 @@ namespace Gamma {
     shaders.skybox.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
     shaders.skybox.setMatrix4f("matInverseView", ctx.matInverseView);
 
+    // @todo allow for custom configuration
+
     OpenGLScreenQuad::render();
   }
 
@@ -966,10 +1035,10 @@ namespace Gamma {
         shaders.particles.setFloat("particles.deviation", particles.deviation);
 
         // Set particle path parameters
-        constexpr static uint32 MAX_PATH_POINTS = 10;
-        uint32 totalPathPoints = std::min((uint32)particles.path.size(), (uint32)MAX_PATH_POINTS);
+        constexpr static u32 MAX_PATH_POINTS = 10;
+        u32 totalPathPoints = std::min((u32)particles.path.size(), (u32)MAX_PATH_POINTS);
 
-        for (uint8 i = 0; i < totalPathPoints; i++) {
+        for (u8 i = 0; i < totalPathPoints; i++) {
           shaders.particles.setVec3f("path.points[" + std::to_string(i) + "]", particles.path[i]);
         }
 
@@ -1134,6 +1203,74 @@ namespace Gamma {
   /**
    * @todo description
    */
+  void OpenGLRenderer::renderWater() {
+    auto& camera = *ctx.activeCamera;
+
+    // Swap buffers so we can temporarily render the
+    // refracted geometry to the second accumulation
+    // buffer while reading from the first
+    swapAccumulationBuffers();
+
+    // At this point, the accumulation source buffer
+    // will contain all effects/shading rendered up
+    // to this point, which we can read from when
+    // rendering refractions. Write to the second
+    // accumulation buffer so we can copy that back
+    // into the first afterward.
+    ctx.accumulationSource->read();
+    ctx.accumulationTarget->write();
+
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glStencilFunc(GL_ALWAYS, MeshType::WATER, 0xFF);
+    glStencilMask(0xFF);
+
+    shaders.water.use();
+
+    #if GAMMA_DEVELOPER_MODE
+      Vec2f screenSize((float)internalResolution.width, (float)internalResolution.height);
+
+      shaders.water.setVec2f("screenSize", screenSize);
+    #endif
+
+    shaders.water.setInt("texColorAndDepth", 0);
+    shaders.water.setMatrix4f("matProjection", ctx.matProjection);
+    shaders.water.setMatrix4f("matInverseProjection", ctx.matInverseProjection);
+    shaders.water.setMatrix4f("matView", ctx.matView);
+    shaders.water.setMatrix4f("matInverseView", ctx.matInverseView);
+    shaders.water.setVec3f("cameraPosition", camera.position);
+    shaders.water.setFloat("time", gmContext->scene.runningTime);
+
+    for (auto* glMesh : glMeshes) {
+      if (glMesh->isMeshType(MeshType::WATER)) {
+        glMesh->render(ctx.primitiveMode);
+      }
+    }
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+
+    // Now that the current target accumulation buffer contains
+    // the rendered refractive geometry, swap the buffers so we
+    // can write refractions back into the original target
+    // accumulation buffer
+    swapAccumulationBuffers();
+
+    ctx.accumulationSource->read();
+    ctx.accumulationTarget->write();
+
+    glStencilFunc(GL_EQUAL, MeshType::WATER, 0xFF);
+
+    shaders.copyFrame.use();
+    shaders.copyFrame.setVec4f("transform", FULL_SCREEN_TRANSFORM);
+    shaders.copyFrame.setInt("texColorAndDepth", 0);
+
+    OpenGLScreenQuad::render();
+  }
+
+  /**
+   * @todo description
+   */
   void OpenGLRenderer::renderPostEffects() {
     ctx.accumulationSource->read();
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -1162,7 +1299,7 @@ namespace Gamma {
 
     OpenGLScreenQuad::render();
 
-    for (uint32 i = 0; i < glDirectionalShadowMaps.size(); i++) {
+    for (u32 i = 0; i < glDirectionalShadowMaps.size(); i++) {
       float yOffset = 0.52f - float(i) * 0.32f;
 
       glDirectionalShadowMaps[i]->buffer.read();
@@ -1185,8 +1322,8 @@ namespace Gamma {
 
     #if GAMMA_DEVELOPER_MODE
       // @todo move to OpenGLMesh
-      uint32 totalVertices = mesh->vertices.size();
-      uint32 totalTriangles = mesh->faceElements.size() / 3;
+      u32 totalVertices = mesh->vertices.size();
+      u32 totalTriangles = mesh->faceElements.size() / 3;
 
       Console::log("[Gamma] OpenGLMesh created:", totalVertices, "vertices,", totalTriangles, "triangles");
     #endif
@@ -1212,7 +1349,47 @@ namespace Gamma {
   }
 
   void OpenGLRenderer::destroyShadowMap(const Light* light) {
-    // @todo
+    // @todo reduce the repetition between cases here
+    // @todo test this to make sure it works!
+    switch (light->type) {
+      case DIRECTIONAL_SHADOWCASTER:
+        for (auto& shadowMap : glDirectionalShadowMaps) {
+          if (shadowMap->light == light) {
+            shadowMap->buffer.destroy();
+
+            Gm_VectorRemove(glDirectionalShadowMaps, shadowMap);
+
+            break;
+          }
+        }
+
+        break;
+      case POINT_SHADOWCASTER:
+        for (auto& shadowMap : glPointShadowMaps) {
+          if (shadowMap->light == light) {
+            shadowMap->buffer.destroy();
+
+            Gm_VectorRemove(glPointShadowMaps, shadowMap);
+
+            break;
+          }
+        }
+
+        break;
+      case SPOT_SHADOWCASTER:
+        for (auto& shadowMap : glSpotShadowMaps) {
+          if (shadowMap->light == light) {
+            shadowMap->buffer.destroy();
+
+            Gm_VectorRemove(glSpotShadowMaps, shadowMap);
+
+            break;
+          }
+        }
+
+        break;
+    }
+
     Console::log("[Gamma] Shadowcaster destroyed!");
   }
 
@@ -1248,9 +1425,9 @@ namespace Gamma {
 
     glProbes[name] = probe;
 
-    std::vector<uint8> order = { 1, 0, 3, 2, 5, 4 };
+    std::vector<u8> order = { 1, 0, 3, 2, 5, 4 };
 
-    for (uint8 i = 0; i < 6; i++) {
+    for (u8 i = 0; i < 6; i++) {
       auto& direction = CUBE_MAP_DIRECTIONS[order[i]];
       auto& upDirection = CUBE_MAP_UP_DIRECTIONS[order[i]];
       float farDistance = 1000.0f;
@@ -1260,15 +1437,18 @@ namespace Gamma {
       probeCamera.position = position;
       probeCamera.orientation.face(direction, upDirection);
 
-      Matrix4f matProjection = Matrix4f::glPerspective({ 1024, 1024 }, 90.0f, 1.0f, farDistance).transpose();
+      Matrix4f matProjection = Matrix4f::glPerspective({ 1024, 1024 }, 90.f, 1.f, farDistance).transpose();
 
       if (i == 2 || i == 3) {
         // @hack @todo there may be a bug in Orientation::face()
-        probeCamera.orientation.yaw += (3.141592f / 2.0f);
+        probeCamera.orientation.yaw += Gm_PI / 2.f;
       }
 
+      probeCamera.rotation = probeCamera.orientation.toQuaternion();
+
       Matrix4f matView = (
-        Matrix4f::rotation(probeCamera.orientation) *
+        probeCamera.rotation.toMatrix4f() *
+        // Matrix4f::rotation(probeCamera.orientation) *
         Matrix4f::translation(probeCamera.position.invert().gl())
       ).transpose();
 
@@ -1292,7 +1472,7 @@ namespace Gamma {
     }
   }
 
-  void OpenGLRenderer::renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background) {
+  void OpenGLRenderer::renderSurfaceToScreen(SDL_Surface* surface, u32 x, u32 y, const Vec3f& color, const Vec4f& background) {
     auto& window = gmContext->window;
     float offsetX = -1.0f + (2 * x + surface->w) / (float)window.size.width;
     float offsetY = 1.0f - (2 * y + surface->h) / (float)window.size.height;
@@ -1317,12 +1497,22 @@ namespace Gamma {
     OpenGLScreenQuad::render();
   }
 
-  void OpenGLRenderer::renderText(TTF_Font* font, const char* message, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background) {
+  void OpenGLRenderer::renderText(TTF_Font* font, const char* message, u32 x, u32 y, const Vec3f& color, const Vec4f& background) {
     SDL_Surface* text = TTF_RenderText_Blended(font, message, { 255, 255, 255 });
 
     renderSurfaceToScreen(text, x, y, color, background);
 
     SDL_FreeSurface(text);
+  }
+
+  void OpenGLRenderer::resetShadowMaps() {
+    for (auto* glShadowMap : glSpotShadowMaps) {
+      glShadowMap->isRendered = false;
+    }
+
+    for (auto* glShadowMap : glPointShadowMaps) {
+      glShadowMap->isRendered = false;
+    }
   }
 
   void OpenGLRenderer::swapAccumulationBuffers() {

@@ -5,12 +5,19 @@
 #include "system/console.h"
 #include "system/context.h"
 #include "system/flags.h"
+#include "system/vector_helpers.h"
 #include "system/yaml_parser.h"
+
+using namespace Gamma;
 
 const GmSceneStats Gm_GetSceneStats(GmContext* context) {
   GmSceneStats stats;
 
   for (auto* mesh : context->scene.meshes) {
+    if (mesh->disabled) {
+      continue;
+    }
+
     if (mesh->lods.size() > 0) {
       for (auto& lod : mesh->lods) {
         stats.verts += lod.vertexCount * lod.instanceCount;
@@ -25,16 +32,14 @@ const GmSceneStats Gm_GetSceneStats(GmContext* context) {
   return stats;
 }
 
-void Gm_AddMesh(GmContext* context, const std::string& meshName, Gamma::uint16 maxInstances, Gamma::Mesh* mesh) {
-  using namespace Gamma;
-
+void Gm_AddMesh(GmContext* context, const std::string& meshName, u16 maxInstances, Gamma::Mesh* mesh) {
   auto& scene = context->scene;
   auto& meshes = scene.meshes;
   auto& meshMap = scene.meshMap;
 
   assert(meshMap.find(meshName) == meshMap.end(), "Mesh '" + meshName + "' already exists!");
 
-  mesh->index = (uint16)meshes.size();
+  mesh->index = (u16)meshes.size();
   mesh->id = scene.runningMeshId++;
   mesh->objects.reserve(maxInstances);
 
@@ -42,7 +47,7 @@ void Gm_AddMesh(GmContext* context, const std::string& meshName, Gamma::uint16 m
   meshes.push_back(mesh);
 
   if (mesh->type == MeshType::PARTICLE_SYSTEM) {
-    for (uint16 i = 0; i < maxInstances; i++) {
+    for (u16 i = 0; i < maxInstances; i++) {
       Gm_CreateObjectFrom(context, meshName);
     }
   }
@@ -55,15 +60,11 @@ void Gm_AddProbe(GmContext* context, const std::string& probeName, const Gamma::
 }
 
 Gamma::Light& Gm_CreateLight(GmContext* context, Gamma::LightType type) {
-  using namespace Gamma;
-
   auto& lights = context->scene.lights;
 
-  // @todo recycle removed/deactivated Lights
-  // @todo new Light()
-  lights.push_back(Light());
+  lights.push_back(new Light());
 
-  auto& light = lights.back();
+  auto& light = *lights.back();
 
   light.type = type;
 
@@ -79,19 +80,17 @@ Gamma::Light& Gm_CreateLight(GmContext* context, Gamma::LightType type) {
 }
 
 void Gm_UseSceneFile(GmContext* context, const std::string& filename) {
-  using namespace Gamma;
-
   auto& scene = Gm_ParseYamlFile(filename.c_str());
 
   // Load meshes
   for (auto& [ key, property ] : *scene["meshes"].object) {
     auto& meshConfig = *property.object;
-    uint32 maxInstances = Gm_ReadYamlProperty<uint32>(meshConfig, "max");
+    u32 maxInstances = Gm_ReadYamlProperty<u32>(meshConfig, "max");
     Mesh* mesh = nullptr;
 
     if (Gm_HasYamlProperty(meshConfig, "plane")) {
-      uint32 size = Gm_ReadYamlProperty<uint32>(meshConfig, "plane.size");
-      bool useLoopingTexture = Gm_ReadYamlProperty<uint32>(meshConfig, "plane.useLoopingTexture");
+      u32 size = Gm_ReadYamlProperty<u32>(meshConfig, "plane.size");
+      bool useLoopingTexture = Gm_ReadYamlProperty<u32>(meshConfig, "plane.useLoopingTexture");
 
       mesh = Mesh::Plane(size, useLoopingTexture);
     } else if (Gm_HasYamlProperty(meshConfig, "cube")) {
@@ -144,8 +143,6 @@ void Gm_UseSceneFile(GmContext* context, const std::string& filename) {
 }
 
 Gamma::Object& Gm_CreateObjectFrom(GmContext* context, const std::string& meshName) {
-  using namespace Gamma;
-
   auto& meshMap = context->scene.meshMap;
 
   assert(meshMap.find(meshName) != meshMap.end(), "Mesh '" + meshName + "' not found");
@@ -171,8 +168,6 @@ Gamma::Object& Gm_CreateObjectFrom(GmContext* context, const std::string& meshNa
 }
 
 void Gm_Commit(GmContext* context, const Gamma::Object& object) {
-  using namespace Gamma;
-
   auto& meshes = context->scene.meshes;
   auto& record = object._record;
   auto* mesh = meshes[record.meshIndex];
@@ -187,13 +182,78 @@ void Gm_Commit(GmContext* context, const Gamma::Object& object) {
   mesh->objects.setColorById(record.id, object.color);
 }
 
-void Gm_PointCamera(GmContext* context, const Gamma::Object& object, bool upsideDown) {
-  Gm_PointCamera(context, object.position, upsideDown);
+Gamma::ObjectPool& Gm_GetObjects(GmContext* context, const std::string& meshName) {
+  // @todo #if GAMMA_DEVELOPER_MODE
+  Gamma::assert(context->scene.meshMap.find(meshName) != context->scene.meshMap.end(), "Mesh '" + meshName + "' not found");
+
+  return context->scene.meshMap[meshName]->objects;
 }
 
-void Gm_PointCamera(GmContext* context, const Gamma::Vec3f& position, bool upsideDown) {
-  using namespace Gamma;
+void Gm_SaveObject(GmContext* context, const std::string& objectName, const Gamma::Object& object) {
+  context->scene.objectStore[objectName] = object._record;
+}
 
+void Gm_SaveLight(GmContext* context, const std::string& lightName, Gamma::Light* light) {
+  context->scene.lightStore[lightName] = light;
+}
+
+bool Gm_HasObject(GmContext* context, const std::string& objectName) {
+  return Gm_FindObject(context, objectName) != nullptr;
+}
+
+Gamma::Object* Gm_FindObject(GmContext* context, const std::string& objectName) {
+  auto& scene = context->scene;
+  auto& store = scene.objectStore;
+
+  if (store.find(objectName) == store.end()) {
+    return nullptr;
+  }
+
+  auto& record = store.at(objectName);
+  auto& mesh = scene.meshes[record.meshIndex];
+
+  return mesh->objects.getByRecord(record);
+}
+
+Gamma::Object& Gm_GetObject(GmContext* context, const std::string& objectName) {
+  auto& scene = context->scene;
+  // @todo assert that the object exists
+  auto& record = scene.objectStore.at(objectName);
+  auto& mesh = scene.meshes[record.meshIndex];
+
+  return *mesh->objects.getByRecord(record);
+}
+
+Gamma::Light& Gm_GetLight(GmContext* context, const std::string& lightName) {
+  auto& lightStore = context->scene.lightStore;
+  // @todo assert that the light exists
+
+  return *lightStore.at(lightName);
+}
+
+void Gm_RemoveObject(GmContext* context, const Gamma::Object& object) {
+  auto& record = object._record;
+  auto& mesh = context->scene.meshes[record.meshIndex];
+
+  mesh->objects.removeById(record.id);
+}
+
+void Gm_RemoveLight(GmContext* context, Gamma::Light* light) {
+  auto& scene = context->scene;
+  auto& renderer = context->renderer;
+
+  renderer->destroyShadowMap(light);
+
+  Gm_VectorRemove(scene.lights, light);
+
+  delete light;
+}
+
+void Gm_PointCameraAt(GmContext* context, const Gamma::Object& object, bool upsideDown) {
+  Gm_PointCameraAt(context, object.position, upsideDown);
+}
+
+void Gm_PointCameraAt(GmContext* context, const Gamma::Vec3f& position, bool upsideDown) {
   auto& camera = context->scene.camera;
   Vec3f forward = (position - camera.position).unit();
   Vec3f sideways = Vec3f::cross(forward, Vec3f(0, 1.0f, 0));
@@ -206,12 +266,10 @@ void Gm_PointCamera(GmContext* context, const Gamma::Vec3f& position, bool upsid
 }
 
 void Gm_HandleFreeCameraMode(GmContext* context, float dt) {
-  using namespace Gamma;
-  
   auto& scene = context->scene;
   auto& camera = scene.camera;
   auto& input = scene.input;
-  const Orientation& orientation = camera.orientation;
+  const auto& orientation = camera.orientation;
   Vec3f direction;
 
   if (input.isKeyHeld(Key::A)) {
@@ -249,17 +307,15 @@ void Gm_UseFrustumCulling(GmContext* context, const std::initializer_list<std::s
 }
 
 void Gm_UseLodByDistance(GmContext* context, float distance, const std::initializer_list<std::string>& meshNames) {
-  using namespace Gamma;
-
   auto& meshMap = context->scene.meshMap;
   auto& camera = context->scene.camera;
 
   for (auto& meshName : meshNames) {
     auto& mesh = *meshMap[meshName];
 
-    uint32 instanceOffset = 0;
+    u32 instanceOffset = 0;
 
-    for (uint32 lodIndex = 0; lodIndex < mesh.lods.size(); lodIndex++) {
+    for (u32 lodIndex = 0; lodIndex < mesh.lods.size(); lodIndex++) {
       mesh.lods[lodIndex].instanceOffset = instanceOffset;
 
       if (lodIndex < mesh.lods.size() - 1) {
@@ -267,13 +323,13 @@ void Gm_UseLodByDistance(GmContext* context, float distance, const std::initiali
         // in front of those outside it, and use the pivot
         // defining that boundary to determine our instance
         // count for this LoD set
-        instanceOffset = (uint32)mesh.objects.partitionByDistance((uint16)instanceOffset, distance * float(lodIndex + 1), camera.position);
+        instanceOffset = (u32)mesh.objects.partitionByDistance((u16)instanceOffset, distance * float(lodIndex + 1), camera.position);
 
         mesh.lods[lodIndex].instanceCount = instanceOffset - mesh.lods[lodIndex].instanceOffset;
       } else {
         // The final LoD can just use the remaining set
         // of objects beyond the last LoD distance threshold
-        mesh.lods[lodIndex].instanceCount = (uint32)mesh.objects.totalVisible() - instanceOffset;
+        mesh.lods[lodIndex].instanceCount = (u32)mesh.objects.totalVisible() - instanceOffset;
       }
     }
   }

@@ -27,12 +27,13 @@ namespace Gamma {
   struct RendererShaders {
     // Rendering pipeline shaders
     OpenGLShader geometry;
+    OpenGLShader foliage;
     OpenGLShader probeReflector;
     OpenGLShader particles;
     OpenGLShader lightingPrepass;
-    OpenGLShader pointLight;
     OpenGLShader directionalLight;
     OpenGLShader spotLight;
+    OpenGLShader pointLight;
     OpenGLShader indirectLight;
     OpenGLShader indirectLightComposite;
     OpenGLShader skybox;
@@ -41,14 +42,14 @@ namespace Gamma {
     OpenGLShader reflectionsDenoise;
     OpenGLShader refractivePrepass;
     OpenGLShader refractiveGeometry;
+    OpenGLShader water;
 
     // Shadowcaster shaders
     OpenGLShader directionalShadowcaster;
-    OpenGLShader directionalShadowcasterView;
-    OpenGLShader pointShadowcaster;
-    OpenGLShader pointShadowcasterView;
     OpenGLShader spotShadowcaster;
-    OpenGLShader spotShadowcasterView;
+    OpenGLShader pointShadowcasterView;
+    OpenGLShader shadowLightView;
+    OpenGLShader pointShadowcaster;
 
     // Dev shaders
     OpenGLShader gBufferDev;
@@ -56,18 +57,19 @@ namespace Gamma {
   };
 
   struct RendererContext {
-    uint32 internalWidth;
-    uint32 internalHeight;
+    u32 internalWidth;
+    u32 internalHeight;
     bool hasEmissiveObjects;
     bool hasReflectiveObjects;
     bool hasRefractiveObjects;
+    bool hasWaterObjects;
     GLenum primitiveMode;
-    std::vector<Light> pointLights;
-    std::vector<Light> pointShadowCasters;
-    std::vector<Light> directionalLights;
-    std::vector<Light> directionalShadowcasters;
-    std::vector<Light> spotLights;
-    std::vector<Light> spotShadowcasters;
+    std::vector<Light*> pointLights;
+    std::vector<Light*> pointShadowcasters;
+    std::vector<Light*> directionalLights;
+    std::vector<Light*> directionalShadowcasters;
+    std::vector<Light*> spotLights;
+    std::vector<Light*> spotShadowcasters;
     Camera* activeCamera = nullptr;
     Matrix4f matProjection;
     Matrix4f matInverseProjection;
@@ -93,7 +95,8 @@ namespace Gamma {
     virtual void destroyShadowMap(const Light* light) override;
     virtual const RenderStats& getRenderStats() override;
     virtual void present() override;
-    virtual void renderText(TTF_Font* font, const char* message, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background) override;
+    virtual void renderText(TTF_Font* font, const char* message, u32 x, u32 y, const Vec3f& color, const Vec4f& background) override;
+    virtual void resetShadowMaps() override;
 
   private:
     SDL_GLContext glContext;
@@ -103,7 +106,7 @@ namespace Gamma {
     OpenGLLightDisc lightDisc;
     OpenGLShader screen;
     GLuint screenTexture = 0;
-    uint32 frame = 0;
+    u32 frame = 0;
     std::vector<OpenGLMesh*> glMeshes;
     std::vector<OpenGLDirectionalShadowMap*> glDirectionalShadowMaps;
     std::vector<OpenGLPointShadowMap*> glPointShadowMaps;
@@ -121,18 +124,19 @@ namespace Gamma {
     void renderSpotShadowMaps();
     void prepareLightingPass();
     void renderLightingPrepass();
-    void renderPointLights();
-    void renderPointShadowcasters();
     void renderDirectionalLights();
     void renderDirectionalShadowcasters();
     void renderSpotLights();
     void renderSpotShadowcasters();
+    void renderPointLights();
+    void renderPointShadowcasters();
     void copyEmissiveObjects();
     void renderIndirectLight();
     void renderSkybox();
     void renderParticleSystems();
     void renderReflections();
     void renderRefractiveGeometry();
+    void renderWater();
     void renderPostEffects();
     void renderDevBuffers();
 
@@ -140,7 +144,7 @@ namespace Gamma {
     void handleSettingsChanges();
     void initializeRendererContext();
     void initializeLightArrays();
-    void renderSurfaceToScreen(SDL_Surface* surface, uint32 x, uint32 y, const Vec3f& color, const Vec4f& background);
+    void renderSurfaceToScreen(SDL_Surface* surface, u32 x, u32 y, const Vec3f& color, const Vec4f& background);
     void renderToAccumulationBuffer();
     void swapAccumulationBuffers();
   };

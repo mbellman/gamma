@@ -12,8 +12,6 @@
 #include "system/packed_data.h"
 #include "system/type_aliases.h"
 
-#define UNUSED_LIGHT_INDEX -1
-
 namespace Gamma {
   enum LightType {
     POINT,
@@ -38,10 +36,10 @@ namespace Gamma {
     float power = 1.0f;
     Vec3f direction = Vec3f(0.0f, -1.0f, 0.0f);
     float fov = 90.0f;
-    uint32 type = LightType::POINT;
+    u32 type = LightType::POINT;
     bool isStatic = false;
-    int id = UNUSED_LIGHT_INDEX;
-    // @todo std::vector<uint32> shadowMapMeshes (?)
+    bool serializable = true;
+    // @todo std::vector<u32> shadowMapMeshes (?)
   };
 
   /**
@@ -56,12 +54,13 @@ namespace Gamma {
    * @size 8 bytes
    */
   struct ObjectRecord {
-    uint16 meshIndex = 0;
-    uint16 meshId = 0;
-    // @todo uint32 id with 24 bits for id and 8 for generation,
+    u16 meshIndex = 0;
+    // @todo remove this and allow meshes to be 'deactivated' when freed
+    u16 meshId = 0;
+    // @todo u32 id with 24 bits for id and 8 for generation,
     // allowing up to ~16.77 million objects per pool
-    uint16 id = 0;
-    uint16 generation = 0;
+    u16 id = 0;
+    u16 generation = 0;
   };
 
   /**
@@ -116,9 +115,17 @@ namespace Gamma {
      */
     PROBE_REFLECTOR = 0xFB,
     /**
+     * @todo description
+     */
+    FOLIAGE = 0xFC,
+    /**
+     * @todo description
+     */
+    WATER = 0xFD,
+    /**
      * Defines standard Meshes without any unique rendering properties.
      */
-    NON_EMISSIVE = 0xFF
+    DEFAULT = 0xFF
   };
 
   /**
@@ -132,27 +139,27 @@ namespace Gamma {
     /**
      * Defines the starting face element in the LOD model.
      */
-    uint32 elementOffset = 0;
+    u32 elementOffset = 0;
     /**
      * Defines the number of face elements in the LOD model.
      */
-    uint32 elementCount = 0;
+    u32 elementCount = 0;
     /**
      * Defines the starting instance in the LOD group.
      */
-    uint32 instanceOffset = 0;
+    u32 instanceOffset = 0;
     /**
      * Defines the number of instances in the LOD group.
      */
-    uint32 instanceCount = 0;
+    u32 instanceCount = 0;
     /**
      * Defines the starting vertex in the LOD model.
      */
-    uint32 vertexOffset = 0;
+    u32 vertexOffset = 0;
     /**
      * Defines the number of vertices in the LOD model.
      */
-    uint32 vertexCount = 0;
+    u32 vertexCount = 0;
   };
 
   /**
@@ -163,15 +170,40 @@ namespace Gamma {
    */
   struct ParticleSystem {
     Vec3f spawn;
-    float spread;
-    float minimumRadius;
-    float medianSpeed;
-    float speedVariation;
-    float medianSize;
-    float sizeVariation;
-    float deviation;
+    float spread = 100.f;
+    float minimumRadius = 1.f;
+    float medianSpeed = 1.f;
+    float speedVariation = 0.f;
+    float medianSize = 1.f;
+    float sizeVariation = 0.f;
+    float deviation = 0.f;
     std::vector<Vec3f> path;
-    bool isCircuit;
+    bool isCircuit = true;
+  };
+
+  /**
+   * FoliageType
+   * -----------
+   *
+   * Different categories of foliage, describing different types
+   * of geometry displacement behavior.
+   */
+  enum FoliageType {
+    NONE,
+    FLOWER,
+    BRANCH,
+    LEAF
+  };
+
+  /**
+   * Foliage
+   * -------
+   *
+   * @todo description
+   */
+  struct Foliage {
+    FoliageType type = FoliageType::NONE;
+    float speed = 1.f;
   };
 
   /**
@@ -188,7 +220,7 @@ namespace Gamma {
      * The index of the mesh in a scene's Mesh array,
      * used for efficient mesh lookups.
      */
-    uint16 index = 0;
+    u16 index = 0;
     /**
      * A unique ID for the mesh. If a mesh retrieved
      * at a specific index in a scene's Mesh array
@@ -196,7 +228,7 @@ namespace Gamma {
      * mesh structure has been recycled), the reference
      * should be considered stale.
      */
-    uint16 id = 0;
+    u16 id = 0;
     /**
      * Static mesh vertices in model space.
      */
@@ -204,13 +236,15 @@ namespace Gamma {
     /**
      * Dynamic mesh vertices, based on the static vertices.
      * Remains empty unless transformGeometry() is used.
+     *
+     * @todo remove?
      */
     std::vector<Vertex> transformedVertices;
     /**
      * Vertex indices for each triangle face of the mesh,
      * defined in groups of three.
      */
-    std::vector<uint32> faceElements;
+    std::vector<u32> faceElements;
     /**
      * The LOD groups for the Mesh, if applicable.
      *
@@ -232,6 +266,8 @@ namespace Gamma {
     std::string normalMap = "";
     /**
      * An optional specularity map texture for the mesh.
+     *
+     * @todo This doesn't actually control specularity yet
      */
     std::string specularityMap = "";
     /**
@@ -243,30 +279,47 @@ namespace Gamma {
      *
      * @see MeshType
      */
-    uint8 type = MeshType::NON_EMISSIVE;
+    u8 type = MeshType::DEFAULT;
     /**
      * Controls the maximum directional cascaded shadow
      * map that the mesh objects should be rendered to.
      */
-    uint8 maxCascade = 3;
+    u8 maxCascade = 3;
     /**
      * Controls whether the mesh's instances are rendered
      * to shadow maps, enabling them to cast shadows.
      */
     bool canCastShadows = true;
     /**
-     * Configuration parameters for particle system meshes.
+     * Controls whether the mesh and its instances are
+     * ignored in all rendering passes.
+     */
+    bool disabled = false;
+    /**
+     * Configuration for particle system meshes.
      */
     ParticleSystem particleSystem;
+    /**
+     * Configuration for foliage meshes.
+     */
+    Foliage foliage;
+    /**
+     * Controls how intensely mesh objects render in their
+     * natural color, without a light source contribution.
+     *
+     * @todo material parameters?
+     */
+    float emissivity = 0.f;
 
     static Mesh* Cube();
     static Mesh* Model(const char* path);
     static Mesh* Model(const std::vector<std::string>& paths);
     static Mesh* Particles();
-    static Mesh* Plane(uint32 size, bool useLoopingTexture = false);
-    // @todo Sphere(uint32 divisions)
-    // @todo Cylinder(uint32 divisions)
+    static Mesh* Plane(u32 size, bool useLoopingTexture = false);
+    // @todo Sphere(u32 divisions)
+    // @todo Cylinder(u32 divisions)
 
+    // @todo remove?
     void transformGeometry(std::function<void(const Vertex&, Vertex&)> handler);
   };
 

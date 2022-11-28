@@ -1,13 +1,18 @@
 #include <cstdio>
 #include <math.h>
 
-#include "math/Vector.h"
+#include "math/vector.h"
+#include "math/utilities.h"
 
 namespace Gamma {
   /**
    * Vec3f
    * -----
    */
+  bool Vec3f::operator==(const Vec3f& vector) const {
+    return x == vector.x && y == vector.y && z == vector.z;
+  }
+
   Vec3f Vec3f::operator+(const Vec3f& vector) const {
     return {
       x + vector.x,
@@ -53,9 +58,11 @@ namespace Gamma {
   }
 
   void Vec3f::operator*=(float scalar) {
-    x *= scalar;
-    y *= scalar;
-    z *= scalar;
+    *this = *this * scalar;
+  }
+
+  void Vec3f::operator*=(const Vec3f& vector) {
+    *this = *this * vector;
   }
 
   Vec3f Vec3f::operator/(float divisor) const {
@@ -96,6 +103,14 @@ namespace Gamma {
     return *this * -1.0f;
   }
 
+  Vec3f Vec3f::lerp(const Vec3f& v1, const Vec3f& v2, float alpha) {
+    return Vec3f(
+      Gm_Lerpf(v1.x, v2.x, alpha),
+      Gm_Lerpf(v1.y, v2.y, alpha),
+      Gm_Lerpf(v1.z, v2.z, alpha)
+    );
+  }
+
   float Vec3f::magnitude() const {
     return sqrtf(x * x + y * y + z * z);
   }
@@ -122,6 +137,7 @@ namespace Gamma {
     return Vec3f(x / w, y / w, z / w);
   }
 
+  // @todo rename xyz()
   Vec3f Vec4f::toVec3f() const {
     return Vec3f(x, y, z);
   }
