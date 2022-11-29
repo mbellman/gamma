@@ -263,6 +263,8 @@ void Gm_PointCameraAt(GmContext* context, const Gamma::Vec3f& position, bool ups
     : Vec3f::cross(sideways, forward);
 
   camera.orientation.face(forward, up);
+
+  camera.rotation = camera.orientation.toQuaternion();
 }
 
 void Gm_HandleFreeCameraMode(GmContext* context, float dt) {

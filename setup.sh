@@ -12,6 +12,7 @@ format_project_name() {
   echo $name
 }
 
+# Naming
 echo "What do you want to name this project?"
 
 read project_name
@@ -24,7 +25,16 @@ sed -i "s/\"Gamma\"/\"$project_name\"/g" gamma.sln
 sed -i "s/\"Gamma.vcxproj\"/\"$formatted_project_name.vcxproj\"/g" gamma.sln
 
 mv 'gamma.sln' "$formatted_project_name.sln"
+mv 'game.vcxproj' "$formatted_project_name.vcxproj"
+mv 'game.vcxproj.filters' "$formatted_project_name.vcxproj.filters"
 
-mv 'Gamma.vcxproj' "$formatted_project_name.vcxproj"
-mv 'Gamma.vcxproj.user' "$formatted_project_name.vcxproj.user"
-mv 'Gamma.vcxproj.filters' "$formatted_project_name.vcxproj.filters"
+# Create Release/Debug directories with DLLs
+mkdir Release
+mkdir Debug
+
+cp dlls/* Release
+cp dlls/* Debug
+
+# Remove zip/setup script
+rm gamma.zip
+rm setup.sh
